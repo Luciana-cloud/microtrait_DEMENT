@@ -32,3 +32,24 @@ boxplot(trait_st%>% select(13:16,27,28),ylab="gene counts",
 # Heat-related traits
 boxplot(trait_st%>% select(5:7),ylab="gene counts",
         names=c("heat shock proteins","ATP proteases","transcription factor"))
+
+# Targeted traits
+
+trait_tar = mat_trait %>% select(4,6:8,24:27,38,43:49,163,174:177,93:99,124,125) # 
+
+# Forming functional guilds (https://uc-r.github.io/kmeans_clustering#fn:scale)
+
+library(cluster)    # clustering algorithms
+library(factoextra) # clustering algorithms & visualization
+
+distance <- get_dist(trait_tar)
+fviz_dist(distance, gradient = list(low = "#00AFBB", mid = "white", high = "#FC4E07"))
+
+trait_tar1 <- (trait_tar %>% select(2:31))
+trait_tar1 <- na.omit(trait_tar1)
+trait_tar1 <- scale(trait_tar1)
+trait_tar1 <- (trait_tar1 %>% select(1:11,13))
+
+k2 <- kmeans(trait_tar1, centers = 100, nstart = 25)
+str(k2)
+
