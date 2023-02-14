@@ -35,21 +35,92 @@ boxplot(trait_st%>% select(5:7),ylab="gene counts",
 
 # Targeted traits
 
-trait_tar = mat_trait %>% select(4,6:8,24:27,38,43:49,163,174:177,93:99,124,125) # 
+trait_tar = mat_trait %>% select(4,6:8,18,23:25,31:35,38,43:49,163,174:177,93:99,125) # 
+genomes   = as.list(mat_trait[1])
+test      = trait_tar %>% summarize_if(is.numeric, sum, na.rm=TRUE)
 
-# Forming functional guilds (https://uc-r.github.io/kmeans_clustering#fn:scale)
+# Change to binary matrix
 
-library(cluster)    # clustering algorithms
-library(factoextra) # clustering algorithms & visualization
+trait_tar_bin_1     = as.data.frame(ifelse(trait_tar>0,1,0))
+trait_tar_bin_2     = as.data.frame(cbind(genomes,trait_tar_bin_1))
+trait_tar_T         = as.numeric(as.matrix((trait_tar_bin_1)))
 
-distance <- get_dist(trait_tar)
-fviz_dist(distance, gradient = list(low = "#00AFBB", mid = "white", high = "#FC4E07"))
+# Forming functional guilds (https://www.youtube.com/watch?v=GPOUGpF-Sno)
+# https://github.com/ukaraoz/microtrait
 
-trait_tar1 <- (trait_tar %>% select(2:31))
-trait_tar1 <- na.omit(trait_tar1)
-trait_tar1 <- scale(trait_tar1)
-trait_tar1 <- (trait_tar1 %>% select(1:11,13))
+library(vegan)
+set.seed(1)
+distance  = vegdist(trait_tar_bin_1, method = "chisq", binary = TRUE)
+distance1 = vegdist(trait_tar_bin_1, method = "jaccard", binary = TRUE)
 
-k2 <- kmeans(trait_tar1, centers = 100, nstart = 25)
-str(k2)
+# chisq = avgdist(distance, dmethod = "chisq",sample = 10000)
+
+nguilds = seq(2, nrow(trait_tar_bin_1), 2)
+cluster = hclust(distance, method="ward")
+plot(cluster)
+
+# Two clusters (0.08827973)
+v                      = cutree(cluster,k=2)
+genome2guild           = data.frame(guild = factor(v))
+rownames(genome2guild) = names(v)
+adonis_2               = vegan::adonis2(distance ~ guild, data = genome2guild, perm = 1)
+adonis_2$R2
+
+# Four clusters (0.1836519)
+v                      = cutree(cluster,k=4)
+genome2guild           = data.frame(guild = factor(v))
+rownames(genome2guild) = names(v)
+adonis_4               = vegan::adonis2(distance ~ guild, data = genome2guild, perm = 1)
+adonis_4$R2
+
+# 50 clusters (0.5726445)
+v                      = cutree(cluster,k=50)
+genome2guild           = data.frame(guild = factor(v))
+rownames(genome2guild) = names(v)
+adonis_50              = vegan::adonis2(distance ~ guild, data = genome2guild, perm = 1)
+adonis_50$R2
+
+# 100 clusters (0.7078275)
+v                      = cutree(cluster,k=100)
+genome2guild           = data.frame(guild = factor(v))
+rownames(genome2guild) = names(v)
+adonis_100             = vegan::adonis2(distance ~ guild, data = genome2guild, perm = 1)
+adonis_100$R2
+
+# 120 clusters (0.7462432)
+v                      = cutree(cluster,k=120)
+genome2guild           = data.frame(guild = factor(v))
+rownames(genome2guild) = names(v)
+adonis_120             = vegan::adonis2(distance ~ guild, data = genome2guild, perm = 1)
+adonis_120$R2
+
+# 150 clusters (0.7945925)
+v                      = cutree(cluster,k=150)
+genome2guild           = data.frame(guild = factor(v))
+rownames(genome2guild) = names(v)
+adonis_150             = vegan::adonis2(distance ~ guild, data = genome2guild, perm = 1)
+adonis_150$R2
+
+# Raw plot
+
+guild_plot <- data.frame(guild_N = c (2,4,50,100,120,150), 
+              R2 = c(0.08827973,0.1836519,0.5726445,0.7078275,0.7462432,0.7945925))
+
+ggplot(data=guild_plot,aes(x=guild_N,y=R2)) + geom_line()
+
+# Working with 100 guilds
+
+mat_trait_f     = as.data.frame(cbind(genome2guild,trait_tar))  
+trait_tar_bin_f = as.data.frame(cbind(genome2guild,trait_tar_bin_2))
+
+temp = mat_trait_f %>% group_by(guild) %>% summarize_if(is.numeric, mean, na.rm=TRUE)
+
+mat = (as.matrix(temp[2:35]))
+
+heatmap(mat, Colv = NA, Rowv = NA, scale="column")
+
+my_colnames2 <- names(temp)
+
+
+
 
