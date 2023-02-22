@@ -132,19 +132,131 @@ ggplot(data=mat_r2_c,aes(x=nguilds,y=my_vec)) + geom_line() +
 v                      = cutree(clusterg,k=100)
 genome2guild           = data.frame(guild = factor(v))
 rownames(genome2guild) = names(v)
-mat_trait_f     = as.data.frame(cbind(genome2guild,trait_tar))  
-trait_tar_bin_f = as.data.frame(cbind(genome2guild,trait_tar_bin_2))
+mat_trait_f     = as.data.frame(cbind(genome2guild,mat_ori$id,trait_tar))  
 temp = mat_trait_f %>% group_by(guild) %>% summarize_if(is.numeric, mean, na.rm=TRUE)
 mat = (as.matrix(temp[2:35]))
 heatmap(mat, Colv = NA, Rowv = NA, scale="column")
 my_colnames2 <- names(temp)
+
+# Preliminary arrangements
+a = as.data.frame(colnames(temp))
+resource_acquisition = rowSums(temp %>% select(2:22), na.rm=FALSE)
+stress_tolerance     = rowSums(temp %>% select(23:27), na.rm=FALSE)
+resource_use         = rowSums(temp %>% select(28:35), na.rm=FALSE)
+
+temp1  = as.data.frame(cbind(temp$guild,resource_acquisition,
+                             resource_use,
+                             stress_tolerance))
+
+library(fmsb)
+
+temp2  = as.data.frame(rbind(rep(max(resource_acquisition),3),
+                             rep(min(resource_use),3),temp1[2:4]))
+temp3  = as.data.frame(temp2[c(1,2,3,4),])
+radarchart(temp2)
+
+temp4  = as.data.frame(temp2[c(1,2,8),])
+radarchart(temp4)
+
+###############################################################################
+
+# Guild 6 (invest the most in resource acquisition)
+
+guild_6 = mat_trait_f %>% filter(guild == 6)
+
+a = as.data.frame(colnames(guild_6))
+resource_acquisition1 = rowSums(guild_6 %>% select(3:23), na.rm=FALSE)
+stress_tolerance1     = rowSums(guild_6 %>% select(24:28), na.rm=FALSE)
+resource_use1         = rowSums(guild_6 %>% select(29:36), na.rm=FALSE)
+
+temp1a  = as.data.frame(cbind(guild_6$guild,resource_acquisition1,
+                             resource_use1,
+                             stress_tolerance1))
+temp2a  = as.data.frame(rbind(rep(max(resource_acquisition),3),
+                             rep(min(resource_use),3),temp1a[2:4]))
+radarchart(temp2a)
+
+# Stress tolerance
+guild_6st = guild_6 %>% select(24:28)
+colnames(guild_6st) <- c("EPS.biosynthesis(G)","solute.transport",
+                         "solute.synthesis","EPS.biosynthesis(S)",
+                         "osmotic.sensors")
+temp6st   = as.data.frame(rbind(rep(max(guild_6st),3),
+                              rep(min(guild_6st),3),guild_6st))
+radarchart(temp6st)
+
+# Resource Acquisition
+guild_6ra = guild_6 %>% select(3:23)
+colnames(guild_6ra) <- c("1","2","3","4","5","6","7","8","9","10","11","12",
+                         "13","14","15","16","16","18","19","20","21")
+temp6ra   = as.data.frame(rbind(rep(max(guild_6ra),3),
+                                rep(min(guild_6ra),3),guild_6ra))
+radarchart(temp6ra)
+
+###############################################################################
+
+# library(GPareto) # Pending
+# set.seed(25468)
+
+
+# Guilds:
+
+guild_1 = mat_trait_f %>% filter(guild == 1)
+guild_2 = mat_trait_f %>% filter(guild == 2)
+guild_3 = mat_trait_f %>% filter(guild == 3)
+guild_4 = mat_trait_f %>% filter(guild == 4)
+guild_5 = mat_trait_f %>% filter(guild == 5)
+guild_6 = mat_trait_f %>% filter(guild == 6)
+guild_7 = mat_trait_f %>% filter(guild == 7)
+guild_8 = mat_trait_f %>% filter(guild == 8)
+guild_9 = mat_trait_f %>% filter(guild == 9)
+guild_10 = mat_trait_f %>% filter(guild == 10)
+guild_11 = mat_trait_f %>% filter(guild == 11)
+guild_12 = mat_trait_f %>% filter(guild == 12)
+guild_13 = mat_trait_f %>% filter(guild == 13)
+guild_14 = mat_trait_f %>% filter(guild == 14)
+guild_15 = mat_trait_f %>% filter(guild == 15)
+guild_16 = mat_trait_f %>% filter(guild == 16)
+guild_17 = mat_trait_f %>% filter(guild == 17)
+guild_18 = mat_trait_f %>% filter(guild == 18)
+guild_19 = mat_trait_f %>% filter(guild == 19)
+guild_20 = mat_trait_f %>% filter(guild == 20)
+guild_21 = mat_trait_f %>% filter(guild == 21)
+guild_22 = mat_trait_f %>% filter(guild == 22)
+guild_23 = mat_trait_f %>% filter(guild == 23)
+guild_24 = mat_trait_f %>% filter(guild == 24)
+guild_25 = mat_trait_f %>% filter(guild == 25)
+guild_26 = mat_trait_f %>% filter(guild == 26)
+guild_27 = mat_trait_f %>% filter(guild == 27)
+guild_28 = mat_trait_f %>% filter(guild == 28)
+guild_29 = mat_trait_f %>% filter(guild == 29)
+guild_30 = mat_trait_f %>% filter(guild == 30)
+guild_31 = mat_trait_f %>% filter(guild == 31)
+guild_32 = mat_trait_f %>% filter(guild == 32)
+guild_33 = mat_trait_f %>% filter(guild == 33)
+guild_34 = mat_trait_f %>% filter(guild == 34)
+guild_35 = mat_trait_f %>% filter(guild == 35)
+guild_36 = mat_trait_f %>% filter(guild == 36)
+guild_37 = mat_trait_f %>% filter(guild == 37)
+guild_38 = mat_trait_f %>% filter(guild == 38)
+guild_39 = mat_trait_f %>% filter(guild == 39)
+guild_40 = mat_trait_f %>% filter(guild == 40)
+guild_41 = mat_trait_f %>% filter(guild == 41)
+guild_42 = mat_trait_f %>% filter(guild == 42)
+guild_43 = mat_trait_f %>% filter(guild == 43)
+guild_44 = mat_trait_f %>% filter(guild == 44)
+guild_45 = mat_trait_f %>% filter(guild == 45)
+guild_46 = mat_trait_f %>% filter(guild == 46)
+guild_47 = mat_trait_f %>% filter(guild == 47)
+guild_48 = mat_trait_f %>% filter(guild == 48)
+guild_49 = mat_trait_f %>% filter(guild == 49)
+guild_50 = mat_trait_f %>% filter(guild == 50)
 
 # Working with 200 guilds
 v                      = cutree(clusterg,k=200)
 genome2guild           = data.frame(guild = factor(v))
 rownames(genome2guild) = names(v)
 mat_trait_f     = as.data.frame(cbind(genome2guild,trait_tar))  
-trait_tar_bin_f = as.data.frame(cbind(genome2guild,trait_tar_bin_2))
 temp = mat_trait_f %>% group_by(guild) %>% summarize_if(is.numeric, mean, na.rm=TRUE)
 mat = (as.matrix(temp[2:35]))
 heatmap(mat, Colv = NA, Rowv = NA, scale="column")
