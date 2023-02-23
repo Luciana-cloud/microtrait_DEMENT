@@ -91,8 +91,8 @@ ggplot(data=mat_r2,aes(x=nguilds,y=my_vec)) + geom_line() +
        geom_hline(yintercept=0.70782750, linetype="dashed", color = "red") + 
        geom_vline(xintercept = 100, linetype="dashed", color = "red")
 
-# Working with 100 guilds
-v                      = cutree(cluster,k=100)
+# Working with 200 guilds
+v                      = cutree(cluster,k=200)
 genome2guild           = data.frame(guild = factor(v))
 rownames(genome2guild) = names(v)
 mat_trait_f     = as.data.frame(cbind(genome2guild,trait_tar))  
@@ -128,35 +128,115 @@ ggplot(data=mat_r2_c,aes(x=nguilds,y=my_vec)) + geom_line() +
   geom_hline(yintercept=0.7023060, linetype="dashed", color = "red") + 
   geom_vline(xintercept = 200, linetype="dashed", color = "red")
 
-# Working with 100 guilds
-v                      = cutree(clusterg,k=100)
+# Working with 200 guilds
+v                      = cutree(clusterg,k=200)
 genome2guild           = data.frame(guild = factor(v))
 rownames(genome2guild) = names(v)
 mat_trait_f     = as.data.frame(cbind(genome2guild,mat_ori$id,trait_tar))  
 temp = mat_trait_f %>% group_by(guild) %>% summarize_if(is.numeric, mean, na.rm=TRUE)
 mat = (as.matrix(temp[2:35]))
-heatmap(mat, Colv = NA, Rowv = NA, scale="column")
-my_colnames2 <- names(temp)
+heatmap(mat)
+# heatmap(mat, Colv = NA, Rowv = NA, scale="column")
+# my_colnames2 <- names(temp)
 
 # Preliminary arrangements
 a = as.data.frame(colnames(temp))
-resource_acquisition = rowSums(temp %>% select(2:22), na.rm=FALSE)
-stress_tolerance     = rowSums(temp %>% select(23:27), na.rm=FALSE)
-resource_use         = rowSums(temp %>% select(28:35), na.rm=FALSE)
+r_acqui = rowSums(temp %>% select(2:22), na.rm=FALSE)
+s_tol   = rowSums(temp %>% select(23:27), na.rm=FALSE)
+r_use   = rowSums(temp %>% select(28:35), na.rm=FALSE)
 
-temp1  = as.data.frame(cbind(temp$guild,resource_acquisition,
-                             resource_use,
-                             stress_tolerance))
+temp1  = as.data.frame(cbind(temp$guild,r_acqui,
+                             s_tol,
+                             r_use))
+mat1 = (as.matrix(temp1[2:4]))
+heatmap(mat1)
 
 library(fmsb)
 
-temp2  = as.data.frame(rbind(rep(max(resource_acquisition),3),
-                             rep(min(resource_use),3),temp1[2:4]))
+temp2  = as.data.frame(rbind(rep(max(r_acqui),3),
+                             rep(min(r_use),3),temp1[2:4]))
 temp3  = as.data.frame(temp2[c(1,2,3,4),])
 radarchart(temp2)
 
 temp4  = as.data.frame(temp2[c(1,2,8),])
 radarchart(temp4)
+
+par(mfrow=c(1,3))
+plot(temp1$r_acqui,temp1$s_tol)
+plot(temp1$s_tol,temp1$r_use)
+plot(temp1$r_acqui,temp1$r_use)
+par(mfrow=c(1,1))
+
+resource_acquisition1 = temp %>% select(2:22)
+colnames(resource_acquisition1) <- c("1","2","3","4","5","6","7","8","9","10","11","12",
+                         "13","14","15","16","16","18","19","20","21")
+RA_total   = as.data.frame(rbind(rep(max(resource_acquisition1),3),
+                                rep(min(resource_acquisition1),3),resource_acquisition1))
+radarchart(RA_total)
+
+
+stress_tolerance1 = temp %>% select(24:27)
+colnames(stress_tolerance1) <- c("solute.transport",
+                         "solute.synthesis","EPS.biosynthesis(S)",
+                         "osmotic.sensors")
+st_total   = as.data.frame(rbind(rep(max(stress_tolerance1),3),
+                                rep(min(stress_tolerance1),3),stress_tolerance1))
+radarchart(st_total)
+
+###############################################################################
+
+# Working with 3 guilds
+v                      = cutree(clusterg,k=3)
+genome2guild           = data.frame(guild = factor(v))
+rownames(genome2guild) = names(v)
+mat_trait_f     = as.data.frame(cbind(genome2guild,mat_ori$id,trait_tar))  
+temp = mat_trait_f %>% group_by(guild) %>% summarize_if(is.numeric, mean, na.rm=TRUE)
+mat = (as.matrix(temp[2:35]))
+heatmap(mat)
+# heatmap(mat, Colv = NA, Rowv = NA, scale="column")
+# my_colnames2 <- names(temp)
+
+# Preliminary arrangements
+a = as.data.frame(colnames(temp))
+r_acqui = rowSums(temp %>% select(2:22), na.rm=FALSE)
+s_tol   = rowSums(temp %>% select(23:27), na.rm=FALSE)
+r_use   = rowSums(temp %>% select(28:35), na.rm=FALSE)
+
+temp1  = as.data.frame(cbind(temp$guild,r_acqui,
+                             s_tol,
+                             r_use))
+mat1 = (as.matrix(temp1[2:4]))
+heatmap(mat1)
+
+library(fmsb)
+
+temp2  = as.data.frame(rbind(rep(max(r_acqui),3),
+                             rep(min(r_use),3),temp1[2:4]))
+radarchart(temp2)
+
+
+par(mfrow=c(1,3))
+plot(temp1$r_acqui,temp1$s_tol)
+plot(temp1$s_tol,temp1$r_use)
+plot(temp1$r_acqui,temp1$r_use)
+par(mfrow=c(1,1))
+
+resource_acquisition1 = temp %>% select(2:22)
+colnames(resource_acquisition1) <- c("1","2","3","4","5","6","7","8","9","10","11","12",
+                                     "13","14","15","16","16","18","19","20","21")
+RA_total   = as.data.frame(rbind(rep(max(resource_acquisition1),3),
+                                 rep(min(resource_acquisition1),3),resource_acquisition1))
+radarchart(RA_total)
+
+
+stress_tolerance1 = temp %>% select(24:27)
+colnames(stress_tolerance1) <- c("solute.transport",
+                                 "solute.synthesis","EPS.biosynthesis(S)",
+                                 "osmotic.sensors")
+st_total   = as.data.frame(rbind(rep(max(stress_tolerance1),3),
+                                 rep(min(stress_tolerance1),3),stress_tolerance1))
+radarchart(st_total)
+
 
 ###############################################################################
 
