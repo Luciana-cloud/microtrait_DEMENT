@@ -341,7 +341,7 @@ temp = mat_trait_f %>% group_by(guild) %>% summarize_if(is.numeric, mean, na.rm=
 mat = (as.matrix(temp[2:35]))
 heatmap(mat, Colv = NA, Rowv = NA, scale="column")
 my_colnames2 <- names(temp)
-
+heatmap(mat)
 ##################################################################v
 
 
