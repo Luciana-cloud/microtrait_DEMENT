@@ -156,6 +156,104 @@ library(ggvegan)
 
 #install.packages("remotes")
 #remotes::install_github("gavinsimpson/ggvegan")
+#autoplot(temp_1)
+
+# full control with fortified ordination
+###############################################################################
+fort = fortify(temp_1)
+
+# One Panel
+###############################################################################
+
+ggplot() + geom_point(data=subset(fort,Score=="sites"),
+                      mapping = aes(x=NMDS1,y=NMDS2,color =mat_trait_f$guild),
+                      alpha=0.5) + 
+           geom_segment(data=subset(fort,Score=="species"),
+                        mapping=aes(x=0,y=0,xend=NMDS1,yend=NMDS2),
+                        arrow=arrow(length=unit(0.015,"npc"),
+                                    type="closed"),
+                        colour="darkgray",
+                        linewidth=0.8) + 
+  geom_text(data=subset(fort,Score=="species"),
+            mapping=aes(label=Label,x=NMDS1*1.1,y=NMDS2*1.1)) + 
+  geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
+  geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.background=element_blank(),
+        axis.line=element_line(colour="black"))
+
+# Two Panels
+###############################################################################
+
+p1 = ggplot() + geom_point(data=subset(fort,Score=="sites"),
+                           mapping = aes(x=NMDS1,y=NMDS2),
+                           colour="black",
+                           alpha=0.5) + 
+  geom_segment(data=subset(fort,Score=="species"),
+               mapping=aes(x=0,y=0,xend=NMDS1,yend=NMDS2),
+               arrow=arrow(length=unit(0.015,"npc"),
+                           type="closed"),
+               colour="darkgray",
+               linewidth=0,
+               alpha=0) + 
+  geom_text(data=subset(fort,Score=="species"),
+            mapping=aes(label=Label,x=NMDS1*1.1,y=NMDS2*1.1),alpha=0) + 
+  geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
+  geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.background=element_blank(),
+        axis.line=element_line(colour="black"))
+
+p2 = ggplot() + geom_point(data=subset(fort,Score=="sites"),
+                           mapping = aes(x=NMDS1,y=NMDS2,color =mat_trait_f$guild),
+                           colour="black",
+                           alpha=0) + 
+  geom_segment(data=subset(fort,Score=="species"),
+               mapping=aes(x=0,y=0,xend=NMDS1,yend=NMDS2),
+               arrow=arrow(length=unit(0.015,"npc"),
+                           type="closed"),
+               colour="darkgray",
+               linewidth=0) + 
+  geom_text(data=subset(fort,Score=="species"),
+            mapping=aes(label=Label,x=NMDS1*1.1,y=NMDS2*1.1)) + 
+  geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
+  geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.background=element_blank(),
+        axis.line=element_line(colour="black")) + scale_x_continuous(limit = c(-0.25,0.25))
+
+p3 = ggplot() + geom_point(data=subset(fort,Score=="sites"),
+                           mapping = aes(x=NMDS1,y=NMDS2,color =mat_trait_f$guild),
+                           alpha=0.5) + 
+  geom_segment(data=subset(fort,Score=="species"),
+               mapping=aes(x=0,y=0,xend=NMDS1,yend=NMDS2),
+               arrow=arrow(length=unit(0.015,"npc"),
+                           type="closed"),
+               colour="darkgray",
+               linewidth=0,
+               alpha=0) + 
+  geom_text(data=subset(fort,Score=="species"),
+            mapping=aes(label=Label,x=NMDS1*1.1,y=NMDS2*1.1),alpha=0) + 
+  geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
+  geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.background=element_blank(),
+        axis.line=element_line(colour="black"))
+
+# Goodness of fit
+###############################################################################
+
+gof <- goodness(temp_1)
+plot(temp_1, type="t", main = "goodness of fit")
+points(temp_1, display="sites", cex=gof*100)
+
+
+en = envfit(temp_1, trait_tar, permutations = 999, na.rm = TRUE)
+en
 
 ###############################################################################
 # Binary plots with total values
@@ -278,3 +376,48 @@ plot(temp$Resource.Use.Chemotrophy.chemoorganoheterotrophy.aerobic.respiration.e
      ylab = "oxidative pentose phosphate pathway ",
      col = "red",pch = 15,cex.lab = 1.5)
 par(mfrow=c(1,1))
+
+###############################################################################
+# Guild 65 (invest the most in resource acquisition)
+###############################################################################
+
+guild_65 = mat_trait_f %>% filter(guild == 65)
+
+a = as.data.frame(colnames(guild_65))
+resource_acquisition1 = rowSums(guild_65 %>% select(3:23), na.rm=FALSE)
+stress_tolerance1     = rowSums(guild_65 %>% select(24:27), na.rm=FALSE)
+resource_use1         = rowSums(guild_65 %>% select(28:35), na.rm=FALSE)
+
+temp1a  = as.data.frame(cbind(guild_65$guild,resource_acquisition1,
+                              resource_use1,
+                              stress_tolerance1))
+temp2a  = as.data.frame(rbind(rep(max(resource_acquisition1),3),
+                              rep(min(resource_use1),3),temp1a[2:4]))
+radarchart(temp1a)
+
+# Stress tolerance
+###############################################################################
+guild_6st = guild_65 %>% select(24:27)
+colnames(guild_6st) <- c("solute.transport",
+                         "solute.synthesis","EPS.biosynthesis(S)",
+                         "osmotic.sensors")
+temp6st   = as.data.frame(rbind(rep(max(guild_6st),3),
+                                rep(min(guild_6st),3),guild_6st))
+radarchart(temp6st)
+
+# Resource Acquisition
+###############################################################################
+guild_6ra = guild_65 %>% select(3:23)
+colnames(guild_6ra) <- c("1","2","3","4","5","6","7","8","9","10","11","12",
+                         "13","14","15","16","16","18","19","20","21")
+temp6ra   = as.data.frame(rbind(rep(max(guild_6ra),3),
+                                rep(min(guild_6ra),3),guild_6ra))
+radarchart(temp6ra)
+
+# Resource use
+###############################################################################
+guild_6ru = guild_65 %>% select(28:35)
+colnames(guild_6ru) <- c("1","2","3","4","5","6","7","8")
+temp6ru   = as.data.frame(rbind(rep(max(guild_6ru),3),
+                                 rep(min(guild_6ru),3),guild_6ru))
+radarchart(temp6ru)
