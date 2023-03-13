@@ -240,16 +240,16 @@ radarchart(st_total)
 
 ###############################################################################
 
-# Guild 6 (invest the most in resource acquisition)
+# Guild 65 (invest the most in resource acquisition)
 
-guild_6 = mat_trait_f %>% filter(guild == 6)
+guild_65 = mat_trait_f %>% filter(guild == 65)
 
-a = as.data.frame(colnames(guild_6))
-resource_acquisition1 = rowSums(guild_6 %>% select(3:23), na.rm=FALSE)
-stress_tolerance1     = rowSums(guild_6 %>% select(24:28), na.rm=FALSE)
-resource_use1         = rowSums(guild_6 %>% select(29:36), na.rm=FALSE)
+a = as.data.frame(colnames(guild_65))
+resource_acquisition1 = rowSums(guild_65 %>% select(3:23), na.rm=FALSE)
+stress_tolerance1     = rowSums(guild_65 %>% select(24:28), na.rm=FALSE)
+resource_use1         = rowSums(guild_65 %>% select(29:36), na.rm=FALSE)
 
-temp1a  = as.data.frame(cbind(guild_6$guild,resource_acquisition1,
+temp1a  = as.data.frame(cbind(guild_65$guild,resource_acquisition1,
                              resource_use1,
                              stress_tolerance1))
 temp2a  = as.data.frame(rbind(rep(max(resource_acquisition),3),
@@ -257,7 +257,7 @@ temp2a  = as.data.frame(rbind(rep(max(resource_acquisition),3),
 radarchart(temp2a)
 
 # Stress tolerance
-guild_6st = guild_6 %>% select(24:28)
+guild_6st = guild_65 %>% select(24:28)
 colnames(guild_6st) <- c("EPS.biosynthesis(G)","solute.transport",
                          "solute.synthesis","EPS.biosynthesis(S)",
                          "osmotic.sensors")
@@ -266,7 +266,7 @@ temp6st   = as.data.frame(rbind(rep(max(guild_6st),3),
 radarchart(temp6st)
 
 # Resource Acquisition
-guild_6ra = guild_6 %>% select(3:23)
+guild_6ra = guild_65 %>% select(3:23)
 colnames(guild_6ra) <- c("1","2","3","4","5","6","7","8","9","10","11","12",
                          "13","14","15","16","16","18","19","20","21")
 temp6ra   = as.data.frame(rbind(rep(max(guild_6ra),3),
