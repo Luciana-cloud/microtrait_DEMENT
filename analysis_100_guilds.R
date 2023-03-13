@@ -128,14 +128,34 @@ nmds
 stressplot(nmds)
 nmds$points
 
-df_nor2
-
 NMDS1 <- nmds$points[,1] 
 NMDS2 <- nmds$points[,2]
 df_nor2.plot<-cbind(mat_trait_f, NMDS1, NMDS2)
 
 ggplot(data=df_nor2.plot,aes(x=NMDS1,y=NMDS2,color =guild))+geom_point(size = 4) + 
   annotate("text", x=-0.4, y=-0.6, label=paste('Stress =',round(nmds$stress,2)))
+
+###############################################################################
+# Test
+###############################################################################
+
+set.seed(2)
+colnames(trait_tar) = c("amino.sug.trans","glycosi.trans",
+                  "FOS.fayt.trans","monosac.trans","aminoac.trans",
+                  "lipid.trans","amide.trans","NH4.trans","nucleob.trans",
+                  "nucleos.trans","nucleot.trans","ribonucle.trans",
+                  "organophos.trans","peptide.trans","cellulose","chitin",
+                  "heteroman","glucan.mix","xylan","xyloglucan","protein",
+                  "sol.trans","sol.synt","EPS.synt","osmotic.sensor",
+                  "oxi.pentose","nonoxi.pentose","glyoxylate","TCA","ETC.I",
+                  "ETC.II","ETC.III","nitrite")
+temp_1 = metaMDS(trait_tar,autotransform = F,trymax = 2000)
+ordiplot(temp_1)
+ordiplot(temp_1,type = "t")
+library(ggvegan)
+
+#install.packages("remotes")
+#remotes::install_github("gavinsimpson/ggvegan")
 
 ###############################################################################
 # Binary plots with total values
