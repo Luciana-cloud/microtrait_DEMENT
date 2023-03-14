@@ -421,3 +421,51 @@ colnames(guild_6ru) <- c("1","2","3","4","5","6","7","8")
 temp6ru   = as.data.frame(rbind(rep(max(guild_6ru),3),
                                  rep(min(guild_6ru),3),guild_6ru))
 radarchart(temp6ru)
+
+###############################################################################
+# Correlation plots
+###############################################################################
+
+library(ggcorrplot)
+
+# Correlation plots - all samples
+###############################################################################
+
+colnames(trait_tar) = c("amino.sug.trans","glycosi.trans",
+                        "FOS.fayt.trans","monosac.trans","aminoac.trans",
+                        "lipid.trans","amide.trans","NH4.trans","nucleob.trans",
+                        "nucleos.trans","nucleot.trans","ribonucle.trans",
+                        "organophos.trans","peptide.trans","cellulose","chitin",
+                        "heteroman","glucan.mix","xylan","xyloglucan","protein",
+                        "sol.trans","sol.synt","EPS.synt","osmotic.sensor",
+                        "oxi.pentose","nonoxi.pentose","glyoxylate","TCA","ETC.I",
+                        "ETC.II","ETC.III","nitrite")
+corr <- round(cor(trait_tar), 1)
+p.mat <- cor_pmat(trait_tar)
+ggcorrplot(corr)
+# using hierarchical clustering
+ggcorrplot(corr, hc.order = TRUE, outline.col = "white")
+# Leave blank on no significant coefficient
+ggcorrplot(corr, p.mat = p.mat, hc.order = TRUE,
+           type = "lower", insig = "blank")
+
+# Correlation plots - 100 guilds
+###############################################################################
+
+temp_100 = temp %>% select(2:34)
+colnames(temp_100) = c("amino.sug.trans","glycosi.trans",
+                        "FOS.fayt.trans","monosac.trans","aminoac.trans",
+                        "lipid.trans","amide.trans","NH4.trans","nucleob.trans",
+                        "nucleos.trans","nucleot.trans","ribonucle.trans",
+                        "organophos.trans","peptide.trans","cellulose","chitin",
+                        "heteroman","glucan.mix","xylan","xyloglucan","protein",
+                        "sol.trans","sol.synt","EPS.synt","osmotic.sensor",
+                        "oxi.pentose","nonoxi.pentose","glyoxylate","TCA","ETC.I",
+                        "ETC.II","ETC.III","nitrite")
+corr100 <- round(cor(temp_100), 1)
+p.mat100 <- cor_pmat(temp_100)
+ggcorrplot(corr100)
+ggcorrplot(corr100, hc.order = TRUE, outline.col = "white")
+# Leave blank on no significant coefficient
+ggcorrplot(corr100, p.mat = p.mat100, hc.order = TRUE,
+           type = "lower", insig = "blank")
