@@ -47,8 +47,14 @@ boxplot(trait_st%>% select(13:16,28),ylab="gene cost",
 boxplot(trait_st%>% select(5:7),ylab="gene cost",
         names=c("heat shock proteins","ATP proteases","transcription factor"))
 
+# Resource - Use
+boxplot(mat_trait%>% select(93:99,125),ylab="gene cost",
+        names=c("oxi.pentose","nonoxi.pentose","glyoxylate.cycle",
+                "TCA.cycle","ETC.complex.I","ETC.complex.II","ETC.complex.III",
+                "nitrite.oxidation"))
+
 ###############################################################################
-# Targeted traits
+# Targeted traits for DEMENT modeling
 ###############################################################################
 
 trait_tar = mat_trait %>% select(4,6:8,18,23:25,31:35,38,43:49,174:177,93:99,125) # 
@@ -93,6 +99,27 @@ ggplot(data=mat_r2_c,aes(x=nguilds,y=my_vec)) + geom_line() +
   theme(text = element_text(size = 20)) + 
   geom_hline(yintercept=0.8424206, linetype="dashed", color = "red") + 
   geom_vline(xintercept = 100, linetype="dashed", color = "red")
+
+###############################################################################
+# Working with 5 guilds
+###############################################################################
+
+v                      = cutree(clusterg,k=6) # Clusters
+genome2guild_5         = data.frame(guild = factor(v))
+rownames(genome2guild_5) = names(v)
+mat_trait_5     = as.data.frame(cbind(genome2guild_5,mat_ori$id,trait_tar))  
+temp = mat_trait_5 %>% group_by(guild) %>% summarize_if(is.numeric, mean, na.rm=TRUE)
+mat = (as.matrix(temp[2:34]))
+a   = as.data.frame(colnames(mat))
+colnames(mat) = c("amino.sug.trans","glycosi.trans",
+                  "FOS.fayt.trans","monosac.trans","aminoac.trans",
+                  "lipid.trans","amide.trans","NH4.trans","nucleob.trans",
+                  "nucleos.trans","nucleot.trans","ribonucle.trans",
+                  "organophos.trans","peptide.trans","cellulose","chitin",
+                  "heteroman","glucan.mix","xylan","xyloglucan","protein",
+                  "sol.trans","sol.synt","EPS.synt","osmotic.sensor",
+                  "oxi.pentose","nonoxi.pentose","glyoxylate","TCA","ETC.I",
+                  "ETC.II","ETC.III","nitrite")
 
 ###############################################################################
 # Working with 100 guilds
@@ -166,7 +193,7 @@ fort = fortify(temp_1)
 ###############################################################################
 
 ggplot() + geom_point(data=subset(fort,Score=="sites"),
-                      mapping = aes(x=NMDS1,y=NMDS2,color =mat_trait_f$guild),
+                      mapping = aes(x=NMDS1,y=NMDS2,color =mat_trait_5$guild),
                       alpha=0.5) + 
            geom_segment(data=subset(fort,Score=="species"),
                         mapping=aes(x=0,y=0,xend=NMDS1,yend=NMDS2),
@@ -181,7 +208,7 @@ ggplot() + geom_point(data=subset(fort,Score=="sites"),
   theme(panel.grid.major=element_blank(),
         panel.grid.minor=element_blank(),
         panel.background=element_blank(),
-        axis.line=element_line(colour="black"))
+        axis.line=element_line(colour="black")) + scale_x_continuous(limit = c(-0.2,0.25))
 
 # Two Panels
 ###############################################################################
@@ -207,7 +234,7 @@ p1 = ggplot() + geom_point(data=subset(fort,Score=="sites"),
         axis.line=element_line(colour="black"))
 
 p2 = ggplot() + geom_point(data=subset(fort,Score=="sites"),
-                           mapping = aes(x=NMDS1,y=NMDS2,color =mat_trait_f$guild),
+                           mapping = aes(x=NMDS1,y=NMDS2,color =mat_trait_5$guild),
                            colour="black",
                            alpha=0) + 
   geom_segment(data=subset(fort,Score=="species"),
@@ -226,7 +253,7 @@ p2 = ggplot() + geom_point(data=subset(fort,Score=="sites"),
         axis.line=element_line(colour="black")) + scale_x_continuous(limit = c(-0.25,0.25))
 
 p3 = ggplot() + geom_point(data=subset(fort,Score=="sites"),
-                           mapping = aes(x=NMDS1,y=NMDS2,color =mat_trait_f$guild),
+                           mapping = aes(x=NMDS1,y=NMDS2,color =mat_trait_5$guild),
                            alpha=0.5) + 
   geom_segment(data=subset(fort,Score=="species"),
                mapping=aes(x=0,y=0,xend=NMDS1,yend=NMDS2),
@@ -242,7 +269,7 @@ p3 = ggplot() + geom_point(data=subset(fort,Score=="sites"),
   theme(panel.grid.major=element_blank(),
         panel.grid.minor=element_blank(),
         panel.background=element_blank(),
-        axis.line=element_line(colour="black"))
+        axis.line=element_line(colour="black")) + scale_x_continuous(limit = c(-0.25,0.25))
 
 # Goodness of fit
 ###############################################################################
@@ -469,3 +496,49 @@ ggcorrplot(corr100, hc.order = TRUE, outline.col = "white")
 # Leave blank on no significant coefficient
 ggcorrplot(corr100, p.mat = p.mat100, hc.order = TRUE,
            type = "lower", insig = "blank")
+
+###############################################################################
+# CAZymes-related traits
+###############################################################################
+
+trait_tarCAZ = mat_trait %>% select(6,8,43:48) # 
+genomes      = as.list(mat_trait[1])
+test         = trait_tar %>% summarize_if(is.numeric, sum, na.rm=TRUE)
+names(trait_tarCAZ)
+colnames(trait_tarCAZ) = c("glycoside.trans","monosac.trans","cellulose","chitin",
+                           "heteromannan","mixed.glucan","xylan","xyloglucan")
+boxplot(trait_tarCAZ,ylab="gene cost")
+
+###############################################################################
+# Forming functional guilds 
+###############################################################################
+
+distanceg  = vegdist(trait_tarCAZ, method = "bray", binary = FALSE)
+clusterg   = hclust(distanceg, method="ward")
+nguilds    = seq(2, nrow(trait_tar), 2)
+plot(clusterg)
+
+# Similiarity within guilds
+###############################################################################
+my_vec = c()
+
+for(i in nguilds) {
+  v                      = cutree(clusterg,k=i)
+  genome2guild           = data.frame(guild = factor(v))
+  rownames(genome2guild) = names(v)
+  adonis_2               = vegan::adonis2(distanceg ~ guild, data = genome2guild, perm = 1)
+  temp                   = adonis_2$R2
+  temp_1                 = temp[1]
+  my_out                 = temp_1        
+  my_vec <- c(my_vec, my_out)    
+}
+
+# Plotting
+mat_r2_c  = as.data.frame(cbind(nguilds,my_vec))
+ggplot(data=mat_r2_c,aes(x=nguilds,y=my_vec)) + geom_line() +
+  xlab("# of guilds") + ylab("Similarity within guilds") +
+  theme(text = element_text(size = 20)) + 
+  geom_hline(yintercept=0.9200740, linetype="dashed", color = "red") + 
+  geom_vline(xintercept = 100, linetype="dashed", color = "red")
+
+barplot(c(29,67,4),ylab="Number of guilds",names.arg=c("Grass","Both","Shrub"))
