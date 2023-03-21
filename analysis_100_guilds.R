@@ -5,6 +5,7 @@
 library(dplyr)
 library(tidyverse)
 library(ggplot2)
+library(stats)
 
 ###############################################################################
 # Calling data #
@@ -12,6 +13,12 @@ library(ggplot2)
 
 mat_ori    = read.csv("C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/litter_mags_trait_matrixatgranularity.csv",dec=".")
 gen_size   = read.delim("C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/litter_mags_metadata.txt",dec=".") 
+
+# Erase weird MAGs, which were found in preliminary analysis: 116, 175
+###############################################################################
+
+mat_ori    = mat_ori[-c(116,175),] 
+gen_size   = gen_size[-c(116,175),] 
 
 ###############################################################################
 # Normalized data
@@ -28,8 +35,9 @@ trait_st     = mat_trait %>% select(1,162:190) # stress related traits
 ###############################################################################
 
 # complex compounds
-boxplot(trait_sd%>% select(2:7),ylab="gene cost",
-        names=c("cellulose","chitin", "heteromannan", "linkage-glucan", "xylan", "xyloglucan"))
+boxplot(trait_sd%>% select(2:7,8),ylab="gene cost",
+        names=c("cellulose","chitin", "heteromannan", "linkage-glucan", "xylan",
+                "xyloglucan","protein"))
 # protein + complex compounds
 boxplot(trait_sd%>% select(2,6,8),ylab="gene cost",
         names=c("cellulose","xylan","protein"))
@@ -97,14 +105,72 @@ mat_r2_c  = as.data.frame(cbind(nguilds,my_vec))
 ggplot(data=mat_r2_c,aes(x=nguilds,y=my_vec)) + geom_line() +
   xlab("# of guilds") + ylab("Similarity within guilds") +
   theme(text = element_text(size = 20)) + 
-  geom_hline(yintercept=0.8424206, linetype="dashed", color = "red") + 
+  geom_hline(yintercept=0.8349532, linetype="dashed", color = "red") + 
   geom_vline(xintercept = 100, linetype="dashed", color = "red")
 
 ###############################################################################
-# Working with 5 guilds
+# Finding the optimal number of guilds
+# https://www.r-bloggers.com/2019/01/10-tips-for-choosing-the-optimal-number-of-clusters/
+# https://r-tastic.co.uk/post/optimal-number-of-clusters/
 ###############################################################################
 
-v                      = cutree(clusterg,k=6) # Clusters
+# Manual Test 
+# Silhouette width : average dissimilarity between and object and all other 
+# objects within a cluster to which it belongs
+# https://www.youtube.com/watch?v=ezn6bFz-Phk&t=2s (19:00)
+###############################################################################
+clusterg_2 = clusterg
+Si = numeric(nrow(trait_tar))
+for (k in 2:(nrow(trait_tar) - 1))
+{
+  sil = silhouette(cutree(clusterg_2,k=k),distanceg)
+  Si[k] = summary(sil)$avg.width
+}
+
+k.best = which.max(Si)
+plot(1:nrow(trait_tar),Si,type="h",main="Silhouette-optimal number of clusters",
+     xlab = "Number of clusters",ylab = "Average silhouette width")
+axis(1,k.best,paste("optimum",k.best,sep="\n"),col="red",font=2,col.axis="red")
+points(k.best,max(Si),pch=16,col="red",cex=1.5)
+
+dend = as.dendrogram(clusterg_2)
+heatmap(as.matrix(distanceg),Rowv = dend, symm = T, margin = c(3,3))
+
+or = tabasco(trait_tar, scale="log",dend)
+or = tabasco(trait_tar,dend)
+
+# CALINSKY CRITERION
+###############################################################################
+cal_fit2 <- cascadeKM(trait_tar, 1, 10, iter = 1000)
+plot(cal_fit2, sortg = TRUE, grpmts.plot = TRUE)
+calinski.best2 <- as.numeric(which.max(cal_fit2$results[2,]))
+cat("Calinski criterion optimal number of clusters:", calinski.best2, "\n")
+
+# Elbow method
+###############################################################################
+library(factoextra)
+# install.packages("NbClust")
+library(NbClust)
+
+fviz_nbclust(trait_tar, kmeans, method = "wss", k.max = 10) + 
+  theme_minimal() + ggtitle("the Elbow Method")
+
+# Gap Statistic
+###############################################################################
+library(cluster)
+gap_stat <- clusGap(trait_tar, kmeans, 100, B = 100, verbose = interactive())
+fviz_gap_stat(gap_stat) + theme_minimal() + ggtitle("fviz_gap_stat: Gap Statistic")
+
+# silhouette
+###############################################################################
+fviz_nbclust(trait_tar, kmeans, method = "silhouette", k.max = 100) + 
+  theme_minimal() + ggtitle("The Silhouette Plot")
+
+###############################################################################
+# Working with 3 guilds
+###############################################################################
+
+v                      = cutree(clusterg,k=3) # Clusters
 genome2guild_5         = data.frame(guild = factor(v))
 rownames(genome2guild_5) = names(v)
 mat_trait_5     = as.data.frame(cbind(genome2guild_5,mat_ori$id,trait_tar))  
@@ -120,6 +186,140 @@ colnames(mat) = c("amino.sug.trans","glycosi.trans",
                   "sol.trans","sol.synt","EPS.synt","osmotic.sensor",
                   "oxi.pentose","nonoxi.pentose","glyoxylate","TCA","ETC.I",
                   "ETC.II","ETC.III","nitrite")
+
+# Ordination
+###############################################################################
+set.seed(2)
+colnames(trait_tar) = c("amino.sug.trans","glycosi.trans",
+                        "FOS.fayt.trans","monosac.trans","aminoac.trans",
+                        "lipid.trans","amide.trans","NH4.trans","nucleob.trans",
+                        "nucleos.trans","nucleot.trans","ribonucle.trans",
+                        "organophos.trans","peptide.trans","cellulose","chitin",
+                        "heteroman","glucan.mix","xylan","xyloglucan","protein",
+                        "sol.trans","sol.synt","EPS.synt","osmotic.sensor",
+                        "oxi.pentose","nonoxi.pentose","glyoxylate","TCA","ETC.I",
+                        "ETC.II","ETC.III","nitrite")
+temp_1 = metaMDS(trait_tar,autotransform = F,trymax = 2000)
+ordiplot(temp_1)
+ordiplot(temp_1,type = "t")
+library(ggvegan)
+
+# One Panel
+###############################################################################
+fort = fortify(temp_1)
+
+ggplot() + geom_point(data=subset(fort,Score=="sites"),
+                      mapping = aes(x=NMDS1,y=NMDS2,color =mat_trait_5$guild,size = 5),
+                      alpha=0.5) + 
+  geom_segment(data=subset(fort,Score=="species"),
+               mapping=aes(x=0,y=0,xend=NMDS1,yend=NMDS2),
+               arrow=arrow(length=unit(0.015,"npc"),
+                           type="closed"),
+               colour="darkgray",
+               linewidth=0.8) + 
+  geom_text(data=subset(fort,Score=="species"),
+            mapping=aes(label=Label,x=NMDS1*1.1,y=NMDS2*1.1)) + 
+  geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
+  geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.background=element_blank(),
+        axis.line=element_line(colour="black")) + 
+  annotate("text", x=-1, y=-1, label=paste('Stress =',round(nmds$stress,2)))
+
+# Substrate
+###############################################################################
+substrate = as.data.frame(substring(mat_ori$id,1,1)) 
+colnames(substrate) = c("subst")
+
+ggplot() + geom_point(data=subset(fort,Score=="sites"),
+                      mapping = aes(x=NMDS1,y=NMDS2,color =mat_trait_5$guild,
+                                    shape = substrate$subst,size = 5),alpha=0.5) + 
+  geom_segment(data=subset(fort,Score=="species"),
+               mapping=aes(x=0,y=0,xend=NMDS1,yend=NMDS2),
+               arrow=arrow(length=unit(0.015,"npc"),
+                           type="closed"),
+               colour="darkgray",
+               linewidth=0.8) + 
+  geom_text(data=subset(fort,Score=="species"),
+            mapping=aes(label=Label,x=NMDS1*1.1,y=NMDS2*1.1)) + 
+  geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
+  geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.background=element_blank(),
+        axis.line=element_line(colour="black")) + 
+  annotate("text", x=-1, y=-1, label=paste('Stress =',round(nmds$stress,2)))
+
+# Other codes
+###############################################################################
+other = as.data.frame(substring(mat_ori$id,20)) 
+colnames(other) = c("other")
+other = other %>% mutate(other = replace(other,other == ".orig","orig"))
+other = other %>% mutate(other = replace(other,other == ".permissive","permissive"))
+other = other %>% mutate(other = replace(other,other == ".strict","strict"))
+
+ggplot() + geom_point(data=subset(fort,Score=="sites"),
+                      mapping = aes(x=NMDS1,y=NMDS2,color =mat_trait_5$guild,
+                                    shape = other$other,size = 5),alpha=0.5) + 
+  geom_segment(data=subset(fort,Score=="species"),
+               mapping=aes(x=0,y=0,xend=NMDS1,yend=NMDS2),
+               arrow=arrow(length=unit(0.015,"npc"),
+                           type="closed"),
+               colour="darkgray",
+               linewidth=0.8) + 
+  geom_text(data=subset(fort,Score=="species"),
+            mapping=aes(label=Label,x=NMDS1*1.1,y=NMDS2*1.1)) + 
+  geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
+  geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.background=element_blank(),
+        axis.line=element_line(colour="black")) + 
+  annotate("text", x=-1, y=-1, label=paste('Stress =',round(nmds$stress,2)))
+
+# Spider plots for YAS framework traits
+###############################################################################
+b   = as.data.frame(colnames(temp)) # extract columns to extract the data for each category
+r_acqui = rowSums(temp %>% select(2:22), na.rm=FALSE)
+s_tol   = rowSums(temp %>% select(23:26), na.rm=FALSE)
+r_use   = rowSums(temp %>% select(27:34), na.rm=FALSE)
+
+library(fmsb)
+
+temp1  = as.data.frame(cbind(temp$guild,r_acqui,s_tol,r_use))
+total  = rowSums(temp1 %>% select(2:4), na.rm=FALSE)
+temp2  = as.data.frame(rbind(rep(max(total),3),
+                             rep(min(r_use),3),temp1[2:4]))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+radarchart(temp2) # Spider plots using 100 guilds and total costs
+
+temp1a  = as.data.frame(cbind(temp$guild,r_acqui/21,s_tol/4,r_use/8))
+totala  = rowSums(temp1 %>% select(2:4), na.rm=FALSE)
+temp2a  = as.data.frame(rbind(rep(max(temp1a$V2),3),
+                              rep(min(temp1a$V4),3),temp1a[2:4]))
+colnames(temp2a) = c("Resource Acquisition","Stress Tolerance",
+                     "Resource Use")
+radarchart(temp2a) # Spider plots using 100 guilds and costs per trait
+
+# Binary plots scaled by trait number
+###############################################################################
+r_acqui1 = rowSums(temp %>% select(2:22), na.rm=FALSE)/21
+s_tol1   = rowSums(temp %>% select(23:26), na.rm=FALSE)/4
+r_use1   = rowSums(temp %>% select(27:34), na.rm=FALSE)/8
+
+par(mfrow=c(1,3))
+plot(r_acqui1,s_tol1,xlab = "Resource Acquisition", ylab = "Stress Tolerance",
+     col = "red",pch = 15,cex.lab = 1.5,cex = 3)
+plot(s_tol1,r_use1,xlab = "Stress Tolerance", ylab = "Resource Use",
+     col = "red",pch = 15,cex.lab = 1.5,cex = 3)
+plot(r_acqui1,r_use1,xlab = "Resource Acquisition", ylab = "Resource Use",
+     col = "red",pch = 15,cex.lab = 1.5,cex = 3)
+par(mfrow=c(1,1))
+
+
+############
 
 ###############################################################################
 # Working with 100 guilds
@@ -161,126 +361,6 @@ df_nor2.plot<-cbind(mat_trait_f, NMDS1, NMDS2)
 
 ggplot(data=df_nor2.plot,aes(x=NMDS1,y=NMDS2,color =guild))+geom_point(size = 4) + 
   annotate("text", x=-0.4, y=-0.6, label=paste('Stress =',round(nmds$stress,2)))
-
-###############################################################################
-# Test
-###############################################################################
-
-set.seed(2)
-colnames(trait_tar) = c("amino.sug.trans","glycosi.trans",
-                  "FOS.fayt.trans","monosac.trans","aminoac.trans",
-                  "lipid.trans","amide.trans","NH4.trans","nucleob.trans",
-                  "nucleos.trans","nucleot.trans","ribonucle.trans",
-                  "organophos.trans","peptide.trans","cellulose","chitin",
-                  "heteroman","glucan.mix","xylan","xyloglucan","protein",
-                  "sol.trans","sol.synt","EPS.synt","osmotic.sensor",
-                  "oxi.pentose","nonoxi.pentose","glyoxylate","TCA","ETC.I",
-                  "ETC.II","ETC.III","nitrite")
-temp_1 = metaMDS(trait_tar,autotransform = F,trymax = 2000)
-ordiplot(temp_1)
-ordiplot(temp_1,type = "t")
-library(ggvegan)
-
-#install.packages("remotes")
-#remotes::install_github("gavinsimpson/ggvegan")
-#autoplot(temp_1)
-
-# full control with fortified ordination
-###############################################################################
-fort = fortify(temp_1)
-
-# One Panel
-###############################################################################
-
-ggplot() + geom_point(data=subset(fort,Score=="sites"),
-                      mapping = aes(x=NMDS1,y=NMDS2,color =mat_trait_5$guild),
-                      alpha=0.5) + 
-           geom_segment(data=subset(fort,Score=="species"),
-                        mapping=aes(x=0,y=0,xend=NMDS1,yend=NMDS2),
-                        arrow=arrow(length=unit(0.015,"npc"),
-                                    type="closed"),
-                        colour="darkgray",
-                        linewidth=0.8) + 
-  geom_text(data=subset(fort,Score=="species"),
-            mapping=aes(label=Label,x=NMDS1*1.1,y=NMDS2*1.1)) + 
-  geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
-  geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
-  theme(panel.grid.major=element_blank(),
-        panel.grid.minor=element_blank(),
-        panel.background=element_blank(),
-        axis.line=element_line(colour="black")) + scale_x_continuous(limit = c(-0.2,0.25))
-
-# Two Panels
-###############################################################################
-
-p1 = ggplot() + geom_point(data=subset(fort,Score=="sites"),
-                           mapping = aes(x=NMDS1,y=NMDS2),
-                           colour="black",
-                           alpha=0.5) + 
-  geom_segment(data=subset(fort,Score=="species"),
-               mapping=aes(x=0,y=0,xend=NMDS1,yend=NMDS2),
-               arrow=arrow(length=unit(0.015,"npc"),
-                           type="closed"),
-               colour="darkgray",
-               linewidth=0,
-               alpha=0) + 
-  geom_text(data=subset(fort,Score=="species"),
-            mapping=aes(label=Label,x=NMDS1*1.1,y=NMDS2*1.1),alpha=0) + 
-  geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
-  geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
-  theme(panel.grid.major=element_blank(),
-        panel.grid.minor=element_blank(),
-        panel.background=element_blank(),
-        axis.line=element_line(colour="black"))
-
-p2 = ggplot() + geom_point(data=subset(fort,Score=="sites"),
-                           mapping = aes(x=NMDS1,y=NMDS2,color =mat_trait_5$guild),
-                           colour="black",
-                           alpha=0) + 
-  geom_segment(data=subset(fort,Score=="species"),
-               mapping=aes(x=0,y=0,xend=NMDS1,yend=NMDS2),
-               arrow=arrow(length=unit(0.015,"npc"),
-                           type="closed"),
-               colour="darkgray",
-               linewidth=0) + 
-  geom_text(data=subset(fort,Score=="species"),
-            mapping=aes(label=Label,x=NMDS1*1.1,y=NMDS2*1.1)) + 
-  geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
-  geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
-  theme(panel.grid.major=element_blank(),
-        panel.grid.minor=element_blank(),
-        panel.background=element_blank(),
-        axis.line=element_line(colour="black")) + scale_x_continuous(limit = c(-0.25,0.25))
-
-p3 = ggplot() + geom_point(data=subset(fort,Score=="sites"),
-                           mapping = aes(x=NMDS1,y=NMDS2,color =mat_trait_5$guild),
-                           alpha=0.5) + 
-  geom_segment(data=subset(fort,Score=="species"),
-               mapping=aes(x=0,y=0,xend=NMDS1,yend=NMDS2),
-               arrow=arrow(length=unit(0.015,"npc"),
-                           type="closed"),
-               colour="darkgray",
-               linewidth=0,
-               alpha=0) + 
-  geom_text(data=subset(fort,Score=="species"),
-            mapping=aes(label=Label,x=NMDS1*1.1,y=NMDS2*1.1),alpha=0) + 
-  geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
-  geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
-  theme(panel.grid.major=element_blank(),
-        panel.grid.minor=element_blank(),
-        panel.background=element_blank(),
-        axis.line=element_line(colour="black")) + scale_x_continuous(limit = c(-0.25,0.25))
-
-# Goodness of fit
-###############################################################################
-
-gof <- goodness(temp_1)
-plot(temp_1, type="t", main = "goodness of fit")
-points(temp_1, display="sites", cex=gof*100)
-
-
-en = envfit(temp_1, trait_tar, permutations = 999, na.rm = TRUE)
-en
 
 ###############################################################################
 # Binary plots with total values
