@@ -4,3 +4,5 @@
 .Ruserdata
 # Ignore All (xlsx) files
 *.xlsx
+*.pdf
+*.txt
