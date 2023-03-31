@@ -1,24 +1,217 @@
-###############################################################################
-# Packages #
-###############################################################################
+# Packages ####
 
 library(dplyr)
 library(tidyverse)
 library(ggplot2)
 library(stats)
 
-###############################################################################
-# Calling data #
-###############################################################################
+# Calling data ####
 
 mat_ori    = read.csv("C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/litter_mags_trait_matrixatgranularity.csv",dec=".")
 gen_size   = read.delim("C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/litter_mags_metadata.txt",dec=".") 
 
+mag_stat   = read.delim("C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/mag_stats.txt") 
+mag_abun   = read.delim("C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/mag_adundance.txt") 
+
+mag_stat   = mag_stat %>% full_join(mag_abun)
+
 # Erase weird MAGs, which were found in preliminary analysis: 116, 175
-###############################################################################
 
 mat_ori    = mat_ori[-c(116,175),] 
 gen_size   = gen_size[-c(116,175),] 
+mag_stat   = mag_stat[-c(116,175),]
+
+mat_trait    = mat_ori %>% select(2:191)/gen_size$length
+mat_trait    = as.data.frame(cbind(mat_ori$id,mat_trait))
+mat_trait    = mat_trait %>% mutate(id_2 = seq(from = 1, to = 531, by = 1))
+
+# Objective 1: Traits responsible for changes in abundance ####
+
+# MAG abundance Analysis  ####
+
+# Grass-ambient vs grass-drought  ####
+
+# Changes in MAGs abundance
+
+mag_stat = mag_stat %>% mutate(ratio1 = log10(mag_stat$Average.1/mag_stat$Average))
+mag_stat = mag_stat %>% mutate(pos = ratio1 >= 0)
+mag_stat = mag_stat %>% mutate(id_2 = seq(from = 1, to = 531, by = 1))
+p<-ggplot(data=mag_stat, aes(x=id_2, y=ratio1, fill = pos)) +
+   geom_bar(stat="identity") + theme(legend.position="none") + ylab("Log-transformed Ratio") + 
+   xlab("MAG ID")
+p
+# MAGs per group
+
+mag_abund_1  = mag_stat %>% filter(ratio1>0&ratio1<=1)
+mag_abund_2  = mag_stat %>% filter(ratio1>1&ratio1<=2)
+mag_abund_3  = mag_stat %>% filter(ratio1>2&ratio1<=3)
+mag_abund_4  = mag_stat %>% filter(ratio1>3&ratio1<=4)
+mag_abund_1N = mag_stat %>% filter(ratio1>-1&ratio1<=0)
+mag_abund_2N = mag_stat %>% filter(ratio1>-2&ratio1<=-1)
+mag_abund_3N = mag_stat %>% filter(ratio1>-3&ratio1<=-2)
+mag_abund_4N = mag_stat %>% filter(ratio1>-4&ratio1<=-3)
+
+barplot(c(nrow(mag_abund_1),nrow(mag_abund_2),nrow(mag_abund_3),nrow(mag_abund_4),
+  nrow(mag_abund_1N),nrow(mag_abund_2N),nrow(mag_abund_3N),nrow(mag_abund_4N)),
+  names.arg = c("+10fold","+100fold","+1000fold","+10000fold",
+    "-10fold","-100fold","-1000fold","-10000fold"))
+
+# Traits per group
+
+trait_4  = mat_trait %>% filter(id_2 %in% mag_abund_4$id_2)
+trait_3  = mat_trait %>% filter(id_2 %in% mag_abund_3$id_2)
+trait_2  = mat_trait %>% filter(id_2 %in% mag_abund_2$id_2)
+trait_1  = mat_trait %>% filter(id_2 %in% mag_abund_1$id_2)
+
+trait_t4 = as.data.frame(colSums(trait_4 %>% select(2:190), na.rm=FALSE)/nrow(trait_4))
+trait_t3 = as.data.frame(colSums(trait_3 %>% select(2:190), na.rm=FALSE)/nrow(trait_3))
+trait_t2 = as.data.frame(colSums(trait_2 %>% select(2:190), na.rm=FALSE)/nrow(trait_2))
+trait_t1 = as.data.frame(colSums(trait_1 %>% select(2:190), na.rm=FALSE)/nrow(trait_1))
+v <- rownames(trait_t4)
+
+write.csv(trait_t4, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t4.csv", row.names=FALSE)
+write.csv(trait_t3, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t3.csv", row.names=FALSE)
+write.csv(trait_t2, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t2.csv", row.names=FALSE)
+write.csv(trait_t1, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t1.csv", row.names=FALSE)
+write.csv(v, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/v.csv", row.names=FALSE)
+
+trait_4N  = mat_trait %>% filter(id_2 %in% mag_abund_4N$id_2)
+trait_3N  = mat_trait %>% filter(id_2 %in% mag_abund_3N$id_2)
+trait_2N  = mat_trait %>% filter(id_2 %in% mag_abund_2N$id_2)
+trait_1N  = mat_trait %>% filter(id_2 %in% mag_abund_1N$id_2)
+
+trait_t3n = as.data.frame(colSums(trait_3N %>% select(2:190), na.rm=FALSE)/nrow(trait_3N))
+trait_t2n = as.data.frame(colSums(trait_2N %>% select(2:190), na.rm=FALSE)/nrow(trait_2N))
+trait_t1n = as.data.frame(colSums(trait_1N %>% select(2:190), na.rm=FALSE)/nrow(trait_1N))
+
+write.csv(trait_t3n, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t3n.csv", row.names=FALSE)
+write.csv(trait_t2n, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t2n.csv", row.names=FALSE)
+write.csv(trait_t1n, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t1n.csv", row.names=FALSE)
+
+# Shrub-ambient vs shrub-drought  ####
+
+# Changes in MAGs abundance
+
+mag_stat.1 = mag_stat %>% mutate(ratio1 = log10(mag_stat$Average.3/mag_stat$Average.2))
+mag_stat.1 = mag_stat.1 %>% mutate(pos = ratio1 >= 0)
+mag_stat.1 = mag_stat.1 %>% mutate(id_2 = seq(from = 1, to = 531, by = 1))
+p<-ggplot(data=mag_stat.1, aes(x=id_2, y=ratio1, fill = pos)) +
+  geom_bar(stat="identity") + theme(legend.position="none") + ylab("Log-transformed Ratio") + 
+  xlab("MAG ID")
+p
+# MAGs per group
+
+mag_abund_1.1  = mag_stat.1 %>% filter(ratio1>0&ratio1<=1)
+mag_abund_2.1  = mag_stat.1 %>% filter(ratio1>1&ratio1<=2)
+mag_abund_3.1  = mag_stat.1 %>% filter(ratio1>2&ratio1<=3)
+mag_abund_4.1  = mag_stat.1 %>% filter(ratio1>3&ratio1<=4)
+mag_abund_1N.1 = mag_stat.1 %>% filter(ratio1>-1&ratio1<=0)
+mag_abund_2N.1 = mag_stat.1 %>% filter(ratio1>-2&ratio1<=-1)
+mag_abund_3N.1 = mag_stat.1 %>% filter(ratio1>-3&ratio1<=-2)
+mag_abund_4N.1 = mag_stat.1 %>% filter(ratio1>-4&ratio1<=-3)
+
+barplot(c(nrow(mag_abund_1.1),nrow(mag_abund_2.1),nrow(mag_abund_3.1),nrow(mag_abund_4.1),
+          nrow(mag_abund_1N.1),nrow(mag_abund_2N.1),nrow(mag_abund_3N.1),nrow(mag_abund_4N.1)),
+        names.arg = c("+10fold","+100fold","+1000fold","+10000fold",
+                      "-10fold","-100fold","-1000fold","-10000fold"))
+# Traits per group
+
+trait_2.1  = mat_trait %>% filter(id_2 %in% mag_abund_2.1$id_2)
+trait_1.1  = mat_trait %>% filter(id_2 %in% mag_abund_1.1$id_2)
+
+trait_t2.1 = as.data.frame(colSums(trait_2.1 %>% select(2:190), na.rm=FALSE)/nrow(trait_2.1))
+trait_t1.1 = as.data.frame(colSums(trait_1.1 %>% select(2:190), na.rm=FALSE)/nrow(trait_1.1))
+write.csv(trait_t2.1, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t2.1.csv", row.names=FALSE)
+write.csv(trait_t1.1, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t1.1.csv", row.names=FALSE)
+
+trait_3N.1  = mat_trait %>% filter(id_2 %in% mag_abund_3N.1$id_2)
+trait_2N.1  = mat_trait %>% filter(id_2 %in% mag_abund_2N.1$id_2)
+trait_1N.1  = mat_trait %>% filter(id_2 %in% mag_abund_1N.1$id_2)
+
+trait_t3n.1 = as.data.frame(colSums(trait_3N.1 %>% select(2:190), na.rm=FALSE)/nrow(trait_3N.1))
+trait_t2n.1 = as.data.frame(colSums(trait_2N.1 %>% select(2:190), na.rm=FALSE)/nrow(trait_2N.1))
+trait_t1n.1 = as.data.frame(colSums(trait_1N.1 %>% select(2:190), na.rm=FALSE)/nrow(trait_1N.1))
+
+write.csv(trait_t3n.1, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t3n.1.csv", row.names=FALSE)
+write.csv(trait_t2n.1, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t2n.1.csv", row.names=FALSE)
+write.csv(trait_t1n.1, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t1n.1.csv", row.names=FALSE)
+
+# Grass-ambient vs drought-ambient  ####
+
+# Changes in MAGs abundance
+
+mag_stat.2 = mag_stat %>% mutate(ratio1 = log10(mag_stat$Average.2/mag_stat$Average))
+mag_stat.2 = mag_stat.2 %>% mutate(pos = ratio1 >= 0)
+mag_stat.2 = mag_stat.2 %>% mutate(id_2 = seq(from = 1, to = 531, by = 1))
+p<-ggplot(data=mag_stat.2, aes(x=id_2, y=ratio1, fill = pos)) +
+  geom_bar(stat="identity") + theme(legend.position="none") + ylab("Log-transformed Ratio") + 
+  xlab("MAG ID")
+p
+# MAGs per group
+
+mag_abund_1.2  = mag_stat.2 %>% filter(ratio1>0&ratio1<=1)
+mag_abund_2.2  = mag_stat.2 %>% filter(ratio1>1&ratio1<=2)
+mag_abund_3.2  = mag_stat.2 %>% filter(ratio1>2&ratio1<=3)
+mag_abund_4.2  = mag_stat.2 %>% filter(ratio1>3&ratio1<=4)
+mag_abund_1N.2 = mag_stat.2 %>% filter(ratio1>-1&ratio1<=0)
+mag_abund_2N.2 = mag_stat.2 %>% filter(ratio1>-2&ratio1<=-1)
+mag_abund_3N.2 = mag_stat.2 %>% filter(ratio1>-3&ratio1<=-2)
+mag_abund_4N.2 = mag_stat.2 %>% filter(ratio1>-4&ratio1<=-3)
+
+barplot(c(nrow(mag_abund_1.2),nrow(mag_abund_2.2),nrow(mag_abund_3.2),nrow(mag_abund_4.2),
+          nrow(mag_abund_1N.2),nrow(mag_abund_2N.2),nrow(mag_abund_3N.2),nrow(mag_abund_4N.2)),
+        names.arg = c("+10fold","+100fold","+1000fold","+10000fold",
+                      "-10fold","-100fold","-1000fold","-10000fold"))
+# Traits per group
+
+trait_4.2  = mat_trait %>% filter(id_2 %in% mag_abund_4.2$id_2)
+trait_3.2  = mat_trait %>% filter(id_2 %in% mag_abund_3.2$id_2)
+trait_2.2  = mat_trait %>% filter(id_2 %in% mag_abund_2.2$id_2)
+trait_1.2  = mat_trait %>% filter(id_2 %in% mag_abund_1.2$id_2)
+
+trait_t4.2 = as.data.frame(colSums(trait_4.2 %>% select(2:190), na.rm=FALSE)/nrow(trait_4.2))
+trait_t3.2 = as.data.frame(colSums(trait_3.2 %>% select(2:190), na.rm=FALSE)/nrow(trait_3.2))
+trait_t2.2 = as.data.frame(colSums(trait_2.2 %>% select(2:190), na.rm=FALSE)/nrow(trait_2.2))
+trait_t1.2 = as.data.frame(colSums(trait_1.2 %>% select(2:190), na.rm=FALSE)/nrow(trait_1.2))
+
+write.csv(trait_t4.2, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t4.2.csv", row.names=FALSE)
+write.csv(trait_t3.2, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t3.2.csv", row.names=FALSE)
+write.csv(trait_t2.2, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t2.2.csv", row.names=FALSE)
+write.csv(trait_t1.2, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t1.2.csv", row.names=FALSE)
+
+trait_4N.2  = mat_trait %>% filter(id_2 %in% mag_abund_4N.2$id_2)
+trait_3N.2  = mat_trait %>% filter(id_2 %in% mag_abund_3N.2$id_2)
+trait_2N.2  = mat_trait %>% filter(id_2 %in% mag_abund_2N.2$id_2)
+trait_1N.2  = mat_trait %>% filter(id_2 %in% mag_abund_1N.2$id_2)
+
+trait_t3n.2 = as.data.frame(colSums(trait_3N.2 %>% select(2:190), na.rm=FALSE)/nrow(trait_3N.2))
+trait_t2n.2 = as.data.frame(colSums(trait_2N.2 %>% select(2:190), na.rm=FALSE)/nrow(trait_2N.2))
+trait_t1n.2 = as.data.frame(colSums(trait_1N.2 %>% select(2:190), na.rm=FALSE)/nrow(trait_1N.2))
+
+write.csv(trait_t3n.2, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t3n.2.csv", row.names=FALSE)
+write.csv(trait_t2n.2, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t2n.2.csv", row.names=FALSE)
+write.csv(trait_t1n.2, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t1n.2.csv", row.names=FALSE)
+
+
+# Objective 2: Grouping based on principal traits  ####
+
+
+
+
+
+
+# Objective 3: Traits-tradeoff analysis  ####
+
+
+
+
+
+###############################################################################
+###############################################################################
+###############################################################################
+
+
+
 
 ###############################################################################
 # Normalized data
@@ -170,7 +363,7 @@ fviz_nbclust(trait_tar, kmeans, method = "silhouette", k.max = 100) +
 # Working with 3 guilds
 ###############################################################################
 
-v                      = cutree(clusterg,k=3) # Clusters
+v                      = cutree(clusterg,k=4) # Clusters
 genome2guild_5         = data.frame(guild = factor(v))
 rownames(genome2guild_5) = names(v)
 mat_trait_5     = as.data.frame(cbind(genome2guild_5,mat_ori$id,trait_tar))  
@@ -225,7 +418,7 @@ ggplot() + geom_point(data=subset(fort,Score=="sites"),
         panel.grid.minor=element_blank(),
         panel.background=element_blank(),
         axis.line=element_line(colour="black")) + 
-  annotate("text", x=-1, y=-1, label=paste('Stress =',round(nmds$stress,2)))
+  annotate("text", x=-1, y=-1, label=paste('Stress =',round(temp_1$stress,2)))
 
 # Substrate
 ###############################################################################
