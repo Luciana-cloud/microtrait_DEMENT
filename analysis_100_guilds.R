@@ -40,53 +40,17 @@ p<-ggplot(data=mag_stat, aes(x=id_2, y=ratio1, fill = pos)) +
    geom_bar(stat="identity") + theme(legend.position="none") + ylab("Log-transformed Ratio") + 
    xlab("MAG ID")
 p
-# MAGs per group
 
-mag_abund_1  = mag_stat %>% filter(ratio1>0&ratio1<=1)
-mag_abund_2  = mag_stat %>% filter(ratio1>1&ratio1<=2)
-mag_abund_3  = mag_stat %>% filter(ratio1>2&ratio1<=3)
-mag_abund_4  = mag_stat %>% filter(ratio1>3&ratio1<=4)
-mag_abund_1N = mag_stat %>% filter(ratio1>-1&ratio1<=0)
-mag_abund_2N = mag_stat %>% filter(ratio1>-2&ratio1<=-1)
-mag_abund_3N = mag_stat %>% filter(ratio1>-3&ratio1<=-2)
-mag_abund_4N = mag_stat %>% filter(ratio1>-4&ratio1<=-3)
+# Correlation plots
 
-barplot(c(nrow(mag_abund_1),nrow(mag_abund_2),nrow(mag_abund_3),nrow(mag_abund_4),
-  nrow(mag_abund_1N),nrow(mag_abund_2N),nrow(mag_abund_3N),nrow(mag_abund_4N)),
-  names.arg = c("+10fold","+100fold","+1000fold","+10000fold",
-    "-10fold","-100fold","-1000fold","-10000fold"))
+mat_trait   = mat_trait %>% mutate(rat_am_dro_gra = mag_stat$ratio1)
+mat_trait   = mat_trait %>% mutate(rat_am_dro_gra = ifelse(is.na(rat_am_dro_gra),0,rat_am_dro_gra),
+                                   rat_am_dro_gra = ifelse(rat_am_dro_gra==Inf,0,rat_am_dro_gra),
+                                   rat_am_dro_gra = ifelse(rat_am_dro_gra ==-Inf, 0, rat_am_dro_gra))
+mat_trait_1 = as.data.frame(mat_trait[,-192])
+mat = (as.matrix(mat_trait_1[2:192]))
 
-# Traits per group
-
-trait_4  = mat_trait %>% filter(id_2 %in% mag_abund_4$id_2)
-trait_3  = mat_trait %>% filter(id_2 %in% mag_abund_3$id_2)
-trait_2  = mat_trait %>% filter(id_2 %in% mag_abund_2$id_2)
-trait_1  = mat_trait %>% filter(id_2 %in% mag_abund_1$id_2)
-
-trait_t4 = as.data.frame(colSums(trait_4 %>% select(2:190), na.rm=FALSE)/nrow(trait_4))
-trait_t3 = as.data.frame(colSums(trait_3 %>% select(2:190), na.rm=FALSE)/nrow(trait_3))
-trait_t2 = as.data.frame(colSums(trait_2 %>% select(2:190), na.rm=FALSE)/nrow(trait_2))
-trait_t1 = as.data.frame(colSums(trait_1 %>% select(2:190), na.rm=FALSE)/nrow(trait_1))
-v <- rownames(trait_t4)
-
-write.csv(trait_t4, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t4.csv", row.names=FALSE)
-write.csv(trait_t3, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t3.csv", row.names=FALSE)
-write.csv(trait_t2, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t2.csv", row.names=FALSE)
-write.csv(trait_t1, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t1.csv", row.names=FALSE)
-write.csv(v, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/v.csv", row.names=FALSE)
-
-trait_4N  = mat_trait %>% filter(id_2 %in% mag_abund_4N$id_2)
-trait_3N  = mat_trait %>% filter(id_2 %in% mag_abund_3N$id_2)
-trait_2N  = mat_trait %>% filter(id_2 %in% mag_abund_2N$id_2)
-trait_1N  = mat_trait %>% filter(id_2 %in% mag_abund_1N$id_2)
-
-trait_t3n = as.data.frame(colSums(trait_3N %>% select(2:190), na.rm=FALSE)/nrow(trait_3N))
-trait_t2n = as.data.frame(colSums(trait_2N %>% select(2:190), na.rm=FALSE)/nrow(trait_2N))
-trait_t1n = as.data.frame(colSums(trait_1N %>% select(2:190), na.rm=FALSE)/nrow(trait_1N))
-
-write.csv(trait_t3n, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t3n.csv", row.names=FALSE)
-write.csv(trait_t2n, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t2n.csv", row.names=FALSE)
-write.csv(trait_t1n, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t1n.csv", row.names=FALSE)
+corre = as.data.frame(cor(mat[,1:190], mat[,191]))
 
 # Shrub-ambient vs shrub-drought  ####
 
@@ -99,44 +63,19 @@ p<-ggplot(data=mag_stat.1, aes(x=id_2, y=ratio1, fill = pos)) +
   geom_bar(stat="identity") + theme(legend.position="none") + ylab("Log-transformed Ratio") + 
   xlab("MAG ID")
 p
-# MAGs per group
+# Correlation plots
 
-mag_abund_1.1  = mag_stat.1 %>% filter(ratio1>0&ratio1<=1)
-mag_abund_2.1  = mag_stat.1 %>% filter(ratio1>1&ratio1<=2)
-mag_abund_3.1  = mag_stat.1 %>% filter(ratio1>2&ratio1<=3)
-mag_abund_4.1  = mag_stat.1 %>% filter(ratio1>3&ratio1<=4)
-mag_abund_1N.1 = mag_stat.1 %>% filter(ratio1>-1&ratio1<=0)
-mag_abund_2N.1 = mag_stat.1 %>% filter(ratio1>-2&ratio1<=-1)
-mag_abund_3N.1 = mag_stat.1 %>% filter(ratio1>-3&ratio1<=-2)
-mag_abund_4N.1 = mag_stat.1 %>% filter(ratio1>-4&ratio1<=-3)
+mat_traits   = mat_trait %>% mutate(rat_am_dro_shr = mag_stat.1$ratio1)
+mat_traits   = mat_traits %>% mutate(rat_am_dro_shr = ifelse(is.na(rat_am_dro_shr),0,rat_am_dro_shr),
+                                   rat_am_dro_shr = ifelse(rat_am_dro_shr==Inf,0,rat_am_dro_shr),
+                                   rat_am_dro_shr = ifelse(rat_am_dro_shr ==-Inf, 0, rat_am_dro_shr))
+mat_trait_1s = as.data.frame(mat_traits[,-192])
+mat_trait_1s = as.data.frame(mat_trait_1s[,-192])
+mats = (as.matrix(mat_trait_1s[2:192]))
 
-barplot(c(nrow(mag_abund_1.1),nrow(mag_abund_2.1),nrow(mag_abund_3.1),nrow(mag_abund_4.1),
-          nrow(mag_abund_1N.1),nrow(mag_abund_2N.1),nrow(mag_abund_3N.1),nrow(mag_abund_4N.1)),
-        names.arg = c("+10fold","+100fold","+1000fold","+10000fold",
-                      "-10fold","-100fold","-1000fold","-10000fold"))
-# Traits per group
+corre1 = as.data.frame(cor(mats[,1:190], mats[,191]))
 
-trait_2.1  = mat_trait %>% filter(id_2 %in% mag_abund_2.1$id_2)
-trait_1.1  = mat_trait %>% filter(id_2 %in% mag_abund_1.1$id_2)
-
-trait_t2.1 = as.data.frame(colSums(trait_2.1 %>% select(2:190), na.rm=FALSE)/nrow(trait_2.1))
-trait_t1.1 = as.data.frame(colSums(trait_1.1 %>% select(2:190), na.rm=FALSE)/nrow(trait_1.1))
-write.csv(trait_t2.1, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t2.1.csv", row.names=FALSE)
-write.csv(trait_t1.1, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t1.1.csv", row.names=FALSE)
-
-trait_3N.1  = mat_trait %>% filter(id_2 %in% mag_abund_3N.1$id_2)
-trait_2N.1  = mat_trait %>% filter(id_2 %in% mag_abund_2N.1$id_2)
-trait_1N.1  = mat_trait %>% filter(id_2 %in% mag_abund_1N.1$id_2)
-
-trait_t3n.1 = as.data.frame(colSums(trait_3N.1 %>% select(2:190), na.rm=FALSE)/nrow(trait_3N.1))
-trait_t2n.1 = as.data.frame(colSums(trait_2N.1 %>% select(2:190), na.rm=FALSE)/nrow(trait_2N.1))
-trait_t1n.1 = as.data.frame(colSums(trait_1N.1 %>% select(2:190), na.rm=FALSE)/nrow(trait_1N.1))
-
-write.csv(trait_t3n.1, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t3n.1.csv", row.names=FALSE)
-write.csv(trait_t2n.1, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t2n.1.csv", row.names=FALSE)
-write.csv(trait_t1n.1, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t1n.1.csv", row.names=FALSE)
-
-# Grass-ambient vs drought-ambient  ####
+# Grass-ambient vs Shrubland-ambient  ####
 
 # Changes in MAGs abundance
 
@@ -147,51 +86,17 @@ p<-ggplot(data=mag_stat.2, aes(x=id_2, y=ratio1, fill = pos)) +
   geom_bar(stat="identity") + theme(legend.position="none") + ylab("Log-transformed Ratio") + 
   xlab("MAG ID")
 p
-# MAGs per group
+# Correlation plots
 
-mag_abund_1.2  = mag_stat.2 %>% filter(ratio1>0&ratio1<=1)
-mag_abund_2.2  = mag_stat.2 %>% filter(ratio1>1&ratio1<=2)
-mag_abund_3.2  = mag_stat.2 %>% filter(ratio1>2&ratio1<=3)
-mag_abund_4.2  = mag_stat.2 %>% filter(ratio1>3&ratio1<=4)
-mag_abund_1N.2 = mag_stat.2 %>% filter(ratio1>-1&ratio1<=0)
-mag_abund_2N.2 = mag_stat.2 %>% filter(ratio1>-2&ratio1<=-1)
-mag_abund_3N.2 = mag_stat.2 %>% filter(ratio1>-3&ratio1<=-2)
-mag_abund_4N.2 = mag_stat.2 %>% filter(ratio1>-4&ratio1<=-3)
+mat_traitsg   = mat_trait %>% mutate(rat_shr_gras = mag_stat.2$ratio1)
+mat_traitsg   = mat_traitsg %>% mutate(rat_shr_gras = ifelse(is.na(rat_shr_gras),0,rat_shr_gras),
+                                     rat_shr_gras = ifelse(rat_shr_gras==Inf,0,rat_shr_gras),
+                                     rat_shr_gras = ifelse(rat_shr_gras ==-Inf, 0, rat_shr_gras))
+mat_trait_1gs = as.data.frame(mat_traitsg[,-192])
+mat_trait_1gs = as.data.frame(mat_trait_1gs[,-192])
+matgs = (as.matrix(mat_trait_1gs[2:192]))
 
-barplot(c(nrow(mag_abund_1.2),nrow(mag_abund_2.2),nrow(mag_abund_3.2),nrow(mag_abund_4.2),
-          nrow(mag_abund_1N.2),nrow(mag_abund_2N.2),nrow(mag_abund_3N.2),nrow(mag_abund_4N.2)),
-        names.arg = c("+10fold","+100fold","+1000fold","+10000fold",
-                      "-10fold","-100fold","-1000fold","-10000fold"))
-# Traits per group
-
-trait_4.2  = mat_trait %>% filter(id_2 %in% mag_abund_4.2$id_2)
-trait_3.2  = mat_trait %>% filter(id_2 %in% mag_abund_3.2$id_2)
-trait_2.2  = mat_trait %>% filter(id_2 %in% mag_abund_2.2$id_2)
-trait_1.2  = mat_trait %>% filter(id_2 %in% mag_abund_1.2$id_2)
-
-trait_t4.2 = as.data.frame(colSums(trait_4.2 %>% select(2:190), na.rm=FALSE)/nrow(trait_4.2))
-trait_t3.2 = as.data.frame(colSums(trait_3.2 %>% select(2:190), na.rm=FALSE)/nrow(trait_3.2))
-trait_t2.2 = as.data.frame(colSums(trait_2.2 %>% select(2:190), na.rm=FALSE)/nrow(trait_2.2))
-trait_t1.2 = as.data.frame(colSums(trait_1.2 %>% select(2:190), na.rm=FALSE)/nrow(trait_1.2))
-
-write.csv(trait_t4.2, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t4.2.csv", row.names=FALSE)
-write.csv(trait_t3.2, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t3.2.csv", row.names=FALSE)
-write.csv(trait_t2.2, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t2.2.csv", row.names=FALSE)
-write.csv(trait_t1.2, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t1.2.csv", row.names=FALSE)
-
-trait_4N.2  = mat_trait %>% filter(id_2 %in% mag_abund_4N.2$id_2)
-trait_3N.2  = mat_trait %>% filter(id_2 %in% mag_abund_3N.2$id_2)
-trait_2N.2  = mat_trait %>% filter(id_2 %in% mag_abund_2N.2$id_2)
-trait_1N.2  = mat_trait %>% filter(id_2 %in% mag_abund_1N.2$id_2)
-
-trait_t3n.2 = as.data.frame(colSums(trait_3N.2 %>% select(2:190), na.rm=FALSE)/nrow(trait_3N.2))
-trait_t2n.2 = as.data.frame(colSums(trait_2N.2 %>% select(2:190), na.rm=FALSE)/nrow(trait_2N.2))
-trait_t1n.2 = as.data.frame(colSums(trait_1N.2 %>% select(2:190), na.rm=FALSE)/nrow(trait_1N.2))
-
-write.csv(trait_t3n.2, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t3n.2.csv", row.names=FALSE)
-write.csv(trait_t2n.2, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t2n.2.csv", row.names=FALSE)
-write.csv(trait_t1n.2, "C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/trait_t1n.2.csv", row.names=FALSE)
-
+corre2 = as.data.frame(cor(matgs[,1:190], matgs[,191]))
 
 # Objective 2: Grouping based on principal traits  ####
 
