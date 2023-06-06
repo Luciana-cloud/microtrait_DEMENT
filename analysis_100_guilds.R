@@ -4,6 +4,7 @@ library(dplyr)
 library(tidyverse)
 library(ggplot2)
 library(stats)
+library(corrr)
 
 # Calling data ####
 
@@ -41,7 +42,7 @@ p<-ggplot(data=mag_stat, aes(x=id_2, y=ratio1, fill = pos)) +
    xlab("MAG ID")
 p
 
-# Correlation plots
+# Correlation results  ####
 
 mat_trait   = mat_trait %>% mutate(rat_am_dro_gra = mag_stat$ratio1)
 mat_trait   = mat_trait %>% mutate(rat_am_dro_gra = ifelse(is.na(rat_am_dro_gra),0,rat_am_dro_gra),
@@ -51,6 +52,20 @@ mat_trait_1 = as.data.frame(mat_trait[,-192])
 mat = (as.matrix(mat_trait_1[2:192]))
 
 corre = as.data.frame(cor(mat[,1:190], mat[,191]))
+
+# Correlation plots  ####
+
+x <- mat %>% 
+  correlate() %>% 
+  focus(rat_am_dro_gra)
+
+x %>% 
+  mutate(rowname = factor(term, levels = term[order(rat_am_dro_gra)])) %>%  # Order by correlation strength
+  ggplot(aes(x = term, y = rat_am_dro_gra)) +
+  geom_bar(stat = "identity") +
+  ylab("Correlation with rat_am_dro_gra") +
+  xlab("")
+
 
 # Shrub-ambient vs shrub-drought  ####
 
@@ -75,6 +90,20 @@ mats = (as.matrix(mat_trait_1s[2:192]))
 
 corre1 = as.data.frame(cor(mats[,1:190], mats[,191]))
 
+# Correlation plots  ####
+
+x1 <- mats %>% 
+  correlate() %>% 
+  focus(rat_am_dro_shr)
+
+x1 %>% 
+  mutate(rowname = factor(term, levels = term[order(rat_am_dro_shr)])) %>%  # Order by correlation strength
+  ggplot(aes(x = term, y = rat_am_dro_shr)) +
+  geom_bar(stat = "identity") +
+  ylab("Correlation with rat_am_dro_shr") +
+  xlab("")
+
+
 # Grass-ambient vs Shrubland-ambient  ####
 
 # Changes in MAGs abundance
@@ -97,6 +126,21 @@ mat_trait_1gs = as.data.frame(mat_trait_1gs[,-192])
 matgs = (as.matrix(mat_trait_1gs[2:192]))
 
 corre2 = as.data.frame(cor(matgs[,1:190], matgs[,191]))
+
+
+# Correlation plots  ####
+
+x2 <- matgs %>% 
+  correlate() %>% 
+  focus(rat_shr_gras)
+
+x2 %>% 
+  mutate(rowname = factor(term, levels = term[order(rat_shr_gras)])) %>%  # Order by correlation strength
+  ggplot(aes(x = term, y = rat_shr_gras)) +
+  geom_bar(stat = "identity") +
+  ylab("Correlation with rat_shr_gras") +
+  xlab("")
+
 
 # Objective 2: Grouping based on principal traits  ####
 
