@@ -32,7 +32,7 @@ mat_trait    = mat_trait %>% mutate(id_2 = seq(from = 1, to = 531, by = 1))
 
 # Grass-ambient vs grass-drought  ####
 
-# Changes in MAGs abundance
+# Changes in MAGs abundance ####
 
 mag_stat = mag_stat %>% mutate(ratio1 = log10(mag_stat$Average.1/mag_stat$Average))
 mag_stat = mag_stat %>% mutate(pos = ratio1 >= 0)
@@ -42,7 +42,7 @@ p<-ggplot(data=mag_stat, aes(x=id_2, y=ratio1, fill = pos)) +
    xlab("MAG ID")
 p
 
-# Correlation results  ####
+# Correlation results with the highest granularity ####
 
 mat_trait   = mat_trait %>% mutate(rat_am_dro_gra = mag_stat$ratio1)
 mat_trait   = mat_trait %>% mutate(rat_am_dro_gra = ifelse(is.na(rat_am_dro_gra),0,rat_am_dro_gra),
@@ -66,6 +66,118 @@ x %>%
   ylab("Correlation with rat_am_dro_gra") +
   xlab("")
 
+# Correlation results with the lowest granularity ####
+
+resource_acquisition1 = rowSums(mat_trait_1 %>% select(2:84), na.rm=FALSE)/83
+resource_use1         = rowSums(mat_trait_1 %>% select(85:161), na.rm=FALSE)/77
+stress_tolerance1     = rowSums(mat_trait_1 %>% select(162:190), na.rm=FALSE)/29
+
+mat_trait_1_low       = cbind(resource_acquisition1,resource_use1,stress_tolerance1,
+                              mat_trait_1 %>% select(191:192))
+
+mat_low = (as.matrix(mat_trait_1_low))
+
+x_low <- mat_low %>% 
+  correlate() %>% 
+  focus(rat_am_dro_gra)
+
+x_low %>% 
+  mutate(rowname = factor(term, levels = term[order(rat_am_dro_gra)])) %>%  # Order by correlation strength
+  ggplot(aes(x = term, y = rat_am_dro_gra)) +
+  geom_bar(stat = "identity") +
+  ylab("Correlation with rat_am_dro_gra") +
+  xlab("")
+
+# Correlation results with the middle granularity ####
+
+RA_substrate_uptake       = rowSums(mat_trait_1 %>% select(2:42), na.rm=FALSE)/41
+RA_substrate_degradation  = rowSums(mat_trait_1 %>% select(43:61), na.rm=FALSE)/19
+RA_substrate_assimilation = rowSums(mat_trait_1 %>% select(62:84), na.rm=FALSE)/23
+RU_chemotrophy            = rowSums(mat_trait_1 %>% select(85:131), na.rm=FALSE)/47
+RU_phototrophy            = rowSums(mat_trait_1 %>% select(132:161), na.rm=FALSE)/30
+ST_general                = rowSums(mat_trait_1 %>% select(162:165), na.rm=FALSE)/4
+ST_specific               = rowSums(mat_trait_1 %>% select(166:190), na.rm=FALSE)/25
+
+mat_trait_1_mid        = cbind(RA_substrate_uptake,RA_substrate_degradation,
+                               RA_substrate_assimilation,RU_chemotrophy,RU_phototrophy,
+                               ST_general,ST_specific,mat_trait_1 %>% select(191:192))
+
+mat_mid = (as.matrix(mat_trait_1_mid))
+
+x_mid <- mat_mid %>% 
+  correlate() %>% 
+  focus(rat_am_dro_gra)
+
+x_mid %>% 
+  mutate(rowname = factor(term, levels = term[order(rat_am_dro_gra)])) %>%  # Order by correlation strength
+  ggplot(aes(x = term, y = rat_am_dro_gra)) +
+  geom_bar(stat = "identity") +
+  ylab("Correlation with rat_am_dro_gra") +
+  xlab("")
+
+# Correlation results with the middle 1 granularity ####
+
+RA_uptake_aromatic       = rowSums(mat_trait_1 %>% select(2), na.rm=FALSE)/1
+RA_uptake_biopolymer     = rowSums(mat_trait_1 %>% select(3), na.rm=FALSE)/1
+RA_uptake_carbohydrate   = rowSums(mat_trait_1 %>% select(4:14), na.rm=FALSE)/11
+RA_uptake_carboxylate    = rowSums(mat_trait_1 %>% select(15:17), na.rm=FALSE)/3
+RA_uptake_aminoacids     = rowSums(mat_trait_1 %>% select(18), na.rm=FALSE)/1
+RA_uptake_ions           = rowSums(mat_trait_1 %>% select(19:20), na.rm=FALSE)/2
+RA_uptake_lipid          = rowSums(mat_trait_1 %>% select(21:23), na.rm=FALSE)/3
+RA_uptake_N_compound     = rowSums(mat_trait_1 %>% select(24:30), na.rm=FALSE)/7
+RA_uptake_nucleid_acid   = rowSums(mat_trait_1 %>% select(31:34), na.rm=FALSE)/4
+RA_uptake_organoP        = rowSums(mat_trait_1 %>% select(35), na.rm=FALSE)/1
+RA_uptake_osmolyte       = rowSums(mat_trait_1 %>% select(36), na.rm=FALSE)/1
+RA_uptake_other          = rowSums(mat_trait_1 %>% select(37), na.rm=FALSE)/1
+RA_uptake_peptide        = rowSums(mat_trait_1 %>% select(38), na.rm=FALSE)/1
+RA_uptake_S_compound     = rowSums(mat_trait_1 %>% select(39), na.rm=FALSE)/1
+RA_uptake_siderophore    = rowSums(mat_trait_1 %>% select(40), na.rm=FALSE)/1
+RA_uptake_vitamin        = rowSums(mat_trait_1 %>% select(41:42), na.rm=FALSE)/2
+RA_degradation_complex   = rowSums(mat_trait_1 %>% select(43:48), na.rm=FALSE)/6
+RA_degradation_simple    = rowSums(mat_trait_1 %>% select(49:61), na.rm=FALSE)/13
+RA_assimilation_C_comp   = rowSums(mat_trait_1 %>% select(62:76), na.rm=FALSE)/15
+RA_assimilation_N_comp   = rowSums(mat_trait_1 %>% select(77:81), na.rm=FALSE)/5
+RA_assimilation_S_comp   = rowSums(mat_trait_1 %>% select(82), na.rm=FALSE)/1
+RA_assimilation_P_comp   = rowSums(mat_trait_1 %>% select(83:84), na.rm=FALSE)/2
+RU_chemotrophy            = rowSums(mat_trait_1 %>% select(85:131), na.rm=FALSE)/47
+RU_phototrophy            = rowSums(mat_trait_1 %>% select(132:161), na.rm=FALSE)/30
+ST_general                = rowSums(mat_trait_1 %>% select(162:165), na.rm=FALSE)/4
+ST_specific_high_T        = rowSums(mat_trait_1 %>% select(166:168), na.rm=FALSE)/3
+ST_specific_low_T         = rowSums(mat_trait_1 %>% select(169:173), na.rm=FALSE)/5
+ST_specific_desiccation   = rowSums(mat_trait_1 %>% select(174:177), na.rm=FALSE)/4
+ST_specific_pH_stress     = rowSums(mat_trait_1 %>% select(178:184), na.rm=FALSE)/7
+ST_specific_oxidative     = rowSums(mat_trait_1 %>% select(185:186), na.rm=FALSE)/2
+ST_specific_O_limit       = rowSums(mat_trait_1 %>% select(187:188), na.rm=FALSE)/2
+ST_specific_envelope      = rowSums(mat_trait_1 %>% select(189:190), na.rm=FALSE)/2
+
+mat_trait_1_mid_1         = cbind(RA_uptake_aromatic,RA_uptake_biopolymer,
+                               RA_uptake_carbohydrate,RA_uptake_carboxylate,
+                               RA_uptake_aminoacids,RA_uptake_ions,RA_uptake_lipid,
+                               RA_uptake_N_compound,RA_uptake_nucleid_acid,
+                               RA_uptake_organoP,RA_uptake_osmolyte,RA_uptake_other,
+                               RA_uptake_peptide,RA_uptake_S_compound,
+                               RA_uptake_siderophore,RA_uptake_vitamin,
+                               RA_degradation_complex,RA_degradation_simple,
+                               RA_assimilation_C_comp,RA_assimilation_N_comp,
+                               RA_assimilation_S_comp,RA_assimilation_P_comp,
+                               RU_chemotrophy,RU_phototrophy,ST_general,
+                               ST_specific_high_T,ST_specific_low_T,
+                               ST_specific_desiccation,ST_specific_pH_stress,
+                               ST_specific_oxidative,ST_specific_O_limit,
+                               ST_specific_envelope,mat_trait_1 %>% select(191:192))
+
+mat_mid_1 = (as.matrix(mat_trait_1_mid_1))
+
+x_mid_1 <- mat_mid_1 %>% 
+  correlate() %>% 
+  focus(rat_am_dro_gra)
+
+x_mid_1 %>% 
+  mutate(rowname = factor(term, levels = term[order(rat_am_dro_gra)])) %>%  # Order by correlation strength
+  ggplot(aes(x = term, y = rat_am_dro_gra)) +
+  geom_bar(stat = "identity") +
+  ylab("Correlation with rat_am_dro_gra") +
+  xlab("")
 
 # Shrub-ambient vs shrub-drought  ####
 
@@ -103,6 +215,118 @@ x1 %>%
   ylab("Correlation with rat_am_dro_shr") +
   xlab("")
 
+# Correlation results with the lowest granularity ####
+
+resource_acquisition1 = rowSums(mat_trait_1s %>% select(2:84), na.rm=FALSE)/83
+resource_use1         = rowSums(mat_trait_1s %>% select(85:161), na.rm=FALSE)/77
+stress_tolerance1     = rowSums(mat_trait_1s %>% select(162:190), na.rm=FALSE)/29
+
+mat_trait_1s_low      = cbind(resource_acquisition1,resource_use1,stress_tolerance1,
+                              mat_trait_1s %>% select(191:192))
+
+mat_low_s = (as.matrix(mat_trait_1s_low))
+
+x_low_s <- mat_low_s %>% 
+  correlate() %>% 
+  focus(rat_am_dro_shr)
+
+x_low_s %>% 
+  mutate(rowname = factor(term, levels = term[order(rat_am_dro_shr)])) %>%  # Order by correlation strength
+  ggplot(aes(x = term, y = rat_am_dro_shr)) +
+  geom_bar(stat = "identity") +
+  ylab("Correlation with rat_am_dro_shr") +
+  xlab("")
+
+# Correlation results with the middle granularity ####
+
+RA_substrate_uptake       = rowSums(mat_trait_1s %>% select(2:42), na.rm=FALSE)/41
+RA_substrate_degradation  = rowSums(mat_trait_1s %>% select(43:61), na.rm=FALSE)/19
+RA_substrate_assimilation = rowSums(mat_trait_1s %>% select(62:84), na.rm=FALSE)/23
+RU_chemotrophy            = rowSums(mat_trait_1s %>% select(85:131), na.rm=FALSE)/47
+RU_phototrophy            = rowSums(mat_trait_1s %>% select(132:161), na.rm=FALSE)/30
+ST_general                = rowSums(mat_trait_1s %>% select(162:165), na.rm=FALSE)/4
+ST_specific               = rowSums(mat_trait_1s %>% select(166:190), na.rm=FALSE)/25
+
+mat_trait_1s_mid          = cbind(RA_substrate_uptake,RA_substrate_degradation,
+                               RA_substrate_assimilation,RU_chemotrophy,RU_phototrophy,
+                               ST_general,ST_specific,mat_trait_1s %>% select(191:192))
+
+mat_mid_1s = (as.matrix(mat_trait_1s_mid))
+
+x_mid_1s <- mat_mid_1s %>% 
+  correlate() %>% 
+  focus(rat_am_dro_shr)
+
+x_mid_1s %>% 
+  mutate(rowname = factor(term, levels = term[order(rat_am_dro_shr)])) %>%  # Order by correlation strength
+  ggplot(aes(x = term, y = rat_am_dro_shr)) +
+  geom_bar(stat = "identity") +
+  ylab("Correlation with rat_am_dro_shr") +
+  xlab("")
+
+# Correlation results with the middle 1 granularity ####
+
+RA_uptake_aromatic       = rowSums(mat_trait_1s %>% select(2), na.rm=FALSE)/1
+RA_uptake_biopolymer     = rowSums(mat_trait_1s %>% select(3), na.rm=FALSE)/1
+RA_uptake_carbohydrate   = rowSums(mat_trait_1s %>% select(4:14), na.rm=FALSE)/11
+RA_uptake_carboxylate    = rowSums(mat_trait_1s %>% select(15:17), na.rm=FALSE)/3
+RA_uptake_aminoacids     = rowSums(mat_trait_1s %>% select(18), na.rm=FALSE)/1
+RA_uptake_ions           = rowSums(mat_trait_1s %>% select(19:20), na.rm=FALSE)/2
+RA_uptake_lipid          = rowSums(mat_trait_1s %>% select(21:23), na.rm=FALSE)/3
+RA_uptake_N_compound     = rowSums(mat_trait_1s %>% select(24:30), na.rm=FALSE)/7
+RA_uptake_nucleid_acid   = rowSums(mat_trait_1s %>% select(31:34), na.rm=FALSE)/4
+RA_uptake_organoP        = rowSums(mat_trait_1s %>% select(35), na.rm=FALSE)/1
+RA_uptake_osmolyte       = rowSums(mat_trait_1s %>% select(36), na.rm=FALSE)/1
+RA_uptake_other          = rowSums(mat_trait_1s %>% select(37), na.rm=FALSE)/1
+RA_uptake_peptide        = rowSums(mat_trait_1s %>% select(38), na.rm=FALSE)/1
+RA_uptake_S_compound     = rowSums(mat_trait_1s %>% select(39), na.rm=FALSE)/1
+RA_uptake_siderophore    = rowSums(mat_trait_1s %>% select(40), na.rm=FALSE)/1
+RA_uptake_vitamin        = rowSums(mat_trait_1s %>% select(41:42), na.rm=FALSE)/2
+RA_degradation_complex   = rowSums(mat_trait_1s %>% select(43:48), na.rm=FALSE)/6
+RA_degradation_simple    = rowSums(mat_trait_1s %>% select(49:61), na.rm=FALSE)/13
+RA_assimilation_C_comp   = rowSums(mat_trait_1s %>% select(62:76), na.rm=FALSE)/15
+RA_assimilation_N_comp   = rowSums(mat_trait_1s %>% select(77:81), na.rm=FALSE)/5
+RA_assimilation_S_comp   = rowSums(mat_trait_1s %>% select(82), na.rm=FALSE)/1
+RA_assimilation_P_comp   = rowSums(mat_trait_1s %>% select(83:84), na.rm=FALSE)/2
+RU_chemotrophy            = rowSums(mat_trait_1s %>% select(85:131), na.rm=FALSE)/47
+RU_phototrophy            = rowSums(mat_trait_1s %>% select(132:161), na.rm=FALSE)/30
+ST_general                = rowSums(mat_trait_1s %>% select(162:165), na.rm=FALSE)/4
+ST_specific_high_T        = rowSums(mat_trait_1s %>% select(166:168), na.rm=FALSE)/3
+ST_specific_low_T         = rowSums(mat_trait_1s %>% select(169:173), na.rm=FALSE)/5
+ST_specific_desiccation   = rowSums(mat_trait_1s %>% select(174:177), na.rm=FALSE)/4
+ST_specific_pH_stress     = rowSums(mat_trait_1s %>% select(178:184), na.rm=FALSE)/7
+ST_specific_oxidative     = rowSums(mat_trait_1s %>% select(185:186), na.rm=FALSE)/2
+ST_specific_O_limit       = rowSums(mat_trait_1s %>% select(187:188), na.rm=FALSE)/2
+ST_specific_envelope      = rowSums(mat_trait_1s %>% select(189:190), na.rm=FALSE)/2
+
+mat_trait_s_mid_1         = cbind(RA_uptake_aromatic,RA_uptake_biopolymer,
+                                  RA_uptake_carbohydrate,RA_uptake_carboxylate,
+                                  RA_uptake_aminoacids,RA_uptake_ions,RA_uptake_lipid,
+                                  RA_uptake_N_compound,RA_uptake_nucleid_acid,
+                                  RA_uptake_organoP,RA_uptake_osmolyte,RA_uptake_other,
+                                  RA_uptake_peptide,RA_uptake_S_compound,
+                                  RA_uptake_siderophore,RA_uptake_vitamin,
+                                  RA_degradation_complex,RA_degradation_simple,
+                                  RA_assimilation_C_comp,RA_assimilation_N_comp,
+                                  RA_assimilation_S_comp,RA_assimilation_P_comp,
+                                  RU_chemotrophy,RU_phototrophy,ST_general,
+                                  ST_specific_high_T,ST_specific_low_T,
+                                  ST_specific_desiccation,ST_specific_pH_stress,
+                                  ST_specific_oxidative,ST_specific_O_limit,
+                                  ST_specific_envelope,mat_trait_1s %>% select(191:192))
+
+mat_mid_s = (as.matrix(mat_trait_s_mid_1))
+
+x_mid_s <- mat_trait_s_mid_1 %>% 
+  correlate() %>% 
+  focus(rat_am_dro_shr)
+
+x_mid_s %>% 
+  mutate(rowname = factor(term, levels = term[order(rat_am_dro_shr)])) %>%  # Order by correlation strength
+  ggplot(aes(x = term, y = rat_am_dro_shr)) +
+  geom_bar(stat = "identity") +
+  ylab("Correlation with rat_am_dro_shr") +
+  xlab("")
 
 # Grass-ambient vs Shrubland-ambient  ####
 
@@ -141,6 +365,118 @@ x2 %>%
   ylab("Correlation with rat_shr_gras") +
   xlab("")
 
+# Correlation results with the lowest granularity ####
+
+resource_acquisition1 = rowSums(mat_trait_1gs %>% select(2:84), na.rm=FALSE)/83
+resource_use1         = rowSums(mat_trait_1gs %>% select(85:161), na.rm=FALSE)/77
+stress_tolerance1     = rowSums(mat_trait_1gs %>% select(162:190), na.rm=FALSE)/29
+
+mat_trait_2s_low      = cbind(resource_acquisition1,resource_use1,stress_tolerance1,
+                              mat_trait_1gs %>% select(191:192))
+
+mat_low_sg = (as.matrix(mat_trait_2s_low))
+
+x_low_sg <- mat_low_sg %>% 
+  correlate() %>% 
+  focus(rat_shr_gras)
+
+x_low_sg %>% 
+  mutate(rowname = factor(term, levels = term[order(rat_shr_gras)])) %>%  # Order by correlation strength
+  ggplot(aes(x = term, y = rat_shr_gras)) +
+  geom_bar(stat = "identity") +
+  ylab("Correlation with rat_shr_gras") +
+  xlab("")
+
+# Correlation results with the middle granularity ####
+
+RA_substrate_uptake       = rowSums(mat_trait_1gs %>% select(2:42), na.rm=FALSE)/41
+RA_substrate_degradation  = rowSums(mat_trait_1gs %>% select(43:61), na.rm=FALSE)/19
+RA_substrate_assimilation = rowSums(mat_trait_1gs %>% select(62:84), na.rm=FALSE)/23
+RU_chemotrophy            = rowSums(mat_trait_1gs %>% select(85:131), na.rm=FALSE)/47
+RU_phototrophy            = rowSums(mat_trait_1gs %>% select(132:161), na.rm=FALSE)/30
+ST_general                = rowSums(mat_trait_1gs %>% select(162:165), na.rm=FALSE)/4
+ST_specific               = rowSums(mat_trait_1gs %>% select(166:190), na.rm=FALSE)/25
+
+mat_trait_sg_mid          = cbind(RA_substrate_uptake,RA_substrate_degradation,
+                                  RA_substrate_assimilation,RU_chemotrophy,RU_phototrophy,
+                                  ST_general,ST_specific,mat_trait_1gs %>% select(191:192))
+
+mat_mid_sg = (as.matrix(mat_trait_sg_mid))
+
+x_mid_sg <- mat_mid_sg %>% 
+  correlate() %>% 
+  focus(rat_shr_gras)
+
+x_mid_sg %>% 
+  mutate(rowname = factor(term, levels = term[order(rat_shr_gras)])) %>%  # Order by correlation strength
+  ggplot(aes(x = term, y = rat_shr_gras)) +
+  geom_bar(stat = "identity") +
+  ylab("Correlation with rat_shr_gras") +
+  xlab("")
+
+# Correlation results with the middle 1 granularity ####
+
+RA_uptake_aromatic       = rowSums(mat_trait_1gs %>% select(2), na.rm=FALSE)/1
+RA_uptake_biopolymer     = rowSums(mat_trait_1gs %>% select(3), na.rm=FALSE)/1
+RA_uptake_carbohydrate   = rowSums(mat_trait_1gs %>% select(4:14), na.rm=FALSE)/11
+RA_uptake_carboxylate    = rowSums(mat_trait_1gs %>% select(15:17), na.rm=FALSE)/3
+RA_uptake_aminoacids     = rowSums(mat_trait_1gs %>% select(18), na.rm=FALSE)/1
+RA_uptake_ions           = rowSums(mat_trait_1gs %>% select(19:20), na.rm=FALSE)/2
+RA_uptake_lipid          = rowSums(mat_trait_1gs %>% select(21:23), na.rm=FALSE)/3
+RA_uptake_N_compound     = rowSums(mat_trait_1gs %>% select(24:30), na.rm=FALSE)/7
+RA_uptake_nucleid_acid   = rowSums(mat_trait_1gs %>% select(31:34), na.rm=FALSE)/4
+RA_uptake_organoP        = rowSums(mat_trait_1gs %>% select(35), na.rm=FALSE)/1
+RA_uptake_osmolyte       = rowSums(mat_trait_1gs %>% select(36), na.rm=FALSE)/1
+RA_uptake_other          = rowSums(mat_trait_1gs %>% select(37), na.rm=FALSE)/1
+RA_uptake_peptide        = rowSums(mat_trait_1gs %>% select(38), na.rm=FALSE)/1
+RA_uptake_S_compound     = rowSums(mat_trait_1gs %>% select(39), na.rm=FALSE)/1
+RA_uptake_siderophore    = rowSums(mat_trait_1gs %>% select(40), na.rm=FALSE)/1
+RA_uptake_vitamin        = rowSums(mat_trait_1gs %>% select(41:42), na.rm=FALSE)/2
+RA_degradation_complex   = rowSums(mat_trait_1gs %>% select(43:48), na.rm=FALSE)/6
+RA_degradation_simple    = rowSums(mat_trait_1gs %>% select(49:61), na.rm=FALSE)/13
+RA_assimilation_C_comp   = rowSums(mat_trait_1gs %>% select(62:76), na.rm=FALSE)/15
+RA_assimilation_N_comp   = rowSums(mat_trait_1gs %>% select(77:81), na.rm=FALSE)/5
+RA_assimilation_S_comp   = rowSums(mat_trait_1gs %>% select(82), na.rm=FALSE)/1
+RA_assimilation_P_comp   = rowSums(mat_trait_1gs %>% select(83:84), na.rm=FALSE)/2
+RU_chemotrophy            = rowSums(mat_trait_1gs %>% select(85:131), na.rm=FALSE)/47
+RU_phototrophy            = rowSums(mat_trait_1gs %>% select(132:161), na.rm=FALSE)/30
+ST_general                = rowSums(mat_trait_1gs %>% select(162:165), na.rm=FALSE)/4
+ST_specific_high_T        = rowSums(mat_trait_1gs %>% select(166:168), na.rm=FALSE)/3
+ST_specific_low_T         = rowSums(mat_trait_1gs %>% select(169:173), na.rm=FALSE)/5
+ST_specific_desiccation   = rowSums(mat_trait_1gs %>% select(174:177), na.rm=FALSE)/4
+ST_specific_pH_stress     = rowSums(mat_trait_1gs %>% select(178:184), na.rm=FALSE)/7
+ST_specific_oxidative     = rowSums(mat_trait_1gs %>% select(185:186), na.rm=FALSE)/2
+ST_specific_O_limit       = rowSums(mat_trait_1gs %>% select(187:188), na.rm=FALSE)/2
+ST_specific_envelope      = rowSums(mat_trait_1gs %>% select(189:190), na.rm=FALSE)/2
+
+mat_trait_sg_mid_1         = cbind(RA_uptake_aromatic,RA_uptake_biopolymer,
+                                  RA_uptake_carbohydrate,RA_uptake_carboxylate,
+                                  RA_uptake_aminoacids,RA_uptake_ions,RA_uptake_lipid,
+                                  RA_uptake_N_compound,RA_uptake_nucleid_acid,
+                                  RA_uptake_organoP,RA_uptake_osmolyte,RA_uptake_other,
+                                  RA_uptake_peptide,RA_uptake_S_compound,
+                                  RA_uptake_siderophore,RA_uptake_vitamin,
+                                  RA_degradation_complex,RA_degradation_simple,
+                                  RA_assimilation_C_comp,RA_assimilation_N_comp,
+                                  RA_assimilation_S_comp,RA_assimilation_P_comp,
+                                  RU_chemotrophy,RU_phototrophy,ST_general,
+                                  ST_specific_high_T,ST_specific_low_T,
+                                  ST_specific_desiccation,ST_specific_pH_stress,
+                                  ST_specific_oxidative,ST_specific_O_limit,
+                                  ST_specific_envelope,mat_trait_1gs %>% select(191:192))
+
+mat_mid_sg = (as.matrix(mat_trait_sg_mid_1))
+
+x_mid_sg <- mat_trait_sg_mid_1 %>% 
+  correlate() %>% 
+  focus(rat_shr_gras)
+
+x_mid_sg %>% 
+  mutate(rowname = factor(term, levels = term[order(rat_shr_gras)])) %>%  # Order by correlation strength
+  ggplot(aes(x = term, y = rat_shr_gras)) +
+  geom_bar(stat = "identity") +
+  ylab("Correlation with rat_shr_gras") +
+  xlab("")
 
 # Objective 2: Grouping based on principal traits  ####
 
