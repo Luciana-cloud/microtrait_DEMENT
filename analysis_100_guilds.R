@@ -5,6 +5,7 @@ library(tidyverse)
 library(ggplot2)
 library(stats)
 library(corrr)
+library(olsrr)
 
 # Calling data ####
 
@@ -42,16 +43,67 @@ p<-ggplot(data=mag_stat, aes(x=id_2, y=ratio1, fill = pos)) +
    xlab("MAG ID")
 p
 
+# Changes in MAGs weighted abundance ####
+
+mag_stat = mag_stat %>% mutate(ratio1.1 = log10(mag_stat$Average.1/mag_stat$Average)*
+                                 abs(mag_stat$Average.1-mag_stat$Average))
+mag_stat = mag_stat %>% mutate(pos.1 = ratio1.1 >= 0)
+mag_stat = mag_stat %>% mutate(id_2 = seq(from = 1, to = 531, by = 1))
+p<-ggplot(data=mag_stat, aes(x=id_2, y=ratio1.1, fill = pos.1)) +
+  geom_bar(stat="identity") + theme(legend.position="none") + ylab("Log-transformed Ratio") + 
+  xlab("MAG ID")
+p
+
 # Correlation results with the highest granularity ####
 
 mat_trait   = mat_trait %>% mutate(rat_am_dro_gra = mag_stat$ratio1)
 mat_trait   = mat_trait %>% mutate(rat_am_dro_gra = ifelse(is.na(rat_am_dro_gra),0,rat_am_dro_gra),
                                    rat_am_dro_gra = ifelse(rat_am_dro_gra==Inf,0,rat_am_dro_gra),
                                    rat_am_dro_gra = ifelse(rat_am_dro_gra ==-Inf, 0, rat_am_dro_gra))
-mat_trait_1 = as.data.frame(mat_trait[,-192])
-mat = (as.matrix(mat_trait_1[2:192]))
+mat_trait   = mat_trait %>% mutate(rat_am_dro_gra.1 = mag_stat$ratio1.1)
+mat_trait   = mat_trait %>% mutate(rat_am_dro_gra.1 = ifelse(is.na(rat_am_dro_gra.1),0,rat_am_dro_gra.1),
+                                   rat_am_dro_gra.1 = ifelse(rat_am_dro_gra.1==Inf,0,rat_am_dro_gra.1),
+                                   rat_am_dro_gra.1 = ifelse(rat_am_dro_gra.1 ==-Inf, 0, rat_am_dro_gra.1))
 
-corre = as.data.frame(cor(mat[,1:190], mat[,191]))
+mat_trait_1 = as.data.frame(mat_trait[,-192])
+mat = (as.matrix(mat_trait_1[2:193]))
+
+corre   = as.data.frame(cor(mat[,1:190], mat[,191]))
+corre.1 = as.data.frame(cor(mat[,1:190], mat[,192]))
+
+# Better prediction attempt  ####
+
+test.1 = as.data.frame(cbind(mat_trait_1[2:191]))
+
+# Erase traits based on correlation matrix
+
+seq.1   = seq(1,190)
+temp.1  = as.data.frame(cbind((colSums(test.1)),seq.1))
+erase.1 = temp.1 %>% filter(V1==0)
+erase.1$row_names <- row.names(erase.1)
+
+test.2 = subset(test.1, select =-((erase.1$row_names)))
+test.2 = test.1[-(erase.1$seq.1)]
+temp.2 = as.data.frame(colSums(test.2))
+
+corre.1.1 = as.data.frame(cor(as.matrix(test.2), mat[,192]))
+
+m.all = lm(mat[,192]~.,data=test.2[1:50])
+temp.1.50 = ols_step_forward_p(m.all, details = FALSE)
+m.all = lm(mat[,192]~.,data=test.2[51:100])
+temp.51.100 = ols_step_forward_p(m.all, details = FALSE)
+m.all = lm(mat[,192]~.,data=test.2[101:140])
+temp.101.140 = ols_step_forward_p(m.all, details = FALSE)
+
+#best.mod = ols_step_best_subset(model=m.all)
+#str(best.mod)
+#plot(best.mod)
+
+#k.1  <- ols_step_all_possible(m.all)
+#k.1
+#pdf("k.1.pdf")
+#plot(k.1)
+#dev.off() 
 
 # Correlation plots  ####
 
