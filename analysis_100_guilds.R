@@ -5,6 +5,7 @@ library(tidyverse)
 library(ggplot2)
 library(stats)
 library(corrr)
+# devtools::install_github("rsquaredacademy/olsrr")
 library(olsrr)
 
 # Calling data ####
@@ -92,10 +93,50 @@ m.all = lm(mat[,192]~.,data=test.2[1:50])
 temp.1.50 = ols_step_forward_p(m.all, details = FALSE)
 m.all = lm(mat[,192]~.,data=test.2[51:100])
 temp.51.100 = ols_step_forward_p(m.all, details = FALSE)
-m.all = lm(mat[,192]~.,data=test.2[101:140])
-temp.101.140 = ols_step_forward_p(m.all, details = FALSE)
+m.all = lm(mat[,192]~.,data=test.2[101:115])
+temp.101.115 = ols_step_forward_p(m.all, details = FALSE)
+m.all = lm(mat[,192]~.,data=test.2[117:127])
+temp.117.127 = ols_step_forward_p(m.all, details = FALSE)
+m.all = lm(mat[,192]~.,data=test.2[128:140])
+temp.128.140 = ols_step_forward_p(m.all, details = FALSE)
 
-#best.mod = ols_step_best_subset(model=m.all)
+erase.2 = as.data.frame(c(temp.1.50[["metrics"]][["variable"]],
+                          temp.51.100[["metrics"]][["variable"]],
+                          temp.101.115[["metrics"]][["variable"]],
+                          temp.117.127[["metrics"]][["variable"]],
+                          temp.128.140[["metrics"]][["variable"]]))
+colnames(erase.2) = c("trait")
+
+test.3 = test.2 %>% select((erase.2$trait))
+corre.1.2 = as.data.frame(cor(as.matrix(test.3), mat[,192]))
+test.3 = test.3[-59]
+m.all.1 = lm(mat[,192]~.,data=test.3[1:55])
+test.3  = test.3[-55]
+m.all.1 = lm(mat[,192]~.,data=test.3)
+test.3  = test.3[-58]
+m.all.1 = lm(mat[,192]~.,data=test.3)
+temp.58 = ols_step_forward_p(m.all.1, details = FALSE)
+
+erase.3 = as.data.frame(temp.58[["metrics"]][["variable"]])
+colnames(erase.3) = c("trait")
+
+test.4 = test.3 %>% select((erase.3$trait))
+write.csv(test.4, file = "test.4.csv")
+corre.1.3 = as.data.frame(cor(as.matrix(test.4), mat[,192]))
+m.all.2 = lm(mat[,192]~.,data=test.4)
+temp.37 = ols_step_forward_p(m.all.2, details = FALSE)
+
+mat.1 = (as.data.frame(cbind(mat_trait_1$rat_am_dro_gra.1,test.4)))
+
+# Leaps test ####
+
+x = model.matrix(mat.1$`mat_trait_1$rat_am_dro_gra.1`~.-1,data=mat.1[1:30])
+y = mat.1$`mat_trait_1$rat_am_dro_gra.1`
+bestmods = leaps(x,y,nbest=1)
+
+#a = as.data.frame(colnames(test.3))
+
+#best.mod = ols_step_best_subset(model=m.all.2)
 #str(best.mod)
 #plot(best.mod)
 
@@ -107,13 +148,13 @@ temp.101.140 = ols_step_forward_p(m.all, details = FALSE)
 
 # Correlation plots  ####
 
-x <- mat %>% 
+x <- mat.1 %>% 
   correlate() %>% 
-  focus(rat_am_dro_gra)
+  focus(`mat[, 192]`)
 
 x %>% 
-  mutate(rowname = factor(term, levels = term[order(rat_am_dro_gra)])) %>%  # Order by correlation strength
-  ggplot(aes(x = term, y = rat_am_dro_gra)) +
+  mutate(rowname = factor(term, levels = term[order(`mat[, 192]`)])) %>%  # Order by correlation strength
+  ggplot(aes(x = term, y = `mat[, 192]`)) +
   geom_bar(stat = "identity") +
   ylab("Correlation with rat_am_dro_gra") +
   xlab("")
