@@ -110,6 +110,17 @@ corre.1.3 = as.data.frame(cor(as.matrix(test.4[2:38]), mat[,191]))
 # 37 traits out of 192 are the best predictors for changes in MAGs abundance 
 # under drought
 
+matgs = as.matrix(cbind(mat[,191],test.4[2:38]))
+x2 <- matgs %>% 
+  correlate() %>% 
+  focus(`mat[, 191]`)
+x2 %>% 
+  mutate(rowname = factor(term, levels = term[order(`mat[, 191]`)])) %>%  # Order by correlation strength
+  ggplot(aes(x = term, y = `mat[, 191]`)) +
+  geom_bar(stat = "identity") +
+  ylab("") +
+  xlab("")
+
 # Aim 2 ####
 # Do we see any functional groups in Loma under drought and which traits drive
 # these functional groups
@@ -157,7 +168,39 @@ ggplot(data=mat_r2_c,aes(x=nguilds,y=my_vec)) + geom_line() +
 
 # Working with 6 guilds
 
+v                        = cutree(clusterg,k=6) # Clusters
+genome2guild_5           = data.frame(guild = factor(v))
+rownames(genome2guild_5) = names(v)
+mat_ori$row_names        = row.names(mat_ori)
+mat_ori.1                = mat_ori[!(mat_ori$row_names %in% erase.n$row_names),]
+mat_trait_5              = as.data.frame(cbind(genome2guild_5,mat_ori.1$id,trait_tar)) 
 
+temp.6 = mat_trait_5 %>% group_by(guild) %>% summarize_if(is.numeric, mean, na.rm=TRUE)
+mat.6  = (as.matrix(temp.6[2:38]))
+a      = as.data.frame(colnames(mat.6))
+library(ggvegan)
+set.seed(2)
+temp_1 = metaMDS(trait_tar[1:37],autotransform = T,
+                 trymax = 1000,noshare=0.1)
 
+fort = fortify(temp_1)
 
+ggplot() + geom_point(data=subset(fort,Score=="sites"),
+                      mapping = aes(x=NMDS1,y=NMDS2,color =mat_trait_5$guild,size = 5),
+                      alpha=0.5) + 
+  geom_segment(data=subset(fort,Score=="species"),
+               mapping=aes(x=0,y=0,xend=NMDS1,yend=NMDS2),
+               arrow=arrow(length=unit(0.015,"npc"),
+                           type="closed"),
+               colour="darkgray",
+               linewidth=0.8) + 
+  geom_text(data=subset(fort,Score==""), # "species"
+            mapping=aes(label=Label,x=NMDS1*1.1,y=NMDS2*1.1)) + 
+  geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
+  geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.background=element_blank(),
+        axis.line=element_line(colour="black")) + 
+  annotate("text", x=-1, y=-1, label=paste('Stress =',round(temp_1$stress,2)))
 
