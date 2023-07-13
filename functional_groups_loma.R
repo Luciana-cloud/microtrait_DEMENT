@@ -153,14 +153,19 @@ g1 + scale_fill_manual(values=c("#a6d96a","#c6dbef",
 # Aim 2 ####
 # Do we see any functional groups in Loma under drought and which traits drive
 # these functional groups: average MAGs abundance
-
-trait_tar = test.4[2:43]
+ratio     = as.data.frame(log10(mag_stat$Average.1/mag_stat$Average+1))
+colnames(ratio) = "ratio"
+test.4    = as.data.frame(cbind(test.4,ratio))
+test.4    = as.data.frame(test.4[c(-163,-164,-263,-299,-387,-396,-399,-425,-479,
+                  -485,-487,-491,-499,-506,-511),])
+test.4    = test.4 %>% mutate(ratio = ratio/max(ratio))
+trait_tar = test.4[2:44]
 genomes   = as.list(mat_trait[1])
 test      = as.data.frame(rowSums(trait_tar))
 test$row_names = row.names(test)
-erase.n   = test %>% filter(`rowSums(trait_tar)`==0)
-trait_tar$row_names = row.names(trait_tar)
-trait_tar = trait_tar[!(trait_tar$row_names %in% erase.n$row_names),]
+# erase.n   = test %>% filter(`rowSums(trait_tar)`==0)
+# trait_tar$row_names = row.names(trait_tar)
+# trait_tar = trait_tar[!(trait_tar$row_names %in% erase.n$row_names),]
 
 # Forming functional guilds 
 
@@ -168,7 +173,7 @@ library(vegan)
 set.seed(1)
 
 # Gene cost
-distanceg  = vegdist(trait_tar[1:42], method = "bray", binary = FALSE)
+distanceg  = vegdist(trait_tar[1:43], method = "bray", binary = FALSE)
 clusterg   = hclust(distanceg, method="ward")
 nguilds    = seq(2, nrow(trait_tar), 2)
 plot(clusterg)
@@ -190,11 +195,11 @@ for(i in nguilds) {
 # Plotting
 mat_r2_c  = as.data.frame(cbind(nguilds,my_vec))
 # write.csv(mat_r2_c, file = "mat_r2_c.csv")
-mat_r2_c  = read.csv("mat_r2_c.csv") 
+# mat_r2_c  = read.csv("mat_r2_c.csv") 
 ggplot(data=mat_r2_c,aes(x=nguilds,y=my_vec)) + geom_line() +
   xlab("# of guilds") + ylab("Similarity within guilds") +
   theme(text = element_text(size = 20)) + 
-  geom_hline(yintercept=0.3415199, linetype="dashed", color = "red") + 
+  geom_hline(yintercept=0.8479659, linetype="dashed", color = "red") + 
   geom_vline(xintercept = 6, linetype="dashed", color = "red")
 
 # Working with 6 guilds
@@ -203,22 +208,23 @@ v                        = cutree(clusterg,k=6) # Clusters
 genome2guild_5           = data.frame(guild = factor(v))
 rownames(genome2guild_5) = names(v)
 mat_ori$row_names        = row.names(mat_ori)
-mat_ori.1                = mat_ori[!(mat_ori$row_names %in% erase.n$row_names),]
+mat_ori                  = as.data.frame(mat_ori[c(-163,-164,-263,-299,-387,-396,-399,-425,-479,
+                                                  -485,-487,-491,-499,-506,-511),])
+mat_ori.1                = as.data.frame(cbind(mat_ori,test.4$ratio))
 mat_trait_5              = as.data.frame(cbind(genome2guild_5,mat_ori.1$id,trait_tar)) 
 
 temp.6 = mat_trait_5 %>% group_by(guild) %>% summarize_if(is.numeric, mean, na.rm=TRUE)
-mat.6  = (as.matrix(temp.6[2:38]))
+mat.6  = (as.matrix(temp.6[2:44]))
 a      = as.data.frame(colnames(mat.6))
 library(ggvegan)
 set.seed(2)
-temp_1 = metaMDS(trait_tar[1:42],autotransform = T,
-                 trymax = 20,noshare=0.1)
+temp_1 = metaMDS(trait_tar[1:43],trymax = 100,autotransform = FALSE)
 
 fort = fortify(temp_1)
 # write.csv(fort, file = "fort.csv")
-fort  = read.csv("fort.csv") 
+# fort  = read.csv("fort.csv") 
 ggplot() + geom_point(data=subset(fort,Score=="sites"),
-                      mapping = aes(x=NMDS1,y=NMDS2,color =mat_trait_5$guild,size = 5),
+                      mapping = aes(x=NMDS1,y=NMDS2,color =mat_trait_5$guild,size = 4),
                       alpha=0.5) + 
   geom_segment(data=subset(fort,Score=="species"),
                mapping=aes(x=0,y=0,xend=NMDS1,yend=NMDS2),
@@ -226,7 +232,7 @@ ggplot() + geom_point(data=subset(fort,Score=="sites"),
                            type="closed"),
                colour="darkgray",
                linewidth=0.8) + 
-  geom_text(data=subset(fort,Score==""), # "species"
+  geom_text(data=subset(fort,Score=="species"), # "species"
             mapping=aes(label=Label,x=NMDS1*1.1,y=NMDS2*1.1)) + 
   geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
   geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
@@ -307,7 +313,7 @@ fort.0 = fortify(temp_1)
 fort.0  = read.csv("fort.0.csv")
 
 ggplot() + geom_point(data=subset(fort.0,Score=="sites"),
-                      mapping = aes(x=NMDS1,y=NMDS2,color =mat_trait_5$guild,size = 5),
+                      mapping = aes(x=NMDS1,y=NMDS2,color =mat_trait_5$guild,size = 4),
                       alpha=0.5) + 
   geom_segment(data=subset(fort.0,Score=="species"),
                mapping=aes(x=0,y=0,xend=NMDS1,yend=NMDS2),
@@ -576,9 +582,12 @@ ggplot() + geom_point(data=subset(fort,Score=="sites"),
 # Trait tradeoffs binary ####
 
 b   = as.data.frame(colnames(temp.6)) # extract columns to extract the data for each cathegory
-r_acqui = rowSums(temp.6 %>% select(3:5,8:16,23,25:29,31,34:38,41,43), na.rm=FALSE)/28
-s_tol   = rowSums(temp.6 %>% select(2,6,17,21,22,32,40,42), na.rm=FALSE)/8
-r_use   = rowSums(temp.6 %>% select(24,33,20,18,39,30), na.rm=FALSE)/6
+r_acqui = rowSums(temp.6 %>% select(11,27,13,10,15,29,
+                                    5,25,38,26,43,16,28,9,
+                                    36,7,3,35,37,4,14,19,
+                                    41,8,43,34,31,12), na.rm=FALSE)/28
+s_tol   = rowSums(temp.6 %>% select(17,2,40,32,22,6,42,21), na.rm=FALSE)/8
+r_use   = rowSums(temp.6 %>% select(30,24,33,20,18,39), na.rm=FALSE)/6
 
 par(mfrow=c(1,3))
 plot(r_acqui,s_tol,xlab = "Resource Acquisition", ylab = "Stress Tolerance",
@@ -593,7 +602,7 @@ par(mfrow=c(1,1))
 
 library(fmsb)
 
-temp1  = as.data.frame(cbind(temp.6$guild,r_acqui/28,s_tol/8,r_use/6))
+temp1  = as.data.frame(cbind(temp.6$guild,r_acqui,s_tol,r_use))
 total  = rowSums(temp1 %>% select(2:4), na.rm=FALSE)
 temp2  = as.data.frame(rbind(rep(max(total),3),
                              rep(min(r_use),3),temp1[2:4]))
