@@ -153,19 +153,19 @@ g1 + scale_fill_manual(values=c("#a6d96a","#c6dbef",
 # Aim 2 ####
 # Do we see any functional groups in Loma under drought and which traits drive
 # these functional groups: average MAGs abundance
-ratio     = as.data.frame(log10(mag_stat$Average.1/mag_stat$Average+1))
+#library(ggpubr)
+test.4    = read.csv("test.4.csv") 
+ratio     = as.data.frame((mag_stat$Average.1/mag_stat$Average))
 colnames(ratio) = "ratio"
 test.4    = as.data.frame(cbind(test.4,ratio))
 test.4    = as.data.frame(test.4[c(-163,-164,-263,-299,-387,-396,-399,-425,-479,
                   -485,-487,-491,-499,-506,-511),])
-test.4    = test.4 %>% mutate(ratio = ratio/max(ratio))
-trait_tar = test.4[2:44]
+#ggqqplot(log10(test.4[,44]+1))
+# Z-transformation ####
+trait_tar = scale(test.4[,2:44])
 genomes   = as.list(mat_trait[1])
 test      = as.data.frame(rowSums(trait_tar))
 test$row_names = row.names(test)
-# erase.n   = test %>% filter(`rowSums(trait_tar)`==0)
-# trait_tar$row_names = row.names(trait_tar)
-# trait_tar = trait_tar[!(trait_tar$row_names %in% erase.n$row_names),]
 
 # Forming functional guilds 
 
@@ -173,7 +173,7 @@ library(vegan)
 set.seed(1)
 
 # Gene cost
-distanceg  = vegdist(trait_tar[1:43], method = "bray", binary = FALSE)
+distanceg  = vegdist(trait_tar, method = "euclidean", binary = FALSE)
 clusterg   = hclust(distanceg, method="ward")
 nguilds    = seq(2, nrow(trait_tar), 2)
 plot(clusterg)
@@ -198,13 +198,13 @@ mat_r2_c  = as.data.frame(cbind(nguilds,my_vec))
 # mat_r2_c  = read.csv("mat_r2_c.csv") 
 ggplot(data=mat_r2_c,aes(x=nguilds,y=my_vec)) + geom_line() +
   xlab("# of guilds") + ylab("Similarity within guilds") +
-  theme(text = element_text(size = 20)) + 
-  geom_hline(yintercept=0.8479659, linetype="dashed", color = "red") + 
-  geom_vline(xintercept = 6, linetype="dashed", color = "red")
+  theme(text = element_text(size = 10)) + 
+  geom_hline(yintercept=0.32582104, linetype="dashed", color = "red") + 
+  geom_vline(xintercept = 10, linetype="dashed", color = "red")
 
 # Working with 6 guilds
 
-v                        = cutree(clusterg,k=6) # Clusters
+v                        = cutree(clusterg,k=10) # Clusters
 genome2guild_5           = data.frame(guild = factor(v))
 rownames(genome2guild_5) = names(v)
 mat_ori$row_names        = row.names(mat_ori)
@@ -218,7 +218,7 @@ mat.6  = (as.matrix(temp.6[2:44]))
 a      = as.data.frame(colnames(mat.6))
 library(ggvegan)
 set.seed(2)
-temp_1 = metaMDS(trait_tar[1:43],trymax = 100,autotransform = FALSE)
+temp_1 = metaMDS(trait_tar)
 
 fort = fortify(temp_1)
 # write.csv(fort, file = "fort.csv")
@@ -232,7 +232,7 @@ ggplot() + geom_point(data=subset(fort,Score=="sites"),
                            type="closed"),
                colour="darkgray",
                linewidth=0.8) + 
-  geom_text(data=subset(fort,Score=="species"), # "species"
+  geom_text(data=subset(fort,Score==""), # "species"
             mapping=aes(label=Label,x=NMDS1*1.1,y=NMDS2*1.1)) + 
   geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
   geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
