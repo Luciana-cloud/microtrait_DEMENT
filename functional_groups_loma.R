@@ -173,7 +173,7 @@ library(vegan)
 set.seed(1)
 
 # Gene cost
-distanceg  = vegdist(trait_tar, method = "euclidean", binary = FALSE)
+distanceg  = vegdist(trait_tar, method = "gower", binary = FALSE)
 clusterg   = hclust(distanceg, method="ward")
 nguilds    = seq(2, nrow(trait_tar), 2)
 plot(clusterg)
@@ -609,3 +609,18 @@ temp2  = as.data.frame(rbind(rep(max(total),3),
 colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
                     "Resource Use")
 radarchart(temp2,plwd=3) # Spider plots using 100 guilds and total costs
+
+
+# Graveyard
+
+pcoa                = cmdscale(distanceg.1,eig = TRUE,add = TRUE)
+positions           = pcoa$points
+colnames(positions) = c("pcoa1","pcoa2")
+percent_explain     = format(round(100*pcoa$eig/sum(pcoa$eig),digits = 1),
+                             nsmall = 1,trim = TRUE)
+labs                = c(glue("PCo 1 ({percent_explain[1]}%)"),
+                        glue("PCo 2 ({percent_explain[2]}%)"))
+
+positions %>% as_tibble(rownames="samples") %>% ggplot(aes(x=pcoa1,y=pcoa2,
+                                                           color =mat_trait_1a$guild)) + 
+  geom_point() + labs(x=labs[1],y=labs[2]) + stat_ellipse()
