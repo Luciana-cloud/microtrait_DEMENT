@@ -17,6 +17,7 @@ library(devtools)
 library(pairwiseAdonis)
 library(EcolUtils)
 library(ggvegan)
+library(fmsb)
 
 # Calling data and preprocessing ####
 
@@ -426,7 +427,7 @@ ggplot(data=mat_r2_1,aes(x=nguilds.1,y=my_vec)) + geom_line() +
 # Working with 16 guilds
 
 v.1                       = cutree(clusterg.1,k=16) # Clusters
-genome2guild_16           = data.frame(guild = factor(v))
+genome2guild_16           = data.frame(guild = factor(v.1))
 rownames(genome2guild_16) = names(v.1)
 mat_ori$row_names         = row.names(mat_ori)
 mat_ori.1                 = as.data.frame(mat_ori[c(-163,-164,-263,-299,-387,-396,-399,-425,-479,
@@ -452,7 +453,7 @@ ggplot() + geom_point(data=subset(fort.1,Score=="sites"),
                            type="closed"),
                colour="darkgray",
                linewidth=0.8) + 
-  geom_text(data=subset(fort.1,Score=="species"), # "species"
+  geom_text(data=subset(fort.1,Score==""), # "species"
             mapping=aes(label=Label,x=NMDS1*1.1,y=NMDS2*1.1)) + 
   geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
   geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
@@ -540,7 +541,7 @@ mat.2                     = mat_trait_2a %>% group_by(guild) %>% summarize_if(is
 mat.2                     = (as.matrix(mat.2[2:43]))
 a.2                       = as.data.frame(colnames(mat.2))
 
-set.seed(25)
+set.seed(1)
 ordination_2              = metaMDS(trait_tar.2,autotransform = F,trymax = 100)
 fort.2                    = fortify(ordination_2)
 # write.csv(fort.2, file = "fort.2.csv")
@@ -643,10 +644,10 @@ mat.3                     = mat_trait_3a %>% group_by(guild) %>% summarize_if(is
 mat.3                     = (as.matrix(mat.3[2:34]))
 a.3                       = as.data.frame(colnames(mat.3))
 
-set.seed(27)
+set.seed(13279)
 ordination_3              = metaMDS(trait_tar.3,autotransform = F,trymax = 100)
 fort.3                    = fortify(ordination_3)
-# write.csv(fort.1, file = "fort.1.csv")
+# write.csv(fort.3, file = "fort.3.csv")
 fort.3  = read.csv("fort.3.csv")
 
 ggplot() + geom_point(data=subset(fort.3,Score=="sites"),
@@ -667,3 +668,744 @@ ggplot() + geom_point(data=subset(fort.3,Score=="sites"),
         panel.background=element_blank(),
         axis.line=element_line(colour="black")) + 
   annotate("text", x=-1, y=-1, label=paste('Stress =',round(ordination_3$stress,2)))
+
+# Aim 3 : Life history statregies ####
+
+# DROUGHT GRASSLAND ####
+
+final_trait_1 = as.data.frame(cbind(mat_trait_1a$guild,
+                                    mat_trait_1a$`mat_ori.1$id`,
+                                    test.1[2:45]))
+a.1           = as.data.frame(colnames(final_trait_1))
+
+# Totals:
+
+r_acqui.t       = c(rowSums(final_trait_1 %>% select(12,23,30,22,9,34,21,18,5,35,31,4,8,
+                                             29,10,25,16,40,28,44,27,6,32,17,11,
+                                             15,14,43), na.rm=FALSE)/28)
+s_tol.t         = c(rowSums(final_trait_1 %>% select(24,38,7,20,36,42,26,41,3,45,39),
+                          na.rm=FALSE)/11)
+r_use.t         = c(rowSums(final_trait_1 %>% select(37,13,19,33), na.rm=FALSE)/4)
+temp1.t         = as.data.frame(cbind(r_acqui.t,s_tol.t,r_use.t))
+
+# group_1:
+group_1       = final_trait_1 %>% filter(`mat_trait_1a$guild` == 1)
+r_acqui       = c(rowSums(group_1 %>% select(12,23,30,22,9,34,21,18,5,35,31,4,8,
+                                           29,10,25,16,40,28,44,27,6,32,17,11,
+                                           15,14,43), na.rm=FALSE)/28)
+s_tol         = c(rowSums(group_1 %>% select(24,38,7,20,36,42,26,41,3,45,39),
+                          na.rm=FALSE)/11)
+r_use         = c(rowSums(group_1 %>% select(37,13,19,33), na.rm=FALSE)/4)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                             rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2) 
+
+# group_2:
+group_2       = final_trait_1 %>% filter(`mat_trait_1a$guild` == 2)
+r_acqui       = c(rowSums(group_2 %>% select(12,23,30,22,9,34,21,18,5,35,31,4,8,
+                                             29,10,25,16,40,28,44,27,6,32,17,11,
+                                             15,14,43), na.rm=FALSE)/28)
+s_tol         = c(rowSums(group_2 %>% select(24,38,7,20,36,42,26,41,3,45,39),
+                          na.rm=FALSE)/11)
+r_use         = c(rowSums(group_2 %>% select(37,13,19,33), na.rm=FALSE)/4)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2) 
+
+# group_3:
+group_3       = final_trait_1 %>% filter(`mat_trait_1a$guild` == 3)
+r_acqui       = c(rowSums(group_3 %>% select(12,23,30,22,9,34,21,18,5,35,31,4,8,
+                                             29,10,25,16,40,28,44,27,6,32,17,11,
+                                             15,14,43), na.rm=FALSE)/28)
+s_tol         = c(rowSums(group_3 %>% select(24,38,7,20,36,42,26,41,3,45,39),
+                          na.rm=FALSE)/11)
+r_use         = c(rowSums(group_3 %>% select(37,13,19,33), na.rm=FALSE)/4)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2) 
+
+# group_4:
+group_4       = final_trait_1 %>% filter(`mat_trait_1a$guild` == 4)
+r_acqui       = c(rowSums(group_4 %>% select(12,23,30,22,9,34,21,18,5,35,31,4,8,
+                                             29,10,25,16,40,28,44,27,6,32,17,11,
+                                             15,14,43), na.rm=FALSE)/28)
+s_tol         = c(rowSums(group_4 %>% select(24,38,7,20,36,42,26,41,3,45,39),
+                          na.rm=FALSE)/11)
+r_use         = c(rowSums(group_4 %>% select(37,13,19,33), na.rm=FALSE)/4)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2) 
+
+# group_5:
+group_5       = final_trait_1 %>% filter(`mat_trait_1a$guild` == 5)
+r_acqui       = c(rowSums(group_5 %>% select(12,23,30,22,9,34,21,18,5,35,31,4,8,
+                                             29,10,25,16,40,28,44,27,6,32,17,11,
+                                             15,14,43), na.rm=FALSE)/28)
+s_tol         = c(rowSums(group_5 %>% select(24,38,7,20,36,42,26,41,3,45,39),
+                          na.rm=FALSE)/11)
+r_use         = c(rowSums(group_5 %>% select(37,13,19,33), na.rm=FALSE)/4)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2) 
+
+# group_6:
+group_6       = final_trait_1 %>% filter(`mat_trait_1a$guild` == 6)
+r_acqui       = c(rowSums(group_6 %>% select(12,23,30,22,9,34,21,18,5,35,31,4,8,
+                                             29,10,25,16,40,28,44,27,6,32,17,11,
+                                             15,14,43), na.rm=FALSE)/28)
+s_tol         = c(rowSums(group_6 %>% select(24,38,7,20,36,42,26,41,3,45,39),
+                          na.rm=FALSE)/11)
+r_use         = c(rowSums(group_6 %>% select(37,13,19,33), na.rm=FALSE)/4)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2) 
+
+# group_7:
+group_7       = final_trait_1 %>% filter(`mat_trait_1a$guild` == 7)
+r_acqui       = c(rowSums(group_7 %>% select(12,23,30,22,9,34,21,18,5,35,31,4,8,
+                                             29,10,25,16,40,28,44,27,6,32,17,11,
+                                             15,14,43), na.rm=FALSE)/28)
+s_tol         = c(rowSums(group_7 %>% select(24,38,7,20,36,42,26,41,3,45,39),
+                          na.rm=FALSE)/11)
+r_use         = c(rowSums(group_7 %>% select(37,13,19,33), na.rm=FALSE)/4)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2) 
+
+# group_8:
+group_8       = final_trait_1 %>% filter(`mat_trait_1a$guild` == 8)
+r_acqui       = c(rowSums(group_8 %>% select(12,23,30,22,9,34,21,18,5,35,31,4,8,
+                                             29,10,25,16,40,28,44,27,6,32,17,11,
+                                             15,14,43), na.rm=FALSE)/28)
+s_tol         = c(rowSums(group_8 %>% select(24,38,7,20,36,42,26,41,3,45,39),
+                          na.rm=FALSE)/11)
+r_use         = c(rowSums(group_8 %>% select(37,13,19,33), na.rm=FALSE)/4)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2) 
+
+# group_9:
+group_9       = final_trait_1 %>% filter(`mat_trait_1a$guild` == 9)
+r_acqui       = c(rowSums(group_9 %>% select(12,23,30,22,9,34,21,18,5,35,31,4,8,
+                                             29,10,25,16,40,28,44,27,6,32,17,11,
+                                             15,14,43), na.rm=FALSE)/28)
+s_tol         = c(rowSums(group_9 %>% select(24,38,7,20,36,42,26,41,3,45,39),
+                          na.rm=FALSE)/11)
+r_use         = c(rowSums(group_9 %>% select(37,13,19,33), na.rm=FALSE)/4)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2) 
+
+# group_10:
+group_10       = final_trait_1 %>% filter(`mat_trait_1a$guild` == 10)
+r_acqui       = c(rowSums(group_10 %>% select(12,23,30,22,9,34,21,18,5,35,31,4,8,
+                                             29,10,25,16,40,28,44,27,6,32,17,11,
+                                             15,14,43), na.rm=FALSE)/28)
+s_tol         = c(rowSums(group_10 %>% select(24,38,7,20,36,42,26,41,3,45,39),
+                          na.rm=FALSE)/11)
+r_use         = c(rowSums(group_10 %>% select(37,13,19,33), na.rm=FALSE)/4)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2) 
+
+# group_11:
+group_11       = final_trait_1 %>% filter(`mat_trait_1a$guild` == 11)
+r_acqui       = c(rowSums(group_11 %>% select(12,23,30,22,9,34,21,18,5,35,31,4,8,
+                                              29,10,25,16,40,28,44,27,6,32,17,11,
+                                              15,14,43), na.rm=FALSE)/28)
+s_tol         = c(rowSums(group_11 %>% select(24,38,7,20,36,42,26,41,3,45,39),
+                          na.rm=FALSE)/11)
+r_use         = c(rowSums(group_11 %>% select(37,13,19,33), na.rm=FALSE)/4)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2)
+
+# group_12:
+group_12       = final_trait_1 %>% filter(`mat_trait_1a$guild` == 12)
+r_acqui       = c(rowSums(group_12 %>% select(12,23,30,22,9,34,21,18,5,35,31,4,8,
+                                              29,10,25,16,40,28,44,27,6,32,17,11,
+                                              15,14,43), na.rm=FALSE)/28)
+s_tol         = c(rowSums(group_12 %>% select(24,38,7,20,36,42,26,41,3,45,39),
+                          na.rm=FALSE)/11)
+r_use         = c(rowSums(group_12 %>% select(37,13,19,33), na.rm=FALSE)/4)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2)
+
+# group_13:
+group_13       = final_trait_1 %>% filter(`mat_trait_1a$guild` == 13)
+r_acqui       = c(rowSums(group_13 %>% select(12,23,30,22,9,34,21,18,5,35,31,4,8,
+                                              29,10,25,16,40,28,44,27,6,32,17,11,
+                                              15,14,43), na.rm=FALSE)/28)
+s_tol         = c(rowSums(group_13 %>% select(24,38,7,20,36,42,26,41,3,45,39),
+                          na.rm=FALSE)/11)
+r_use         = c(rowSums(group_13 %>% select(37,13,19,33), na.rm=FALSE)/4)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2)
+
+# group_14:
+group_14       = final_trait_1 %>% filter(`mat_trait_1a$guild` == 14)
+r_acqui       = c(rowSums(group_14 %>% select(12,23,30,22,9,34,21,18,5,35,31,4,8,
+                                              29,10,25,16,40,28,44,27,6,32,17,11,
+                                              15,14,43), na.rm=FALSE)/28)
+s_tol         = c(rowSums(group_14 %>% select(24,38,7,20,36,42,26,41,3,45,39),
+                          na.rm=FALSE)/11)
+r_use         = c(rowSums(group_14 %>% select(37,13,19,33), na.rm=FALSE)/4)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2)
+
+# group_15:
+group_15       = final_trait_1 %>% filter(`mat_trait_1a$guild` == 15)
+r_acqui       = c(rowSums(group_15 %>% select(12,23,30,22,9,34,21,18,5,35,31,4,8,
+                                              29,10,25,16,40,28,44,27,6,32,17,11,
+                                              15,14,43), na.rm=FALSE)/28)
+s_tol         = c(rowSums(group_15 %>% select(24,38,7,20,36,42,26,41,3,45,39),
+                          na.rm=FALSE)/11)
+r_use         = c(rowSums(group_15 %>% select(37,13,19,33), na.rm=FALSE)/4)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2)
+
+# group_16:
+group_16       = final_trait_1 %>% filter(`mat_trait_1a$guild` == 16)
+r_acqui       = c(rowSums(group_16 %>% select(12,23,30,22,9,34,21,18,5,35,31,4,8,
+                                              29,10,25,16,40,28,44,27,6,32,17,11,
+                                              15,14,43), na.rm=FALSE)/28)
+s_tol         = c(rowSums(group_16 %>% select(24,38,7,20,36,42,26,41,3,45,39),
+                          na.rm=FALSE)/11)
+r_use         = c(rowSums(group_16 %>% select(37,13,19,33), na.rm=FALSE)/4)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2)
+
+# DROGUTH SHRUBLAND ####
+
+final_trait_2 = as.data.frame(cbind(mat_trait_2a$guild,
+                                    mat_trait_2a$`mat_ori.2$id`,
+                                    test.2[2:43]))
+a.2           = as.data.frame(colnames(final_trait_2))
+
+# Totals:
+
+r_acqui.t       = c(rowSums(final_trait_2 %>% select(20,36,37,21,13,3,31,19,41,
+                                                     29,18,7,11,38,34,40,15,39,
+                                                     6,22,4,35,24,43,17,10,9), 
+                            na.rm=FALSE)/27)
+s_tol.t         = c(rowSums(final_trait_2 %>% select(8,5,12,42,26,27,33),
+                            na.rm=FALSE)/7)
+r_use.t         = c(rowSums(final_trait_2 %>% select(16,14,28,32,25,23), na.rm=FALSE)/6)
+temp1.t         = as.data.frame(cbind(r_acqui.t,s_tol.t,r_use.t))
+
+# group_1:
+group_1       = final_trait_2 %>% filter(`mat_trait_2a$guild` == 1)
+r_acqui       = c(rowSums(group_1 %>% select(20,36,37,21,13,3,31,19,41,
+                                             29,18,7,11,38,34,40,15,39,
+                                             6,22,4,35,24,43,17,10,9), na.rm=FALSE)/27)
+s_tol         = c(rowSums(group_1 %>% select(8,5,12,42,26,27,33),
+                          na.rm=FALSE)/7)
+r_use         = c(rowSums(group_1 %>% select(16,14,28,32,25,23), na.rm=FALSE)/6)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2) 
+
+# group_2:
+group_2       = final_trait_2 %>% filter(`mat_trait_2a$guild` == 2)
+r_acqui       = c(rowSums(group_2 %>% select(20,36,37,21,13,3,31,19,41,
+                                             29,18,7,11,38,34,40,15,39,
+                                             6,22,4,35,24,43,17,10,9), na.rm=FALSE)/27)
+s_tol         = c(rowSums(group_2 %>% select(8,5,12,42,26,27,33),
+                          na.rm=FALSE)/7)
+r_use         = c(rowSums(group_2 %>% select(16,14,28,32,25,23), na.rm=FALSE)/6)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2) 
+
+# group_3:
+group_3       = final_trait_2 %>% filter(`mat_trait_2a$guild` == 3)
+r_acqui       = c(rowSums(group_3 %>% select(20,36,37,21,13,3,31,19,41,
+                                             29,18,7,11,38,34,40,15,39,
+                                             6,22,4,35,24,43,17,10,9), na.rm=FALSE)/27)
+s_tol         = c(rowSums(group_3 %>% select(8,5,12,42,26,27,33),
+                          na.rm=FALSE)/7)
+r_use         = c(rowSums(group_3 %>% select(16,14,28,32,25,23), na.rm=FALSE)/6)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2) 
+
+# group_4:
+group_4       = final_trait_2 %>% filter(`mat_trait_2a$guild` == 4)
+r_acqui       = c(rowSums(group_4 %>% select(20,36,37,21,13,3,31,19,41,
+                                             29,18,7,11,38,34,40,15,39,
+                                             6,22,4,35,24,43,17,10,9), na.rm=FALSE)/27)
+s_tol         = c(rowSums(group_4 %>% select(8,5,12,42,26,27,33),
+                          na.rm=FALSE)/7)
+r_use         = c(rowSums(group_4 %>% select(16,14,28,32,25,23), na.rm=FALSE)/6)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2) 
+
+# group_5:
+group_5       = final_trait_2 %>% filter(`mat_trait_2a$guild` == 5)
+r_acqui       = c(rowSums(group_5 %>% select(20,36,37,21,13,3,31,19,41,
+                                             29,18,7,11,38,34,40,15,39,
+                                             6,22,4,35,24,43,17,10,9), na.rm=FALSE)/27)
+s_tol         = c(rowSums(group_5 %>% select(8,5,12,42,26,27,33),
+                          na.rm=FALSE)/7)
+r_use         = c(rowSums(group_5 %>% select(16,14,28,32,25,23), na.rm=FALSE)/6)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2) 
+
+# group_6:
+group_6       = final_trait_2 %>% filter(`mat_trait_2a$guild` == 6)
+r_acqui       = c(rowSums(group_6 %>% select(20,36,37,21,13,3,31,19,41,
+                                             29,18,7,11,38,34,40,15,39,
+                                             6,22,4,35,24,43,17,10,9), na.rm=FALSE)/27)
+s_tol         = c(rowSums(group_6 %>% select(8,5,12,42,26,27,33),
+                          na.rm=FALSE)/7)
+r_use         = c(rowSums(group_6 %>% select(16,14,28,32,25,23), na.rm=FALSE)/6)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2) 
+
+# group_7:
+group_7       = final_trait_2 %>% filter(`mat_trait_2a$guild` == 7)
+r_acqui       = c(rowSums(group_7 %>% select(20,36,37,21,13,3,31,19,41,
+                                             29,18,7,11,38,34,40,15,39,
+                                             6,22,4,35,24,43,17,10,9), na.rm=FALSE)/27)
+s_tol         = c(rowSums(group_7 %>% select(8,5,12,42,26,27,33),
+                          na.rm=FALSE)/7)
+r_use         = c(rowSums(group_7 %>% select(16,14,28,32,25,23), na.rm=FALSE)/6)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2) 
+
+# group_8:
+group_8       = final_trait_2 %>% filter(`mat_trait_2a$guild` == 8)
+r_acqui       = c(rowSums(group_8 %>% select(20,36,37,21,13,3,31,19,41,
+                                             29,18,7,11,38,34,40,15,39,
+                                             6,22,4,35,24,43,17,10,9), na.rm=FALSE)/27)
+s_tol         = c(rowSums(group_8 %>% select(8,5,12,42,26,27,33),
+                          na.rm=FALSE)/7)
+r_use         = c(rowSums(group_8 %>% select(16,14,28,32,25,23), na.rm=FALSE)/6)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2) 
+
+# group_9:
+group_9       = final_trait_2 %>% filter(`mat_trait_2a$guild` == 9)
+r_acqui       = c(rowSums(group_9 %>% select(20,36,37,21,13,3,31,19,41,
+                                             29,18,7,11,38,34,40,15,39,
+                                             6,22,4,35,24,43,17,10,9), na.rm=FALSE)/27)
+s_tol         = c(rowSums(group_9 %>% select(8,5,12,42,26,27,33),
+                          na.rm=FALSE)/7)
+r_use         = c(rowSums(group_9 %>% select(16,14,28,32,25,23), na.rm=FALSE)/6)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2) 
+
+# group_10:
+group_10       = final_trait_2 %>% filter(`mat_trait_2a$guild` == 10)
+r_acqui       = c(rowSums(group_10 %>% select(20,36,37,21,13,3,31,19,41,
+                                             29,18,7,11,38,34,40,15,39,
+                                             6,22,4,35,24,43,17,10,9), na.rm=FALSE)/27)
+s_tol         = c(rowSums(group_10 %>% select(8,5,12,42,26,27,33),
+                          na.rm=FALSE)/7)
+r_use         = c(rowSums(group_10 %>% select(16,14,28,32,25,23), na.rm=FALSE)/6)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2) 
+
+# group_11:
+group_11       = final_trait_2 %>% filter(`mat_trait_2a$guild` == 11)
+r_acqui       = c(rowSums(group_11 %>% select(20,36,37,21,13,3,31,19,41,
+                                              29,18,7,11,38,34,40,15,39,
+                                              6,22,4,35,24,43,17,10,9), na.rm=FALSE)/27)
+s_tol         = c(rowSums(group_11 %>% select(8,5,12,42,26,27,33),
+                          na.rm=FALSE)/7)
+r_use         = c(rowSums(group_11 %>% select(16,14,28,32,25,23), na.rm=FALSE)/6)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2) 
+
+# group_12:
+group_12       = final_trait_2 %>% filter(`mat_trait_2a$guild` == 12)
+r_acqui       = c(rowSums(group_12 %>% select(20,36,37,21,13,3,31,19,41,
+                                              29,18,7,11,38,34,40,15,39,
+                                              6,22,4,35,24,43,17,10,9), na.rm=FALSE)/27)
+s_tol         = c(rowSums(group_12 %>% select(8,5,12,42,26,27,33),
+                          na.rm=FALSE)/7)
+r_use         = c(rowSums(group_12 %>% select(16,14,28,32,25,23), na.rm=FALSE)/6)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2) 
+
+# group_13:
+group_13       = final_trait_2 %>% filter(`mat_trait_2a$guild` == 13)
+r_acqui       = c(rowSums(group_13 %>% select(20,36,37,21,13,3,31,19,41,
+                                              29,18,7,11,38,34,40,15,39,
+                                              6,22,4,35,24,43,17,10,9), na.rm=FALSE)/27)
+s_tol         = c(rowSums(group_13 %>% select(8,5,12,42,26,27,33),
+                          na.rm=FALSE)/7)
+r_use         = c(rowSums(group_13 %>% select(16,14,28,32,25,23), na.rm=FALSE)/6)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2) 
+
+# group_14:
+group_14       = final_trait_2 %>% filter(`mat_trait_2a$guild` == 14)
+r_acqui       = c(rowSums(group_14 %>% select(20,36,37,21,13,3,31,19,41,
+                                              29,18,7,11,38,34,40,15,39,
+                                              6,22,4,35,24,43,17,10,9), na.rm=FALSE)/27)
+s_tol         = c(rowSums(group_14 %>% select(8,5,12,42,26,27,33),
+                          na.rm=FALSE)/7)
+r_use         = c(rowSums(group_14 %>% select(16,14,28,32,25,23), na.rm=FALSE)/6)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2) 
+
+# group_15:
+group_15       = final_trait_2 %>% filter(`mat_trait_2a$guild` == 15)
+r_acqui       = c(rowSums(group_15 %>% select(20,36,37,21,13,3,31,19,41,
+                                              29,18,7,11,38,34,40,15,39,
+                                              6,22,4,35,24,43,17,10,9), na.rm=FALSE)/27)
+s_tol         = c(rowSums(group_15 %>% select(8,5,12,42,26,27,33),
+                          na.rm=FALSE)/7)
+r_use         = c(rowSums(group_15 %>% select(16,14,28,32,25,23), na.rm=FALSE)/6)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2) 
+
+# group_16:
+group_16       = final_trait_2 %>% filter(`mat_trait_2a$guild` == 16)
+r_acqui       = c(rowSums(group_16 %>% select(20,36,37,21,13,3,31,19,41,
+                                              29,18,7,11,38,34,40,15,39,
+                                              6,22,4,35,24,43,17,10,9), na.rm=FALSE)/27)
+s_tol         = c(rowSums(group_16 %>% select(8,5,12,42,26,27,33),
+                          na.rm=FALSE)/7)
+r_use         = c(rowSums(group_16 %>% select(16,14,28,32,25,23), na.rm=FALSE)/6)
+
+temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
+temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
+temp2         = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1))
+temp2.1       = as.data.frame(rbind(rep(max(temp1.t),3),
+                                    rep(min(temp1.t),3),temp1.1))
+colnames(temp2) = c("Resource Acquisition","Stress Tolerance",
+                    "Resource Use")
+colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
+                      "Resource Use")
+radarchart(temp2,plwd=1) 
+radarchart(temp2.1,plwd=2) 
