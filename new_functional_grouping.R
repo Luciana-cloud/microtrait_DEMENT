@@ -688,14 +688,14 @@ s_tol.t         = c(rowSums(final_trait_1 %>% select(24,38,7,20,36,42,26,41,3,45
 r_use.t         = c(rowSums(final_trait_1 %>% select(37,13,19,33), na.rm=FALSE)/4)
 temp1.t         = as.data.frame(cbind(r_acqui.t,s_tol.t,r_use.t))
 
-# group_1:
-group_1       = final_trait_1 %>% filter(`mat_trait_1a$guild` == 1)
-r_acqui       = c(rowSums(group_1 %>% select(12,23,30,22,9,34,21,18,5,35,31,4,8,
+# group_n:1:15
+group_n       = final_trait_1 %>% filter(`mat_trait_1a$guild` == 2)
+r_acqui       = c(rowSums(group_n %>% select(12,23,30,22,9,34,21,18,5,35,31,4,8,
                                            29,10,25,16,40,28,44,27,6,32,17,11,
                                            15,14,43), na.rm=FALSE)/28)
-s_tol         = c(rowSums(group_1 %>% select(24,38,7,20,36,42,26,41,3,45,39),
+s_tol         = c(rowSums(group_n %>% select(24,38,7,20,36,42,26,41,3,45,39),
                           na.rm=FALSE)/11)
-r_use         = c(rowSums(group_1 %>% select(37,13,19,33), na.rm=FALSE)/4)
+r_use         = c(rowSums(group_n %>% select(37,13,19,33), na.rm=FALSE)/4)
 
 temp1         = as.data.frame(cbind(r_acqui,s_tol,r_use))
 temp1.1       = as.data.frame(cbind(mean(r_acqui),mean(s_tol),mean(r_use)))
