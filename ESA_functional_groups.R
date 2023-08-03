@@ -291,12 +291,14 @@ ggplot(data=mat_r2_1,aes(x=nguilds.1,y=my_vec)) + geom_line() +
 # Ordination of the 15 functional groups ####
 mat_trait_1a           = as.data.frame(cbind(genome2guild,mat_ori$id,trait_tar))
 write.csv(mat_trait_1a, file = "mat_trait_1a.csv")
+mat_trait_1a           = read.csv(file = "mat_trait_1a.csv")
+
 set.seed(16)
 ordination_1           = metaMDS(trait_tar,autotransform = T,trymax = 500)
 fort.1                 = fortify(ordination_1)
 
-ggplot() + geom_point(data=subset(fort.1,Score=="sites"),
-                      mapping = aes(x=NMDS1,y=NMDS2,color =mat_trait_1a$guild,size = 2),
+p1 = ggplot() + geom_point(data=subset(fort.1,Score=="sites"),
+                      mapping = aes(x=NMDS1,y=NMDS2,color =as.factor(mat_trait_1a$guild),size = 2),
                       alpha=0.5) + 
   geom_segment(data=subset(fort.1,Score=="species"),
                mapping=aes(x=0,y=0,xend=NMDS1,yend=NMDS2),
@@ -313,6 +315,23 @@ ggplot() + geom_point(data=subset(fort.1,Score=="sites"),
         panel.background=element_blank(),
         axis.line=element_line(colour="black")) + 
   annotate("text", x=-1, y=-1, label=paste('Stress =',round(ordination_1$stress,2)))
+
+ggplot() + geom_point(data=subset(fort.1,Score=="sites"),
+                           mapping = aes(x=NMDS1,y=NMDS2,color =as.factor(mat_trait_1a$guild),size = 2),
+                           alpha=0.5) + 
+  geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
+  geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.background=element_blank(),
+        axis.line=element_line(colour="black")) + 
+  annotate("text", x=-1, y=-1, label=paste('Stress =',round(ordination_1$stress,2))) + 
+  stat_ellipse(data = subset(fort.1,Score=="sites"), 
+            aes(x = NMDS1, y = NMDS2, color = as.factor(mat_trait_1a$guild))) + 
+  scale_colour_manual(values=c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
+                               "#3F4921", "#7FDCC0", "#CBD588", "#5F7FC7",
+                               "#673770", "#D3D93E", "#38333E", "#508578", 
+                               "#D7C1B1", "#689030", "#AD6F3B"))
 
 # Aim 3 : Life history strategies ####
 
@@ -363,7 +382,9 @@ radarchart(temp2.1,plwd=2)
 
 fg_abundance = as.data.frame(cbind(genome2guild$guild,mat_trait$`mat_ori$id`,
                                   mag_stat[,7:27]))
-write.csv(fg_abundance, file = "fg_abundance.csv")
+# write.csv(fg_abundance, file = "fg_abundance.csv")
+fg_abundance = read.csv(file = "fg_abundance.csv")
+
 grassland.a    = fg_abundance %>% group_by(`genome2guild$guild`) %>% 
   summarise(abundance = sum(Average)/sum(fg_abundance$Average)) %>% 
   mutate(condition = rep("grassland.ambient" , nrow(grassland.a)))
@@ -380,9 +401,15 @@ shrubland.d    = fg_abundance %>% group_by(`genome2guild$guild`) %>%
 fg_ab.fig      =  as.data.frame(rbind(grassland.a,grassland.d,shrubland.a,
                                       shrubland.d))
 colnames(fg_ab.fig) = c("guild","abundance","condition")
-write.csv(fg_ab.fig, file = "fg_ab.fig.csv")
+# write.csv(fg_ab.fig, file = "fg_ab.fig.csv")
+fg_ab.fig = read.csv(file = "fg_ab.fig.csv")
 
-ggplot(fg_ab.fig, aes(fill=guild, y=abundance, x=condition)) + 
-  geom_bar(position="fill", stat="identity")
-
-
+ggplot(fg_ab.fig, aes(fill=as.factor(guild), y=abundance, x=condition)) + 
+  geom_bar(position="fill", stat="identity") + 
+  scale_fill_manual(values=c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
+                             "#3F4921", "#7FDCC0", "#CBD588", "#5F7FC7",
+                             "#673770", "#D3D93E", "#38333E", "#508578", 
+                             "#D7C1B1", "#689030", "#AD6F3B")) + 
+  theme(text = element_text(size=25)) + 
+  labs(y="Abundance",x = element_blank()) + 
+  theme(legend.title = element_blank())
