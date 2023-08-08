@@ -257,6 +257,19 @@ clusterg.1   = hclust(distanceg.1, method="ward")
 nguilds.1    = seq(2, nrow(trait_tar), 2)
 plot(clusterg.1)
 
+library(factoextra)
+fviz_dend(clusterg.1, cex = 0.5)
+
+fviz_dend(clusterg.1, k = 15,                 # Cut in four groups
+          cex = 0.25,                 # label size
+          k_colors = c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
+                       "#3F4921", "#7FDCC0", "#CBD588", "#5F7FC7",
+                       "#673770", "#D3D93E", "#38333E", "#508578", 
+                       "#D7C1B1", "#689030", "#AD6F3B"),
+          color_labels_by_k = TRUE,  # color labels by groups
+          ggtheme = theme_gray()     # Change theme
+)
+
 # Similarity within guilds ####
 my_vec = c()
 
@@ -282,11 +295,14 @@ test.clus.1            = adonis.pair(distanceg.1, genome2guild[,"guild"], nper =
 adonis_2               = vegan::adonis2(distanceg.1 ~ guild, data = genome2guild, perm = 1)
 
 # Plotting similarity ####
+pdf("Test.pdf", height = 3, width = 5)
 ggplot(data=mat_r2_1,aes(x=nguilds.1,y=my_vec)) + geom_line() +
-  xlab("# of guilds") + ylab("Similarity within guilds") +
+  xlab("Number of guilds") + ylab("Similarity within guilds") +
   theme(text = element_text(size = 16)) + 
   geom_hline(yintercept=0.4100782, linetype="dashed", color = "red") + 
-  geom_vline(xintercept = 15, linetype="dashed", color = "red")
+  geom_vline(xintercept = 15, linetype="dashed", color = "red") +
+  theme_classic()
+dev.off()
 
 # Ordination of the 15 functional groups ####
 mat_trait_1a           = as.data.frame(cbind(genome2guild,mat_ori$id,trait_tar))
