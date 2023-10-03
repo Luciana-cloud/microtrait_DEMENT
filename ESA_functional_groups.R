@@ -1,5 +1,7 @@
 # Final Analysis
 
+setwd("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT")
+
 # General goal: fitness traits tradeoffs and microbial life history strategies 
 # using genome-scale data
 
@@ -15,17 +17,20 @@ library(vegan)
 library(devtools)
 #install_github("pmartinezarbizu/pairwiseAdonis/pairwiseAdonis")
 library(pairwiseAdonis)
+# devtools::install_github("GuillemSalazar/EcolUtils")
 library(EcolUtils)
+# install.packages("remotes")
+# remotes::install_github("gavinsimpson/ggvegan")
 library(ggvegan)
 library(fmsb)
 
 # Calling data and preprocessing ####
 
-mat_ori    = read.csv("C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/litter_mags_trait_matrixatgranularity.csv",dec=".")
-gen_size   = read.delim("C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/litter_mags_metadata.txt",dec=".") 
+mat_ori    = read.csv("litter_mags_trait_matrixatgranularity.csv",dec=".")
+gen_size   = read.delim("litter_mags_metadata.txt",dec=".") 
 
-mag_stat   = read.delim("C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/mag_stats.txt") 
-mag_abun   = read.delim("C:/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/mag_adundance.txt") 
+mag_stat   = read.delim("mag_stats.txt") 
+mag_abun   = read.delim("mag_adundance.txt") 
 
 mag_stat   = mag_stat %>% full_join(mag_abun)
 
@@ -35,7 +40,10 @@ mat_ori    = mat_ori[-c(116,175),]
 gen_size   = gen_size[-c(116,175),] 
 mag_stat   = mag_stat[-c(116,175),]
 
-mat_trait    = mat_ori %>% select(2:191)/gen_size$length
+mat_trait  = as.data.frame(cbind((mat_ori %>% select(2:49)/gen_size$length),
+                                  mat_ori %>% select(50:161),
+                                  mat_ori %>% select(162:190)/gen_size$length,
+                                  mat_ori %>% select(191)))
 mat_trait    = as.data.frame(cbind(mat_ori$id,mat_trait))
 mat_trait    = mat_trait %>% mutate(id_2 = seq(from = 1, to = 531, by = 1))
 
@@ -46,7 +54,7 @@ mat_trait    = mat_trait %>% mutate(id_2 = seq(from = 1, to = 531, by = 1))
 mat_trait_g   = mat_trait %>% mutate(grass_abund = mag_stat$Average)
 mat_trait_g   = as.data.frame(mat_trait_g[,-192])
 mat_g         = (as.matrix(mat_trait_g[2:192]))
-corre.g       = as.data.frame(cor(mat_g[,1:190], mat_g[,191]))
+# corre.g       = as.data.frame(cor(mat_g[,1:190], mat_g[,191]))
 # Erase traits based on correlation matrix
 
 test.1        = as.data.frame(cbind(mat_trait_g[2:191]))
@@ -56,7 +64,7 @@ erase.1       = temp.1 %>% filter(V1==0)
 erase.1$row_names = row.names(erase.1)
 test.1        = test.1[-(erase.1$seq.1)]
 temp.1        = as.data.frame(colSums(test.1))
-corre.1.1     = as.data.frame(cor(as.matrix(test.1), mat_g[,191]))
+# corre.1.1     = as.data.frame(cor(as.matrix(test.1), mat_g[,191]))
 # Best predictors statistics
 
 m.all        = lm(mat_g[,191]~.,data=test.1[1:50])
@@ -67,27 +75,43 @@ m.all        = lm(mat_g[,191]~.,data=test.1[96:99])
 temp.96.99   = ols_step_forward_p(m.all, details = FALSE)
 m.all        = lm(mat_g[,191]~.,data=test.1[100:102])
 temp.100.102 = ols_step_forward_p(m.all, details = FALSE)
-m.all        = lm(mat_g[,191]~.,data=test.1[103:115])
-temp.103.115 = ols_step_forward_p(m.all, details = FALSE)
-m.all        = lm(mat_g[,191]~.,data=test.1[116:127])
-temp.116.127 = ols_step_forward_p(m.all, details = FALSE)
-m.all        = lm(mat_g[,191]~.,data=test.1[128:140])
-temp.128.140 = ols_step_forward_p(m.all, details = FALSE)
-erase.1a     = as.data.frame(c(temp.1.50[["metrics"]][["variable"]],
-                               temp.51.95[["metrics"]][["variable"]],
-                               temp.96.99[["metrics"]][["variable"]],
-                               temp.100.102[["metrics"]][["variable"]],
-                               temp.103.115[["metrics"]][["variable"]],
-                               temp.116.127[["metrics"]][["variable"]],
-                               temp.128.140[["metrics"]][["variable"]]))
+m.all        = lm(mat_g[,191]~.,data=test.1[103:109])
+temp.103.109 = ols_step_forward_p(m.all, details = FALSE)
+
+# Erasing 110 and 111 because the trait values are the same as trait 109
+
+m.all        = lm(mat_g[,191]~.,data=test.1[112:115])
+temp.112.115 = ols_step_forward_p(m.all, details = FALSE)
+
+# Erasing 116 because the trait value is the same as trait 115
+
+m.all        = lm(mat_g[,191]~.,data=test.1[117:125])
+temp.117.125 = ols_step_forward_p(m.all, details = FALSE)
+
+# Erasing 126 because the trait value is the same as trait 113
+
+m.all        = lm(mat_g[,191]~.,data=test.1[127:134])
+temp.127.134 = ols_step_forward_p(m.all, details = FALSE)
+m.all        = lm(mat_g[,191]~.,data=test.1[135:140])
+temp.135.140 = ols_step_forward_p(m.all, details = FALSE)
+
+erase.1a     = as.data.frame(c(temp.1.50[["predictors"]],
+                               temp.51.95[["predictors"]],
+                               temp.96.99[["predictors"]],
+                               temp.100.102[["predictors"]],
+                               temp.103.109[["predictors"]],
+                               temp.112.115[["predictors"]],
+                               temp.117.125[["predictors"]],
+                               temp.127.134[["predictors"]],
+                               temp.135.140[["predictors"]]))
 colnames(erase.1a) = c("trait")
 test.g             = test.1 %>% select((erase.1a$trait))
-corre.1.2          = as.data.frame(cor(as.matrix(test.g),mat_g[,191]))
+# corre.1.2          = as.data.frame(cor(as.matrix(test.g),mat_g[,191]))
 a                  = as.data.frame(colnames(test.g))
-test.g             = test.g[c(-49,-59,-63)]
+test.g             = test.g[c(-48,-57,-60)]
 m.all              = lm(mat_g[,191]~.,data=test.g)
 best.predictors    = ols_step_forward_p(m.all, details = FALSE)
-erase.1a           = as.data.frame(best.predictors[["metrics"]][["variable"]])
+erase.1a           = as.data.frame(best.predictors[["predictors"]])
 colnames(erase.1a) = c("trait")
 test.g             = test.g %>% select((erase.1a$trait))
 m.all              = lm(mat_g[,191]~.,data=test.g)
@@ -95,45 +119,52 @@ write.csv(erase.1a, file = "grassland.best.predictors.csv")
 
 # Shrubland ####
 
-mat_trait_g   = mat_trait %>% mutate(grass_abund = mag_stat$Average.2)
-mat_trait_g   = as.data.frame(mat_trait_g[,-192])
-mat_g         = (as.matrix(mat_trait_g[2:192]))
-corre.g       = as.data.frame(cor(mat_g[,1:190], mat_g[,191]))
+mat_trait_s   = mat_trait %>% mutate(shrub_abund = mag_stat$Average.2)
+mat_trait_s   = as.data.frame(mat_trait_s[,-192])
+mat_s         = (as.matrix(mat_trait_s[2:192]))
+# corre.g       = as.data.frame(cor(mat_g[,1:190], mat_g[,191]))
 # Erase traits based on correlation matrix
 
-test.1        = as.data.frame(cbind(mat_trait_g[2:191]))
+test.1        = as.data.frame(cbind(mat_trait_s[2:191]))
 seq.1         = seq(1,190)
 temp.1        = as.data.frame(cbind((colSums(test.1)),seq.1))
 erase.1       = temp.1 %>% filter(V1==0)
 erase.1$row_names = row.names(erase.1)
 test.1        = test.1[-(erase.1$seq.1)]
 temp.1        = as.data.frame(colSums(test.1))
-corre.1.1     = as.data.frame(cor(as.matrix(test.1), mat_g[,191]))
+# corre.1.1     = as.data.frame(cor(as.matrix(test.1), mat_s[,191]))
 # Best predictors statistics
 
-m.all        = lm(mat_g[,191]~.,data=test.1[1:50])
+m.all        = lm(mat_s[,191]~.,data=test.1[1:50])
 temp.1.50    = ols_step_forward_p(m.all, details = FALSE)
-m.all        = lm(mat_g[,191]~.,data=test.1[51:100])
-temp.51.100  = ols_step_forward_p(m.all, details = FALSE)
-m.all        = lm(mat_g[,191]~.,data=test.1[101:115])
-temp.101.115 = ols_step_forward_p(m.all, details = FALSE)
-m.all        = lm(mat_g[,191]~.,data=test.1[116:140])
+m.all        = lm(mat_s[,191]~.,data=test.1[51:95])
+temp.51.95   = ols_step_forward_p(m.all, details = FALSE)
+m.all        = lm(mat_s[,191]~.,data=test.1[96:99])
+temp.96.99  = ols_step_forward_p(m.all, details = FALSE)
+m.all        = lm(mat_s[,191]~.,data=test.1[100:113])
+temp.100.113 = ols_step_forward_p(m.all, details = FALSE)
+m.all        = lm(mat_s[,191]~.,data=test.1[114:115])
+temp.114.115 = ols_step_forward_p(m.all, details = FALSE)
+m.all        = lm(mat_s[,191]~.,data=test.1[116:140])
 temp.116.140 = ols_step_forward_p(m.all, details = FALSE)
-erase.1a     = as.data.frame(c(temp.1.50[["metrics"]][["variable"]],
-                               temp.51.100[["metrics"]][["variable"]],
-                               temp.101.115[["metrics"]][["variable"]],
-                               temp.116.140[["metrics"]][["variable"]]))
+
+erase.1a     = as.data.frame(c(temp.1.50[["predictors"]],
+                               temp.51.95[["predictors"]],
+                               temp.96.99[["predictors"]],
+                               temp.100.113[["predictors"]],
+                               temp.114.115[["predictors"]],
+                               temp.116.140[["predictors"]]))
 colnames(erase.1a) = c("trait")
-test.g             = test.1 %>% select((erase.1a$trait))
-corre.1.2          = as.data.frame(cor(as.matrix(test.g),mat_g[,191]))
-a                  = as.data.frame(colnames(test.g))
-test.g             = test.g[c(-60,-62)]
-m.all              = lm(mat_g[,191]~.,data=test.g)
+test.s             = test.1 %>% select((erase.1a$trait))
+# corre.1.2          = as.data.frame(cor(as.matrix(test.g),mat_g[,191]))
+a                  = as.data.frame(colnames(test.s))
+test.s             = test.s[c(-60,-61)]
+m.all              = lm(mat_s[,191]~.,data=test.s)
 best.predictors    = ols_step_forward_p(m.all, details = FALSE)
-erase.1a           = as.data.frame(best.predictors[["metrics"]][["variable"]])
+erase.1a           = as.data.frame(best.predictors[["predictors"]])
 colnames(erase.1a) = c("trait")
-test.g             = test.g %>% select((erase.1a$trait))
-m.all              = lm(mat_g[,191]~.,data=test.g)
+test.s             = test.s %>% select((erase.1a$trait))
+m.all              = lm(mat_s[,191]~.,data=test.s)
 write.csv(erase.1a, file = "shrubland.best.predictors.csv")
 
 # Grassland Drought ####
@@ -141,7 +172,7 @@ write.csv(erase.1a, file = "shrubland.best.predictors.csv")
 mat_trait_gd   = mat_trait %>% mutate(grass_abund = mag_stat$Average.1)
 mat_trait_gd   = as.data.frame(mat_trait_gd[,-192])
 mat_gd         = (as.matrix(mat_trait_gd[2:192]))
-corre.gd       = as.data.frame(cor(mat_gd[,1:190], mat_gd[,191]))
+# corre.gd       = as.data.frame(cor(mat_gd[,1:190], mat_gd[,191]))
 # Erase traits based on correlation matrix
 
 test.1        = as.data.frame(cbind(mat_trait_gd[2:191]))
@@ -151,35 +182,44 @@ erase.1       = temp.1 %>% filter(V1==0)
 erase.1$row_names = row.names(erase.1)
 test.1        = test.1[-(erase.1$seq.1)]
 temp.1        = as.data.frame(colSums(test.1))
-corre.1.1     = as.data.frame(cor(as.matrix(test.1), mat_gd[,191]))
+# corre.1.1     = as.data.frame(cor(as.matrix(test.1), mat_gd[,191]))
 # Best predictors statistics
 
 m.all        = lm(mat_gd[,191]~.,data=test.1[1:50])
 temp.1.50    = ols_step_forward_p(m.all, details = FALSE)
-m.all        = lm(mat_gd[,191]~.,data=test.1[51:95])
-temp.51.95   = ols_step_forward_p(m.all, details = FALSE)
-m.all        = lm(mat_gd[,191]~.,data=test.1[96:99])
-temp.96.99   = ols_step_forward_p(m.all, details = FALSE)
+m.all        = lm(mat_gd[,191]~.,data=test.1[51:93])
+temp.51.93   = ols_step_forward_p(m.all, details = FALSE)
+m.all        = lm(mat_gd[,191]~.,data=test.1[94:99])
+temp.94.99   = ols_step_forward_p(m.all, details = FALSE)
 m.all        = lm(mat_gd[,191]~.,data=test.1[100:115])
 temp.100.115 = ols_step_forward_p(m.all, details = FALSE)
 m.all        = lm(mat_gd[,191]~.,data=test.1[116:140])
 temp.116.140 = ols_step_forward_p(m.all, details = FALSE)
-erase.1a     = as.data.frame(c(temp.1.50[["metrics"]][["variable"]],
-                               temp.51.95[["metrics"]][["variable"]],
-                               temp.96.99[["metrics"]][["variable"]],
-                               temp.100.115[["metrics"]][["variable"]],
-                               temp.116.140[["metrics"]][["variable"]]))
+erase.1a     = as.data.frame(c(temp.1.50[["predictors"]],
+                               temp.51.93[["predictors"]],
+                               temp.96.99[["predictors"]],
+                               temp.94.99[["predictors"]],
+                               temp.100.115[["predictors"]],
+                               temp.116.140[["predictors"]]))
 colnames(erase.1a) = c("trait")
-test.g             = test.1 %>% select((erase.1a$trait))
-corre.1.2          = as.data.frame(cor(as.matrix(test.g),mat_gd[,191]))
-a                  = as.data.frame(colnames(test.g))
-test.g             = test.g[c(-49)]
-m.all              = lm(mat_gd[,191]~.,data=test.g)
+test.gd            = test.1 %>% select((erase.1a$trait))
+# corre.1.2          = as.data.frame(cor(as.matrix(test.g),mat_gd[,191]))
+a                  = as.data.frame(colnames(test.gd))
+m.all              = lm(mat_gd[,191]~.,data=test.gd[1:46])
+temp.1.46          = ols_step_forward_p(m.all, details = FALSE)
+m.all              = lm(mat_gd[,191]~.,data=test.gd[47:65])
+temp.47.65         = ols_step_forward_p(m.all, details = FALSE)
+erase.1a           = as.data.frame(c(temp.1.46[["predictors"]],
+                                     temp.47.65[["predictors"]]))
+colnames(erase.1a) = c("trait")
+test.gd            = test.gd %>% select((erase.1a$trait))
+a                  = as.data.frame(colnames(test.gd))
+m.all              = lm(mat_gd[,191]~.,data=test.gd)
 best.predictors    = ols_step_forward_p(m.all, details = FALSE)
-erase.1a           = as.data.frame(best.predictors[["metrics"]][["variable"]])
+erase.1a           = as.data.frame(best.predictors[["predictors"]])
 colnames(erase.1a) = c("trait")
-test.g             = test.g %>% select((erase.1a$trait))
-m.all              = lm(mat_gd[,191]~.,data=test.g)
+test.gd            = test.gd %>% select((erase.1a$trait))
+m.all              = lm(mat_gd[,191]~.,data=test.gd)
 write.csv(erase.1a, file = "grassland.drought.best.predictors.csv")
 
 # Shrubland Drought ####
@@ -187,7 +227,7 @@ write.csv(erase.1a, file = "grassland.drought.best.predictors.csv")
 mat_trait_g   = mat_trait %>% mutate(grass_abund = mag_stat$Average.3)
 mat_trait_g   = as.data.frame(mat_trait_g[,-192])
 mat_g         = (as.matrix(mat_trait_g[2:192]))
-corre.g       = as.data.frame(cor(mat_g[,1:190], mat_g[,191]))
+# corre.g       = as.data.frame(cor(mat_g[,1:190], mat_g[,191]))
 # Erase traits based on correlation matrix
 
 test.1        = as.data.frame(cbind(mat_trait_g[2:191]))
@@ -197,38 +237,56 @@ erase.1       = temp.1 %>% filter(V1==0)
 erase.1$row_names = row.names(erase.1)
 test.1        = test.1[-(erase.1$seq.1)]
 temp.1        = as.data.frame(colSums(test.1))
-corre.1.1     = as.data.frame(cor(as.matrix(test.1), mat_g[,191]))
+# corre.1.1     = as.data.frame(cor(as.matrix(test.1), mat_g[,191]))
 # Best predictors statistics
 
 m.all        = lm(mat_g[,191]~.,data=test.1[1:50])
 temp.1.50    = ols_step_forward_p(m.all, details = FALSE)
 m.all        = lm(mat_g[,191]~.,data=test.1[51:93])
 temp.51.93   = ols_step_forward_p(m.all, details = FALSE)
-m.all        = lm(mat_g[,191]~.,data=test.1[94:100])
-temp.94.100  = ols_step_forward_p(m.all, details = FALSE)
-m.all        = lm(mat_g[,191]~.,data=test.1[101:102])
-temp.101.102 = ols_step_forward_p(m.all, details = FALSE)
+m.all        = lm(mat_g[,191]~.,data=test.1[94:99])
+temp.94.99   = ols_step_forward_p(m.all, details = FALSE)
+m.all        = lm(mat_g[,191]~.,data=test.1[100:102])
+temp.100.102 = ols_step_forward_p(m.all, details = FALSE)
 m.all        = lm(mat_g[,191]~.,data=test.1[103:115])
 temp.103.115 = ols_step_forward_p(m.all, details = FALSE)
 m.all        = lm(mat_g[,191]~.,data=test.1[116:140])
 temp.116.140 = ols_step_forward_p(m.all, details = FALSE)
-erase.1a     = as.data.frame(c(temp.1.50[["metrics"]][["variable"]],
-                               temp.51.93[["metrics"]][["variable"]],
-                               temp.94.100[["metrics"]][["variable"]],
-                               temp.101.102[["metrics"]][["variable"]],
-                               temp.103.115[["metrics"]][["variable"]],
-                               temp.116.140[["metrics"]][["variable"]]))
+erase.1a     = as.data.frame(c(temp.1.50[["predictors"]],
+                               temp.51.93[["predictors"]],
+                               temp.94.99[["predictors"]],
+                               temp.100.102[["predictors"]],
+                               temp.103.115[["predictors"]],
+                               temp.116.140[["predictors"]]))
 colnames(erase.1a) = c("trait")
 test.g             = test.1 %>% select((erase.1a$trait))
-corre.1.2          = as.data.frame(cor(as.matrix(test.g),mat_g[,191]))
+# corre.1.2          = as.data.frame(cor(as.matrix(test.g),mat_g[,191]))
 a                  = as.data.frame(colnames(test.g))
-test.g             = test.g[c(-45,-47,-59)]
-m.all              = lm(mat_g[,191]~.,data=test.g)
-best.predictors    = ols_step_forward_p(m.all, details = FALSE)
-erase.1a           = as.data.frame(best.predictors[["metrics"]][["variable"]])
+
+m.all              = lm(mat_g[,191]~.,data=test.g[1:45])
+temp.1.45          = ols_step_forward_p(m.all, details = FALSE)
+m.all              = lm(mat_g[,191]~.,data=test.g[46:50])
+temp.46.50         = ols_step_forward_p(m.all, details = FALSE)
+m.all              = lm(mat_g[,191]~.,data=test.g[51:60])
+temp.51.60         = ols_step_forward_p(m.all, details = FALSE)
+m.all              = lm(mat_g[,191]~.,data=test.g[61:63])
+temp.61.63         = ols_step_forward_p(m.all, details = FALSE)
+erase.1a     = as.data.frame(c(temp.1.45[["predictors"]],
+                               temp.46.50[["predictors"]],
+                               temp.51.60[["predictors"]],
+                               temp.61.63[["predictors"]]))
 colnames(erase.1a) = c("trait")
 test.g             = test.g %>% select((erase.1a$trait))
-m.all              = lm(mat_g[,191]~.,data=test.g)
+a                  = as.data.frame(colnames(test.g))
+test.g1            = test.g[c(-38,-45,-50)]
+a                  = as.data.frame(colnames(test.g1))
+test.g1            = test.g1[c(-22)] # erasing trait 22
+m.all              = lm(mat_g[,191]~.,data=test.g1)
+best.predictors    = ols_step_forward_p(m.all, details = FALSE)
+erase.1a           = as.data.frame(best.predictors[["predictors"]])
+colnames(erase.1a) = c("trait")
+test.g1            = test.g1 %>% select((erase.1a$trait))
+m.all              = lm(mat_g[,191]~.,data=test.g1)
 write.csv(erase.1a, file = "shrubland.drought.best.predictors.csv")
 
 # Selected traits ####
