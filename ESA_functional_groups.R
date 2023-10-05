@@ -451,9 +451,14 @@ ggplot() + geom_point(data=subset(fort.1,score=="sites"),
 # Aim 3 : Life history strategies ####
 
 final_trait = as.data.frame(cbind(genome2guild$guild,mat_trait$`mat_ori$id`,
-                                  mat_trait.fin[,3:90]))
+                                  mat_trait.fin[,3:77]))
 a.1         = as.data.frame(colnames(final_trait))
 write.csv(final_trait, file = "final_trait.csv")
+
+group_n   = final_trait %>% filter(`genome2guild$guild` == 31)
+s_tol.t   = c(rowSums(group_n %>% select(4,5,64,6,36,80,37,46,33,82,66,69,
+                                               54,31,22,52),na.rm=FALSE)/16)
+
 # Totals ####
 r_acqui.t   = c(rowSums(final_trait %>% select(27,45,3,50,72,73,39,53,78,15,81,
                                                17,67,14,77,42,44,32,13,25,88,51,
@@ -500,16 +505,16 @@ fg_abundance = as.data.frame(cbind(genome2guild$guild,mat_trait$`mat_ori$id`,
 # write.csv(fg_abundance, file = "fg_abundance.csv")
 fg_abundance = read.csv(file = "fg_abundance.csv")
 
-grassland.a    = fg_abundance %>% group_by(`genome2guild$guild`) %>% 
+grassland.a    = fg_abundance %>% group_by(genome2guild.guild) %>% 
   summarise(abundance = sum(Average)/sum(fg_abundance$Average)) %>% 
   mutate(condition = rep("grassland.ambient" , nrow(grassland.a)))
-grassland.d    = fg_abundance %>% group_by(`genome2guild$guild`) %>% 
+grassland.d    = fg_abundance %>% group_by(genome2guild.guild) %>% 
   summarise(abundance = sum(Average.1)/sum(fg_abundance$Average.1)) %>% 
   mutate(condition = rep("grassland.drought" , nrow(grassland.a)))
-shrubland.a    = fg_abundance %>% group_by(`genome2guild$guild`) %>% 
+shrubland.a    = fg_abundance %>% group_by(genome2guild.guild) %>% 
   summarise(abundance = sum(Average.2)/sum(fg_abundance$Average.2)) %>% 
   mutate(condition = rep("shrubland.ambient" , nrow(grassland.a)))
-shrubland.d    = fg_abundance %>% group_by(`genome2guild$guild`) %>% 
+shrubland.d    = fg_abundance %>% group_by(genome2guild.guild) %>% 
   summarise(abundance = sum(Average.3)/sum(fg_abundance$Average.3)) %>% 
   mutate(condition = rep("shrubland.drought" , nrow(grassland.a)))
 
@@ -521,10 +526,78 @@ fg_ab.fig = read.csv(file = "fg_ab.fig.csv")
 
 ggplot(fg_ab.fig, aes(fill=as.factor(guild), y=abundance, x=condition)) + 
   geom_bar(position="fill", stat="identity") + 
-  scale_fill_manual(values=c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
-                             "#3F4921", "#7FDCC0", "#CBD588", "#5F7FC7",
-                             "#673770", "#D3D93E", "#38333E", "#508578", 
-                             "#D7C1B1", "#689030", "#AD6F3B")) + 
+#  scale_fill_manual(values=c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
+  #                             "#3F4921", "#7FDCC0", "#CBD588", "#5F7FC7",
+  #                             "#673770", "#D3D93E", "#38333E", "#508578", 
+  #                             "#D7C1B1", "#689030", "#AD6F3B")) + 
   theme(text = element_text(size=25)) + 
   labs(y="Abundance",x = element_blank()) + 
   theme(legend.title = element_blank())
+
+# Aim 4: Selecting decomposers
+
+# We are defining decomposers if they have more than one of the following traits for
+# degradation of complex compounds and protein
+
+a       = as.data.frame(colnames(mat_trait))
+decomp  = as.data.frame(cbind(mat_trait[1],mat_trait[,43:49]))
+sum_row = as.data.frame(rowSums(decomp[,2:8]))
+
+# write.csv(decomp, file = "decomposers.csv")
+
+decomp       = read.csv(file = "decomposers.csv")
+set.seed(1)
+decomp_de    = scale(decomp[,3:9],center = FALSE)
+distance_de  = vegdist(decomp_de, method = "euclidean", binary = FALSE)
+distance_de  = as.dist(distance_de)
+cluster_de   = hclust(distance_de, method="ward.D2")
+nguilds_de   = seq(2, nrow(decomp_de), 2)
+plot(cluster_de)
+
+my_vec = c()
+
+for(i in nguilds_de) {
+  v                      = cutree(cluster_de,k=i)
+  genome2guild           = data.frame(guild = factor(v))
+  rownames(genome2guild) = names(v)
+  adonis_2               = vegan::adonis2(distance_de ~ guild, data = genome2guild, perm = 1)
+  temp                   = adonis_2$R2
+  temp_1                 = temp[1]
+  my_out                 = temp_1
+  my_vec   <- c(my_vec, my_out)   
+}
+mat_r2_de  = as.data.frame(cbind(nguilds_de,my_vec))
+
+v                      = cutree(cluster_de,k=6)
+genome2guild           = data.frame(guild = factor(v))
+rownames(genome2guild) = names(v)
+adonis_1               = pairwiseAdonis::pairwise.adonis(distance_de,genome2guild$guild,
+                                                         perm = 999,p.adjust.m='BH')
+test.clus.1            = adonis.pair(distance_de, genome2guild[,"guild"], nper = 999, 
+                                     corr.method = "fdr")
+adonis_2               = vegan::adonis2(distance_de ~ guild, data = genome2guild, perm = 999)
+
+library(factoextra)
+
+fviz_dend(cluster_de, k = 6,                 # Cut in four groups
+          cex = 0.25,                 # label size
+          k_colors = c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
+                       "#3F4921", "#AD6F3B"),
+          color_labels_by_k = TRUE,  # color labels by groups
+          ggtheme = theme_gray()     # Change theme
+)
+
+ggplot(data=mat_r2_de,aes(x=nguilds_de,y=my_vec)) + geom_line() +
+  xlab("Number of guilds") + ylab("Similarity within guilds") +
+  theme(text = element_text(size = 16)) + 
+  geom_hline(yintercept=0.6073025, linetype="dashed", color = "red") + 
+  geom_vline(xintercept = 6, linetype="dashed", color = "red") +
+  theme_classic()
+
+mat_trait_de           = as.data.frame(cbind(genome2guild,mat_ori$id,trait_tar))
+write.csv(mat_trait_1a, file = "mat_trait_1a.csv")
+mat_trait_1a           = read.csv(file = "mat_trait_1a.csv")
+
+set.seed(1)
+ordination_1           = metaMDS(trait_tar,autotransform = T,trymax = 500)
+fort.1                 = fortify(ordination_1)
