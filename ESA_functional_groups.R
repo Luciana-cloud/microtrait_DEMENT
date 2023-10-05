@@ -306,27 +306,28 @@ mat_trait.fin         = as.data.frame(cbind(mat_trait$`mat_ori$id`,
 
 # Data scaling ####
 mat_trait.fin = read.csv(file = "selected.trait.values.csv")
-trait_tar     = scale(mat_trait.fin[,3:90],center = FALSE) # scaling with center=False to avoid breaking the sparsity structure of the data
+a             = as.data.frame(colnames(mat_trait.fin))
+trait_tar     = as.data.frame(cbind(mat_trait.fin[,c(39,12,52,33,27,19,72,8,11,
+                                                     57,23,65,34,69,21,60,56,17,
+                                                     38,64,28,30,31,20,22,62,46,
+                                                     35,7,51,50)],
+                                    scale(mat_trait.fin[,c(71,54,32,63,45,74,10,
+                                                           16,26,49,25,13,29,43,
+                                                           37,70,14,66,9,15,55,
+                                                           75,47,36,68,77,53,73,
+                                                           3,44,18,48,24,42,41,67,
+                                                           61,59,40,6,58,5,4,76)],
+                                          center = FALSE)))
 
 # Hierarchical Clustering ####
 set.seed(1)
-distanceg.1  = vegdist(trait_tar, method = "euclidean", binary = FALSE)
-clusterg.1   = hclust(distanceg.1, method="ward")
+# distanceg.1  = vegdist(trait_tar, method = "euclidean", binary = FALSE)
+library(kmed)
+distanceg.1  = distmix(trait_tar, method = "gower", idnum = 1:31, idbin = 32:75)
+distanceg.1  = as.dist(distanceg.1)
+clusterg.1   = hclust(distanceg.1, method="ward.D2")
 nguilds.1    = seq(2, nrow(trait_tar), 2)
 plot(clusterg.1)
-
-library(factoextra)
-fviz_dend(clusterg.1, cex = 0.5)
-
-fviz_dend(clusterg.1, k = 15,                 # Cut in four groups
-          cex = 0.25,                 # label size
-          k_colors = c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
-                       "#3F4921", "#7FDCC0", "#CBD588", "#5F7FC7",
-                       "#673770", "#D3D93E", "#38333E", "#508578", 
-                       "#D7C1B1", "#689030", "#AD6F3B"),
-          color_labels_by_k = TRUE,  # color labels by groups
-          ggtheme = theme_gray()     # Change theme
-)
 
 # Similarity within guilds ####
 my_vec = c()
@@ -344,13 +345,30 @@ for(i in nguilds.1) {
 mat_r2_1  = as.data.frame(cbind(nguilds.1,my_vec))
 
 # Similarity among guilds ####
-v                      = cutree(clusterg.1,k=15)
+v                      = cutree(clusterg.1,k=43)
 genome2guild           = data.frame(guild = factor(v))
 rownames(genome2guild) = names(v)
-adonis_1               = pairwiseAdonis::pairwise.adonis(distanceg.1,genome2guild$guild,perm = 999)
+adonis_1               = pairwiseAdonis::pairwise.adonis(distanceg.1,genome2guild$guild,
+                                                         perm = 999)
 test.clus.1            = adonis.pair(distanceg.1, genome2guild[,"guild"], nper = 1000, 
                                      corr.method = "fdr")
-adonis_2               = vegan::adonis2(distanceg.1 ~ guild, data = genome2guild, perm = 1)
+adonis_2               = vegan::adonis2(distanceg.1 ~ guild, data = genome2guild, perm = 999)
+
+# I am using the pairwise analysis with the adonis package to assess the pvalue and
+# the differences among groups. So far, 43 seems to be the new number of groups
+
+library(factoextra)
+fviz_dend(clusterg.1, cex = 0.5)
+
+fviz_dend(clusterg.1, k = 15,                 # Cut in four groups
+          cex = 0.25,                 # label size
+          k_colors = c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
+                       "#3F4921", "#7FDCC0", "#CBD588", "#5F7FC7",
+                       "#673770", "#D3D93E", "#38333E", "#508578", 
+                       "#D7C1B1", "#689030", "#AD6F3B"),
+          color_labels_by_k = TRUE,  # color labels by groups
+          ggtheme = theme_gray()     # Change theme
+)
 
 # Plotting similarity ####
 pdf("Test.pdf", height = 3, width = 5)
@@ -358,7 +376,7 @@ ggplot(data=mat_r2_1,aes(x=nguilds.1,y=my_vec)) + geom_line() +
   xlab("Number of guilds") + ylab("Similarity within guilds") +
   theme(text = element_text(size = 16)) + 
   geom_hline(yintercept=0.4100782, linetype="dashed", color = "red") + 
-  geom_vline(xintercept = 15, linetype="dashed", color = "red") +
+  geom_vline(xintercept = 43, linetype="dashed", color = "red") +
   theme_classic()
 dev.off()
 
