@@ -349,8 +349,8 @@ v                      = cutree(clusterg.1,k=43)
 genome2guild           = data.frame(guild = factor(v))
 rownames(genome2guild) = names(v)
 adonis_1               = pairwiseAdonis::pairwise.adonis(distanceg.1,genome2guild$guild,
-                                                         perm = 999)
-test.clus.1            = adonis.pair(distanceg.1, genome2guild[,"guild"], nper = 1000, 
+                                                         perm = 999,p.adjust.m='BH')
+test.clus.1            = adonis.pair(distanceg.1, genome2guild[,"guild"], nper = 999, 
                                      corr.method = "fdr")
 adonis_2               = vegan::adonis2(distanceg.1 ~ guild, data = genome2guild, perm = 999)
 
@@ -360,12 +360,18 @@ adonis_2               = vegan::adonis2(distanceg.1 ~ guild, data = genome2guild
 library(factoextra)
 fviz_dend(clusterg.1, cex = 0.5)
 
-fviz_dend(clusterg.1, k = 15,                 # Cut in four groups
-          cex = 0.25,                 # label size
-          k_colors = c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
-                       "#3F4921", "#7FDCC0", "#CBD588", "#5F7FC7",
-                       "#673770", "#D3D93E", "#38333E", "#508578", 
-                       "#D7C1B1", "#689030", "#AD6F3B"),
+#fviz_dend(clusterg.1, k = 15,                 # Cut in four groups
+#          cex = 0.25,                 # label size
+#          k_colors = c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
+#                       "#3F4921", "#7FDCC0", "#CBD588", "#5F7FC7",
+#                       "#673770", "#D3D93E", "#38333E", "#508578", 
+#                       "#D7C1B1", "#689030", "#AD6F3B"),
+#          color_labels_by_k = TRUE,  # color labels by groups
+#          ggtheme = theme_gray()     # Change theme
+#)
+
+fviz_dend(clusterg.1, k = 43,                 # Cut in four groups
+          cex = 0.25,
           color_labels_by_k = TRUE,  # color labels by groups
           ggtheme = theme_gray()     # Change theme
 )
@@ -375,31 +381,31 @@ pdf("Test.pdf", height = 3, width = 5)
 ggplot(data=mat_r2_1,aes(x=nguilds.1,y=my_vec)) + geom_line() +
   xlab("Number of guilds") + ylab("Similarity within guilds") +
   theme(text = element_text(size = 16)) + 
-  geom_hline(yintercept=0.4100782, linetype="dashed", color = "red") + 
+  geom_hline(yintercept=0.370101, linetype="dashed", color = "red") + 
   geom_vline(xintercept = 43, linetype="dashed", color = "red") +
   theme_classic()
 dev.off()
 
-# Ordination of the 15 functional groups ####
+# Ordination of the 43 functional groups ####
 mat_trait_1a           = as.data.frame(cbind(genome2guild,mat_ori$id,trait_tar))
 write.csv(mat_trait_1a, file = "mat_trait_1a.csv")
 mat_trait_1a           = read.csv(file = "mat_trait_1a.csv")
 
-set.seed(16)
+set.seed(1)
 ordination_1           = metaMDS(trait_tar,autotransform = T,trymax = 500)
 fort.1                 = fortify(ordination_1)
 
-p1 = ggplot() + geom_point(data=subset(fort.1,Score=="sites"),
+p1 = ggplot() + geom_point(data=subset(fort.1,score=="sites"),
                       mapping = aes(x=NMDS1,y=NMDS2,color =as.factor(mat_trait_1a$guild),size = 2),
                       alpha=0.5) + 
-  geom_segment(data=subset(fort.1,Score=="species"),
+  geom_segment(data=subset(fort.1,score=="species"),
                mapping=aes(x=0,y=0,xend=NMDS1,yend=NMDS2),
                arrow=arrow(length=unit(0.015,"npc"),
                            type="closed"),
                colour="darkgray",
                linewidth=0.8) + 
-  geom_text(data=subset(fort.1,Score==""), # "species"
-            mapping=aes(label=Label,x=NMDS1*1.1,y=NMDS2*1.1)) + 
+  geom_text(data=subset(fort.1,score==""), # "species"
+            mapping=aes(label=label,x=NMDS1*1.1,y=NMDS2*1.1)) + 
   geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
   geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
   theme(panel.grid.major=element_blank(),
@@ -408,9 +414,11 @@ p1 = ggplot() + geom_point(data=subset(fort.1,Score=="sites"),
         axis.line=element_line(colour="black")) + 
   annotate("text", x=-1, y=-1, label=paste('Stress =',round(ordination_1$stress,2)))
 
-ggplot() + geom_point(data=subset(fort.1,Score=="sites"),
+# Test Figure
+
+ggplot() + geom_point(data=subset(fort.1,score=="sites"),
                            mapping = aes(x=NMDS1,y=NMDS2,color =as.factor(mat_trait_1a$guild),size = 2),
-                           alpha=0.5) + 
+                           alpha=0.5) + geom_text(data=subset(fort.1,score=="sites"),aes(x=NMDS1,y=NMDS2,label=as.factor(mat_trait_1a$guild)),alpha=0.5) +
   geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
   geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
   theme(panel.grid.major=element_blank(),
@@ -418,12 +426,27 @@ ggplot() + geom_point(data=subset(fort.1,Score=="sites"),
         panel.background=element_blank(),
         axis.line=element_line(colour="black")) + 
   annotate("text", x=-1, y=-1, label=paste('Stress =',round(ordination_1$stress,2))) + 
-  stat_ellipse(data = subset(fort.1,Score=="sites"), 
-            aes(x = NMDS1, y = NMDS2, color = as.factor(mat_trait_1a$guild))) + 
-  scale_colour_manual(values=c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
-                               "#3F4921", "#7FDCC0", "#CBD588", "#5F7FC7",
-                               "#673770", "#D3D93E", "#38333E", "#508578", 
-                               "#D7C1B1", "#689030", "#AD6F3B"))
+  stat_ellipse(data = subset(fort.1,score=="sites"), 
+            aes(x = NMDS1, y = NMDS2, color = as.factor(mat_trait_1a$guild))) #+ 
+#  scale_colour_manual(values=c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
+#                               "#3F4921", "#7FDCC0", "#CBD588", "#5F7FC7",
+#                              "#673770", "#D3D93E", "#38333E", "#508578", 
+#                               "#D7C1B1", "#689030", "#AD6F3B"))
+
+# PPT Figure
+
+ggplot() + geom_point(data=subset(fort.1,score=="sites"),
+                      mapping = aes(x=NMDS1,y=NMDS2,color =as.factor(mat_trait_1a$guild),size = 2),
+                      alpha=0.5) + 
+  geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
+  geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.background=element_blank(),
+        axis.line=element_line(colour="black")) + 
+  annotate("text", x=-1, y=-1, label=paste('Stress =',round(ordination_1$stress,2))) + 
+  stat_ellipse(data = subset(fort.1,score=="sites"), 
+               aes(x = NMDS1, y = NMDS2, color = as.factor(mat_trait_1a$guild)))
 
 # Aim 3 : Life history strategies ####
 
