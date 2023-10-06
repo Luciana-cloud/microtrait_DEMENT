@@ -498,7 +498,7 @@ colnames(temp2.1) = c("Resource Acquisition","Stress Tolerance",
 radarchart(temp2,plwd=1) 
 radarchart(temp2.1,plwd=2) 
 
-# Aim 3 : Abundance of functional groups under conditions ####
+# Aim 4 : Abundance of functional groups under conditions ####
 
 fg_abundance = as.data.frame(cbind(genome2guild$guild,mat_trait$`mat_ori$id`,
                                   mag_stat[,7:27]))
@@ -534,7 +534,7 @@ ggplot(fg_ab.fig, aes(fill=as.factor(guild), y=abundance, x=condition)) +
   labs(y="Abundance",x = element_blank()) + 
   theme(legend.title = element_blank())
 
-# Aim 4: Selecting decomposers
+# Aim 5: Selecting decomposers ####
 
 # We are defining decomposers if they have more than one of the following traits for
 # degradation of complex compounds and protein
@@ -594,10 +594,84 @@ ggplot(data=mat_r2_de,aes(x=nguilds_de,y=my_vec)) + geom_line() +
   geom_vline(xintercept = 6, linetype="dashed", color = "red") +
   theme_classic()
 
-mat_trait_de           = as.data.frame(cbind(genome2guild,mat_ori$id,trait_tar))
-write.csv(mat_trait_1a, file = "mat_trait_1a.csv")
-mat_trait_1a           = read.csv(file = "mat_trait_1a.csv")
+mat_trait_de           = as.data.frame(cbind(genome2guild,mat_ori$id,decomp_de))
+write.csv(mat_trait_de, file = "mat_trait_de.csv")
+mat_trait_de           = read.csv(file = "mat_trait_de.csv")
 
-set.seed(1)
-ordination_1           = metaMDS(trait_tar,autotransform = T,trymax = 500)
-fort.1                 = fortify(ordination_1)
+set.seed(1627)
+colnames(decomp_de)    = c("cellulose","chitin","heteromannan","mixed_glucan",
+                           "xylan","xyloglucan","protein")
+ordination_d           = metaMDS(decomp_de,autotransform = T,trymax = 100)
+fort.d                 = fortify(ordination_d)
+
+ggplot() + geom_point(data=subset(fort.d,score=="sites"),
+                      mapping = aes(x=NMDS1,y=NMDS2,color =as.factor(mat_trait_de$guild),size = 2),
+                      alpha=0.5) + 
+#  geom_text(data=subset(fort.d,score=="sites"),aes(x=NMDS1,y=NMDS2,label=as.factor(mat_trait_de$guild)),alpha=0.5) +
+  geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
+  geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.background=element_blank(),
+        axis.line=element_line(colour="black")) + 
+  annotate("text", x=-1, y=-1, label=paste('Stress =',round(ordination_d$stress,2))) + 
+  stat_ellipse(data = subset(fort.d,score=="sites"), 
+               aes(x = NMDS1, y = NMDS2, color = as.factor(mat_trait_de$guild))) + 
+  scale_colour_manual(values=c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
+                               "#3F4921", "#AD6F3B"))
+
+ggplot() + geom_point(data=subset(fort.d,score=="sites"),
+                             mapping = aes(x=NMDS1,y=NMDS2,color =as.factor(mat_trait_de$guild),size = 2),
+                             alpha=0.5) + 
+    geom_segment(data=subset(fort.d,score=="species"),
+                 mapping=aes(x=0,y=0,xend=NMDS1,yend=NMDS2),
+                 arrow=arrow(length=unit(0.015,"npc"),
+                             type="closed"),
+                 colour="darkgray",
+                 linewidth=0.8) + 
+    geom_text(data=subset(fort.d,score=="species"), # "species"
+              mapping=aes(label=label,x=NMDS1*1.1,y=NMDS2*1.1)) + 
+    geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
+    geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
+    theme(panel.grid.major=element_blank(),
+          panel.grid.minor=element_blank(),
+          panel.background=element_blank(),
+          axis.line=element_line(colour="black")) + 
+    annotate("text", x=-1, y=-1, label=paste('Stress =',round(ordination_d$stress,2))) + 
+  scale_colour_manual(values=c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
+                               "#3F4921", "#AD6F3B"))
+
+fg_abundance = as.data.frame(cbind(genome2guild$guild,mat_trait$`mat_ori$id`,
+                                   mag_stat[,7:27]))
+# write.csv(fg_abundance, file = "fg_abundance.csv")
+# fg_abundance = read.csv(file = "fg_abundance.csv")
+
+grassland.a    = fg_abundance %>% group_by(`genome2guild$guild`) %>% 
+  summarise(abundance = sum(Average)/sum(fg_abundance$Average)) %>% 
+  mutate(condition = rep("grassland.ambient" , nrow(grassland.a)))
+
+grassland.d    = fg_abundance %>% group_by(`genome2guild$guild`) %>% 
+  summarise(abundance = sum(Average.1)/sum(fg_abundance$Average.1)) %>% 
+  mutate(condition = rep("grassland.drought" , nrow(grassland.a)))
+
+shrubland.a    = fg_abundance %>% group_by(`genome2guild$guild`) %>% 
+  summarise(abundance = sum(Average.2)/sum(fg_abundance$Average.2)) %>% 
+  mutate(condition = rep("shrubland.ambient" , nrow(grassland.a)))
+
+shrubland.d    = fg_abundance %>% group_by(`genome2guild$guild`) %>% 
+  summarise(abundance = sum(Average.3)/sum(fg_abundance$Average.3)) %>% 
+  mutate(condition = rep("shrubland.drought" , nrow(grassland.a)))
+
+fg_ab.fig.dec           =  as.data.frame(rbind(grassland.a,grassland.d,shrubland.a,
+                                      shrubland.d))
+colnames(fg_ab.fig.dec) = c("guild","abundance","condition")
+# write.csv(fg_ab.fig, file = "fg_ab.fig.csv")
+# fg_ab.fig = read.csv(file = "fg_ab.fig.csv")
+
+ggplot(fg_ab.fig.dec, aes(fill=as.factor(guild), y=abundance, x=condition)) + 
+  geom_bar(position="fill", stat="identity") + 
+  theme(text = element_text(size=25)) + 
+  labs(y="Abundance",x = element_blank()) + 
+  theme(legend.title = element_blank()) + 
+  scale_fill_manual(values=c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
+                               "#3F4921", "#AD6F3B"))
