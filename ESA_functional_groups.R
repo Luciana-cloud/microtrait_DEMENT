@@ -534,6 +534,130 @@ ggplot(fg_ab.fig, aes(fill=as.factor(guild), y=abundance, x=condition)) +
   labs(y="Abundance",x = element_blank()) + 
   theme(legend.title = element_blank())
 
+# Time 1 ####
+
+grassland.1a    = fg_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(grassAmbDry1)/sum(fg_abundance$grassAmbDry1)) %>% 
+  mutate(condition = rep("grassland.ambient" , nrow(grassland.a)))
+grassland.1d    = fg_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(grassRedDry1)/sum(fg_abundance$grassRedDry1)) %>% 
+  mutate(condition = rep("grassland.drought" , nrow(grassland.a)))
+shrubland.1a    = fg_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(shrubAmbDry1)/sum(fg_abundance$shrubAmbDry1)) %>% 
+  mutate(condition = rep("shrubland.ambient" , nrow(grassland.a)))
+shrubland.1d    = fg_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(shrubRedDry1)/sum(fg_abundance$shrubRedDry1)) %>% 
+  mutate(condition = rep("shrubland.drought" , nrow(grassland.a)))
+
+fg_ab.fig1      =  as.data.frame(rbind(grassland.1a,grassland.1d,shrubland.1a,
+                                      shrubland.1d))
+colnames(fg_ab.fig1) = c("guild","abundance","condition")
+# write.csv(fg_ab.fig1, file = "fg_ab.fig1.csv")
+fg_ab.fig1 = read.csv(file = "fg_ab.fig1.csv")
+
+ggplot(fg_ab.fig1, aes(fill=as.factor(guild), y=abundance, x=condition)) + 
+  geom_bar(position="fill", stat="identity") + 
+  #  scale_fill_manual(values=c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
+  #                             "#3F4921", "#7FDCC0", "#CBD588", "#5F7FC7",
+  #                             "#673770", "#D3D93E", "#38333E", "#508578", 
+  #                             "#D7C1B1", "#689030", "#AD6F3B")) + 
+  theme(text = element_text(size=25)) + 
+  labs(y="Abundance",x = element_blank()) + 
+  theme(legend.title = element_blank())
+
+# Time 2 ####
+
+grassland.2a    = fg_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(grassAmbWet1)/sum(fg_abundance$grassAmbWet1)) %>% 
+  mutate(condition = rep("grassland.ambient" , nrow(grassland.a)))
+grassland.2d    = fg_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(grassRedWet1)/sum(fg_abundance$grassRedWet1)) %>% 
+  mutate(condition = rep("grassland.drought" , nrow(grassland.a)))
+shrubland.2a    = fg_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(shrubAmbWet1)/sum(fg_abundance$shrubAmbWet1)) %>% 
+  mutate(condition = rep("shrubland.ambient" , nrow(grassland.a)))
+shrubland.2d    = fg_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(shrubRedWet1)/sum(fg_abundance$shrubRedWet1)) %>% 
+  mutate(condition = rep("shrubland.drought" , nrow(grassland.a)))
+
+fg_ab.fig2      =  as.data.frame(rbind(grassland.2a,grassland.2d,shrubland.2a,
+                                       shrubland.2d))
+colnames(fg_ab.fig2) = c("guild","abundance","condition")
+# write.csv(fg_ab.fig2, file = "fg_ab.fig2.csv")
+fg_ab.fig2 = read.csv(file = "fg_ab.fig2.csv")
+
+ggplot(fg_ab.fig2, aes(fill=as.factor(guild), y=abundance, x=condition)) + 
+  geom_bar(position="fill", stat="identity") + 
+  #  scale_fill_manual(values=c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
+  #                             "#3F4921", "#7FDCC0", "#CBD588", "#5F7FC7",
+  #                             "#673770", "#D3D93E", "#38333E", "#508578", 
+  #                             "#D7C1B1", "#689030", "#AD6F3B")) + 
+  theme(text = element_text(size=25)) + 
+  labs(y="Abundance",x = element_blank()) + 
+  theme(legend.title = element_blank())
+
+# Time 3 ####
+
+grassland.3a    = fg_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(grassAmbDry2)/sum(fg_abundance$grassAmbDry2)) %>% 
+  mutate(condition = rep("grassland.ambient" , nrow(grassland.a)))
+grassland.3d    = fg_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(grassRedDry2)/sum(fg_abundance$grassRedDry2)) %>% 
+  mutate(condition = rep("grassland.drought" , nrow(grassland.a)))
+shrubland.3a    = fg_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(shrubAmbDry2)/sum(fg_abundance$shrubAmbDry2)) %>% 
+  mutate(condition = rep("shrubland.ambient" , nrow(grassland.a)))
+shrubland.3d    = fg_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(shrubRedDry2)/sum(fg_abundance$shrubRedDry2)) %>% 
+  mutate(condition = rep("shrubland.drought" , nrow(grassland.a)))
+
+fg_ab.fig3      =  as.data.frame(rbind(grassland.3a,grassland.3d,shrubland.3a,
+                                       shrubland.3d))
+colnames(fg_ab.fig3) = c("guild","abundance","condition")
+# write.csv(fg_ab.fig3, file = "fg_ab.fig3.csv")
+fg_ab.fig3 = read.csv(file = "fg_ab.fig3.csv")
+
+ggplot(fg_ab.fig3, aes(fill=as.factor(guild), y=abundance, x=condition)) + 
+  geom_bar(position="fill", stat="identity") + 
+  #  scale_fill_manual(values=c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
+  #                             "#3F4921", "#7FDCC0", "#CBD588", "#5F7FC7",
+  #                             "#673770", "#D3D93E", "#38333E", "#508578", 
+  #                             "#D7C1B1", "#689030", "#AD6F3B")) + 
+  theme(text = element_text(size=25)) + 
+  labs(y="Abundance",x = element_blank()) + 
+  theme(legend.title = element_blank())
+
+# Time 4 ####
+
+grassland.4a    = fg_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(grassAmbWet2)/sum(fg_abundance$grassAmbWet2)) %>% 
+  mutate(condition = rep("grassland.ambient" , nrow(grassland.a)))
+grassland.4d    = fg_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(grassRedWet2)/sum(fg_abundance$grassRedWet2)) %>% 
+  mutate(condition = rep("grassland.drought" , nrow(grassland.a)))
+shrubland.4a    = fg_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(shrubAmbWet2)/sum(fg_abundance$shrubAmbWet2)) %>% 
+  mutate(condition = rep("shrubland.ambient" , nrow(grassland.a)))
+shrubland.4d    = fg_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(shrubRedWet2)/sum(fg_abundance$shrubRedWet2)) %>% 
+  mutate(condition = rep("shrubland.drought" , nrow(grassland.a)))
+
+fg_ab.fig4      =  as.data.frame(rbind(grassland.4a,grassland.4d,shrubland.4a,
+                                       shrubland.4d))
+colnames(fg_ab.fig4) = c("guild","abundance","condition")
+# write.csv(fg_ab.fig4, file = "fg_ab.fig4.csv")
+fg_ab.fig4 = read.csv(file = "fg_ab.fig4.csv")
+
+ggplot(fg_ab.fig4, aes(fill=as.factor(guild), y=abundance, x=condition)) + 
+  geom_bar(position="fill", stat="identity") + 
+  #  scale_fill_manual(values=c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
+  #                             "#3F4921", "#7FDCC0", "#CBD588", "#5F7FC7",
+  #                             "#673770", "#D3D93E", "#38333E", "#508578", 
+  #                             "#D7C1B1", "#689030", "#AD6F3B")) + 
+  theme(text = element_text(size=25)) + 
+  labs(y="Abundance",x = element_blank()) + 
+  theme(legend.title = element_blank())
+
 # Aim 5: Selecting decomposers ####
 
 # We are defining decomposers if they have more than one of the following traits for
@@ -641,32 +765,34 @@ ggplot() + geom_point(data=subset(fort.d,score=="sites"),
   scale_colour_manual(values=c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
                                "#3F4921", "#AD6F3B"))
 
-fg_abundance = as.data.frame(cbind(genome2guild$guild,mat_trait$`mat_ori$id`,
+de_abundance = as.data.frame(cbind(genome2guild$guild,mat_trait$`mat_ori$id`,
                                    mag_stat[,7:27]))
-# write.csv(fg_abundance, file = "fg_abundance.csv")
-# fg_abundance = read.csv(file = "fg_abundance.csv")
+# write.csv(de_abundance, file = "de_abundance.csv")
+# de_abundance = read.csv(file = "de_abundance.csv")
 
-grassland.a    = fg_abundance %>% group_by(`genome2guild$guild`) %>% 
-  summarise(abundance = sum(Average)/sum(fg_abundance$Average)) %>% 
+# Average ####
+
+grassland.a    = de_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(Average)/sum(de_abundance$Average)) %>% 
   mutate(condition = rep("grassland.ambient" , nrow(grassland.a)))
 
-grassland.d    = fg_abundance %>% group_by(`genome2guild$guild`) %>% 
-  summarise(abundance = sum(Average.1)/sum(fg_abundance$Average.1)) %>% 
+grassland.d    = de_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(Average.1)/sum(de_abundance$Average.1)) %>% 
   mutate(condition = rep("grassland.drought" , nrow(grassland.a)))
 
-shrubland.a    = fg_abundance %>% group_by(`genome2guild$guild`) %>% 
-  summarise(abundance = sum(Average.2)/sum(fg_abundance$Average.2)) %>% 
+shrubland.a    = de_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(Average.2)/sum(de_abundance$Average.2)) %>% 
   mutate(condition = rep("shrubland.ambient" , nrow(grassland.a)))
 
-shrubland.d    = fg_abundance %>% group_by(`genome2guild$guild`) %>% 
-  summarise(abundance = sum(Average.3)/sum(fg_abundance$Average.3)) %>% 
+shrubland.d    = de_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(Average.3)/sum(de_abundance$Average.3)) %>% 
   mutate(condition = rep("shrubland.drought" , nrow(grassland.a)))
 
 fg_ab.fig.dec           =  as.data.frame(rbind(grassland.a,grassland.d,shrubland.a,
                                       shrubland.d))
 colnames(fg_ab.fig.dec) = c("guild","abundance","condition")
-# write.csv(fg_ab.fig, file = "fg_ab.fig.csv")
-# fg_ab.fig = read.csv(file = "fg_ab.fig.csv")
+# write.csv(fg_ab.fig.dec, file = "fg_ab.fig.dec.csv")
+# fg_ab.fig.dec = read.csv(file = "fg_ab.fig.dec.csv")
 
 ggplot(fg_ab.fig.dec, aes(fill=as.factor(guild), y=abundance, x=condition)) + 
   geom_bar(position="fill", stat="identity") + 
@@ -675,3 +801,131 @@ ggplot(fg_ab.fig.dec, aes(fill=as.factor(guild), y=abundance, x=condition)) +
   theme(legend.title = element_blank()) + 
   scale_fill_manual(values=c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
                                "#3F4921", "#AD6F3B"))
+
+# T1 ####
+
+grassland.1a    = de_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(grassAmbDry1)/sum(de_abundance$grassAmbDry1)) %>% 
+  mutate(condition = rep("grassland.ambient" , nrow(grassland.a)))
+
+grassland.1d    = de_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(grassRedDry1)/sum(de_abundance$grassRedDry1)) %>% 
+  mutate(condition = rep("grassland.drought" , nrow(grassland.a)))
+
+shrubland.1a    = de_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(shrubAmbDry1)/sum(de_abundance$shrubAmbDry1)) %>% 
+  mutate(condition = rep("shrubland.ambient" , nrow(grassland.a)))
+
+shrubland.1d    = de_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(shrubRedDry1)/sum(de_abundance$shrubRedDry1)) %>% 
+  mutate(condition = rep("shrubland.drought" , nrow(grassland.a)))
+
+fg_ab.fig.1dec           =  as.data.frame(rbind(grassland.1a,grassland.1d,shrubland.1a,
+                                               shrubland.1d))
+colnames(fg_ab.fig.1dec) = c("guild","abundance","condition")
+# write.csv(fg_ab.fig.1dec, file = "fg_ab.fig.1dec.csv")
+fg_ab.fig.1dec = read.csv(file = "fg_ab.fig.1dec.csv")
+
+ggplot(fg_ab.fig.1dec, aes(fill=as.factor(guild), y=abundance, x=condition)) + 
+  geom_bar(position="fill", stat="identity") + 
+  theme(text = element_text(size=25)) + 
+  labs(y="Abundance",x = element_blank()) + 
+  theme(legend.title = element_blank()) + 
+  scale_fill_manual(values=c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
+                             "#3F4921", "#AD6F3B"))
+
+# T2 ####
+
+grassland.2a    = de_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(grassAmbWet1)/sum(de_abundance$grassAmbWet1)) %>% 
+  mutate(condition = rep("grassland.ambient" , nrow(grassland.a)))
+
+grassland.2d    = de_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(grassRedWet1)/sum(de_abundance$grassRedWet1)) %>% 
+  mutate(condition = rep("grassland.drought" , nrow(grassland.a)))
+
+shrubland.2a    = de_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(shrubAmbWet1)/sum(de_abundance$shrubAmbWet1)) %>% 
+  mutate(condition = rep("shrubland.ambient" , nrow(grassland.a)))
+
+shrubland.2d    = de_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(shrubRedWet1)/sum(de_abundance$shrubRedWet1)) %>% 
+  mutate(condition = rep("shrubland.drought" , nrow(grassland.a)))
+
+fg_ab.fig.2dec           =  as.data.frame(rbind(grassland.2a,grassland.2d,shrubland.2a,
+                                               shrubland.2d))
+colnames(fg_ab.fig.2dec) = c("guild","abundance","condition")
+# write.csv(fg_ab.fig.2dec, file = "fg_ab.fig.2dec.csv")
+# fg_ab.fig.2dec = read.csv(file = "fg_ab.fig.2dec.csv")
+
+ggplot(fg_ab.fig.2dec, aes(fill=as.factor(guild), y=abundance, x=condition)) + 
+  geom_bar(position="fill", stat="identity") + 
+  theme(text = element_text(size=25)) + 
+  labs(y="Abundance",x = element_blank()) + 
+  theme(legend.title = element_blank()) + 
+  scale_fill_manual(values=c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
+                             "#3F4921", "#AD6F3B"))
+
+# T3 ####
+
+grassland.3a    = de_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(grassAmbDry2)/sum(de_abundance$grassAmbDry2)) %>% 
+  mutate(condition = rep("grassland.ambient" , nrow(grassland.a)))
+
+grassland.3d    = de_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(grassRedDry2)/sum(de_abundance$grassRedDry2)) %>% 
+  mutate(condition = rep("grassland.drought" , nrow(grassland.a)))
+
+shrubland.3a    = de_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(shrubAmbDry2)/sum(de_abundance$shrubAmbDry2)) %>% 
+  mutate(condition = rep("shrubland.ambient" , nrow(grassland.a)))
+
+shrubland.3d    = de_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(shrubRedDry2)/sum(de_abundance$shrubRedDry2)) %>% 
+  mutate(condition = rep("shrubland.drought" , nrow(grassland.a)))
+
+fg_ab.fig.3dec           =  as.data.frame(rbind(grassland.3a,grassland.3d,shrubland.3a,
+                                               shrubland.3d))
+colnames(fg_ab.fig.3dec) = c("guild","abundance","condition")
+# write.csv(fg_ab.fig.dec, file = "fg_ab.fig.dec.csv")
+# fg_ab.fig.dec = read.csv(file = "fg_ab.fig.dec.csv")
+
+ggplot(fg_ab.fig.3dec, aes(fill=as.factor(guild), y=abundance, x=condition)) + 
+  geom_bar(position="fill", stat="identity") + 
+  theme(text = element_text(size=25)) + 
+  labs(y="Abundance",x = element_blank()) + 
+  theme(legend.title = element_blank()) + 
+  scale_fill_manual(values=c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
+                             "#3F4921", "#AD6F3B"))
+
+# T4 ####
+
+grassland.4a    = de_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(grassAmbWet2)/sum(de_abundance$grassAmbWet2)) %>% 
+  mutate(condition = rep("grassland.ambient" , nrow(grassland.a)))
+
+grassland.4d    = de_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(grassRedWet2)/sum(de_abundance$grassRedWet2)) %>% 
+  mutate(condition = rep("grassland.drought" , nrow(grassland.a)))
+
+shrubland.4a    = de_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(shrubAmbWet2)/sum(de_abundance$shrubAmbWet2)) %>% 
+  mutate(condition = rep("shrubland.ambient" , nrow(grassland.a)))
+
+shrubland.4d    = de_abundance %>% group_by(genome2guild.guild) %>% 
+  summarise(abundance = sum(shrubRedWet2)/sum(de_abundance$shrubRedWet2)) %>% 
+  mutate(condition = rep("shrubland.drought" , nrow(grassland.a)))
+
+fg_ab.fig.4dec           =  as.data.frame(rbind(grassland.4a,grassland.4d,shrubland.4a,
+                                               shrubland.4d))
+colnames(fg_ab.fig.4dec) = c("guild","abundance","condition")
+# write.csv(fg_ab.fig.dec, file = "fg_ab.fig.dec.csv")
+# fg_ab.fig.dec = read.csv(file = "fg_ab.fig.dec.csv")
+
+ggplot(fg_ab.fig.4dec, aes(fill=as.factor(guild), y=abundance, x=condition)) + 
+  geom_bar(position="fill", stat="identity") + 
+  theme(text = element_text(size=25)) + 
+  labs(y="Abundance",x = element_blank()) + 
+  theme(legend.title = element_blank()) + 
+  scale_fill_manual(values=c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
+                             "#3F4921", "#AD6F3B"))
