@@ -45,26 +45,50 @@ library("devtools")
 
 - Bioconductor package dependencies:
 
-install.packages("BiocManager")
+#install.packages("BiocManager")
 library("BiocManager")
-BiocManager::install("Biostrings")
-BiocManager::install("coRdon")
-BiocManager::install("ComplexHeatmap")
+#BiocManager::install("Biostrings")
+#BiocManager::install("coRdon")
+#BiocManager::install("ComplexHeatmap")
 library("Biostrings")
 library("coRdon")
 library("ComplexHeatmap")
 
-- Developmental package dependencies: Questinable
+- Developmental package dependencies
 
-# devtools::install_github("jlw-ecoevo/gRodon")
-# library("gRodon")
+#devtools::install_github("jlw-ecoevo/gRodon")
+library("gRodon")
 
-3. Installation of microTrait:
+# 3. Installation of microTrait:
 
-devtools::install_github("ukaraoz/microtrait")
+#devtools::install_github("ukaraoz/microtrait")
 library("microtrait")
 
 4. Data dependencies: This function should be run once after the installation.
 
 microtrait::prep.hmmmodels()
 list.files(file.path(.libPaths(), "microtrait/extdata/hmm/hmmpress"))
+
+5. Extracting traits from a genome sequence
+
+result = extract.traits("/pub/lucianac/MAG_burn/RYN_6.fa")
+
+# Parallel
+
+genomes_files = list.files('/pub/lucianac/MAG_burn')
+message("Number of cores:", parallel::detectCores(), "\n")
+
+tictoc::tic.clearlog()
+tictoc::tic(paste0("Running microtrait for ", length(genomes_files)))
+microtrait_results = extract.traits.parallel(genomes_files, dirname(genomes_files), ncores = floor(parallel::detectCores()*0.7))
+tictoc::toc(log = "TRUE")
+
+# no tested
+rds_files = unlist(parallel::mclapply(microtrait_results, "[[", "rds_file", mc.cores = ncores))
+genomeset_results = make.genomeset.results(rds_files = rds_files,
+                                           ids = sub(".microtrait.rds", "", basename(rds_files)),
+                                           ncores = 1)
+df_with_special_characters <- readRDS("RYN_6.microtrait.rds")
+a = as.data.frame(df_with_special_characters[["trait_counts_atgranularity3"]])										   
+b = as.data.frame(df_with_special_characters[["ogt"]])										   
+c = as.data.frame(df_with_special_characters[["growthrate_d"]])										   
