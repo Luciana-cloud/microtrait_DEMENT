@@ -5,7 +5,8 @@ Intalling Microtrait
 In the HPC3:
 conda env create -f microtrait.yml
 conda activate microtrait
-Here we have install all the software dependencies from https://github.com/ukaraoz/microtrait. We just need to add the R dependencies and data dependencies.
+Here we have install all the software dependencies from https://github.com/ukaraoz/microtrait using microtrait.yml. 
+We just need to add the R dependencies and data dependencies. We need to create the environment only once and then just activate it. 
 
 2. R package dependencies
 
@@ -69,11 +70,11 @@ library("microtrait")
 microtrait::prep.hmmmodels()
 list.files(file.path(.libPaths(), "microtrait/extdata/hmm/hmmpress"))
 
-5. Extracting traits from a genome sequence
+5a. Extracting traits from a genome sequence
 
 result = extract.traits("/pub/lucianac/MAG_burn/RYN_6.fa")
 
-# Parallel
+5b. Extracting traits from a genome sequence in Parallel
 
 genomes_files = list.files('/pub/lucianac/MAG_burn')
 message("Number of cores:", parallel::detectCores(), "\n")
@@ -83,12 +84,43 @@ tictoc::tic(paste0("Running microtrait for ", length(genomes_files)))
 microtrait_results = extract.traits.parallel(genomes_files, dirname(genomes_files), ncores = floor(parallel::detectCores()*0.7))
 tictoc::toc(log = "TRUE")
 
-# no tested
-rds_files = unlist(parallel::mclapply(microtrait_results, "[[", "rds_file", mc.cores = ncores))
-genomeset_results = make.genomeset.results(rds_files = rds_files,
-                                           ids = sub(".microtrait.rds", "", basename(rds_files)),
-                                           ncores = 1)
-df_with_special_characters <- readRDS("RYN_6.microtrait.rds")
-a = as.data.frame(df_with_special_characters[["trait_counts_atgranularity3"]])										   
-b = as.data.frame(df_with_special_characters[["ogt"]])										   
-c = as.data.frame(df_with_special_characters[["growthrate_d"]])										   
+6. Building trait matrices from microTrait outputs (make sure there are only rds outputs in the folder)
+
+rds_files = list.files('/pub/lucianac/MAG_burn',full.names = T, recursive = F, pattern = ".microtrait.rds$")
+genomeset_results = make.genomeset.results(rds_files = rds_files,ids = sub(".microtrait.rds", "", basename(rds_files)),ncores = 1)
+
+# For burn dataset because T and growth rate was not working
+
+combine.results <- function(rds_files, ids = NULL, type, ncores = 1) {
+  # reminder for "foreach" way to parallelize
+  # rds_files = unlist(purrr::map_depth(results, 1, "rds_file"))
+  if (is.null(ids)) {
+    ids = sub("\\..*", "", sub(".rds", "", basename(rds_files)), perl = T)
+  }
+  cl <- parallel::makeCluster(ncores)
+  doParallel::registerDoParallel(cl)
+  results_rowbinded = foreach(i = 1:length(rds_files), .packages = c("dplyr", "tibble"), .export = "fetch.results", .combine = "rbind") %dopar% {
+    fetch.results(rds_files[i], ids[i], type = type)
+  }
+  results_rowbinded = results_rowbinded %>% tibble::as_tibble()
+  results_matrix = switch(type,
+                          trait_atgranularity1 = {results_rowbinded %>% tidyr::spread(`microtrait_trait-name`, `microtrait_trait-value`)},
+                          trait_atgranularity2 = {results_rowbinded %>% tidyr::spread(`microtrait_trait-name`, `microtrait_trait-value`)},
+                          trait_atgranularity3 = {results_rowbinded %>% tidyr::spread(`microtrait_trait-name`, `microtrait_trait-value`)},
+                          # distinct() needed here, multiple hits/genome
+                          # drop=FALSE to add columns for undetected hmms
+                          gene = {results_rowbinded %>% tibble::add_column(n = factor(1, levels = c(0,1), ordered = T)) %>% distinct() %>% tidyr::spread(hmm, n, drop = FALSE, fill = 0)},
+                          rule = {results_rowbinded %>% tidyr::spread(`microtrait_rule-name`, `microtrait_rule-asserted`)},
+                          growthrate = {results_rowbinded %>% tidyr::spread(`microtrait_trait-name`, `microtrait_trait-value`)},
+                          optimumT = {results_rowbinded %>% tidyr::spread(`microtrait_trait-name`, `microtrait_trait-value`)}
+  )
+  parallel::stopCluster(cl)
+  # todo: NULLify rownames earlier
+  row.names(results_matrix) = NULL
+  results_matrix
+}
+ids = NULL
+ncores = 1
+trait_matrixatgranularity3 = combine.results(rds_files, type = "trait_atgranularity3", ids = ids, ncores = ncores) %>% tibble::as_tibble()
+results = as.data.frame(trait_matrixatgranularity3)
+write.csv(results, file = "/pub/lucianac/MAG_burn/trait_burn.csv")								   
