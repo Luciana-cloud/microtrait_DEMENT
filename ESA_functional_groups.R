@@ -664,14 +664,14 @@ ggplot(fg_ab.fig4, aes(fill=as.factor(guild), y=abundance, x=condition)) +
 # degradation of complex compounds and protein
 
 a       = as.data.frame(colnames(mat_trait))
-decomp  = as.data.frame(cbind(mat_trait[1],mat_trait[,43:49]))
-sum_row = as.data.frame(rowSums(decomp[,2:8]))
+decomp  = as.data.frame(cbind(mat_trait[1],mat_trait[,43:48]))
+sum_row = as.data.frame(rowSums(decomp[,2:7]))
 
 # write.csv(decomp, file = "decomposers.csv")
 
 decomp       = read.csv(file = "decomposers.csv")
 set.seed(1)
-decomp_de    = scale(decomp[,3:9],center = FALSE)
+decomp_de    = scale(decomp[,3:8],center = FALSE)
 distance_de  = vegdist(decomp_de, method = "euclidean", binary = FALSE)
 distance_de  = as.dist(distance_de)
 cluster_de   = hclust(distance_de, method="ward.D2")
@@ -692,7 +692,7 @@ for(i in nguilds_de) {
 }
 mat_r2_de  = as.data.frame(cbind(nguilds_de,my_vec))
 
-v                      = cutree(cluster_de,k=6)
+v                      = cutree(cluster_de,k=21)
 genome2guild           = data.frame(guild = factor(v))
 rownames(genome2guild) = names(v)
 adonis_1               = pairwiseAdonis::pairwise.adonis(distance_de,genome2guild$guild,
@@ -703,10 +703,10 @@ adonis_2               = vegan::adonis2(distance_de ~ guild, data = genome2guild
 
 library(factoextra)
 
-fviz_dend(cluster_de, k = 6,                 # Cut in four groups
+fviz_dend(cluster_de, k = 21,                 # Cut in four groups
           cex = 0.25,                 # label size
-          k_colors = c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
-                       "#3F4921", "#AD6F3B"),
+          #          k_colors = c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
+          #                       "#3F4921", "#AD6F3B"),
           color_labels_by_k = TRUE,  # color labels by groups
           ggtheme = theme_gray()     # Change theme
 )
@@ -714,8 +714,8 @@ fviz_dend(cluster_de, k = 6,                 # Cut in four groups
 ggplot(data=mat_r2_de,aes(x=nguilds_de,y=my_vec)) + geom_line() +
   xlab("Number of guilds") + ylab("Similarity within guilds") +
   theme(text = element_text(size = 16)) + 
-  geom_hline(yintercept=0.6073025, linetype="dashed", color = "red") + 
-  geom_vline(xintercept = 6, linetype="dashed", color = "red") +
+  geom_hline(yintercept=0.7940737, linetype="dashed", color = "red") + 
+  geom_vline(xintercept = 21, linetype="dashed", color = "red") +
   theme_classic()
 
 mat_trait_de           = as.data.frame(cbind(genome2guild,mat_ori$id,decomp_de))
@@ -724,7 +724,7 @@ mat_trait_de           = read.csv(file = "mat_trait_de.csv")
 
 set.seed(1627)
 colnames(decomp_de)    = c("cellulose","chitin","heteromannan","mixed_glucan",
-                           "xylan","xyloglucan","protein")
+                           "xylan","xyloglucan") #,"protein"
 ordination_d           = metaMDS(decomp_de,autotransform = T,trymax = 100)
 fort.d                 = fortify(ordination_d)
 
@@ -740,9 +740,9 @@ ggplot() + geom_point(data=subset(fort.d,score=="sites"),
         axis.line=element_line(colour="black")) + 
   annotate("text", x=-1, y=-1, label=paste('Stress =',round(ordination_d$stress,2))) + 
   stat_ellipse(data = subset(fort.d,score=="sites"), 
-               aes(x = NMDS1, y = NMDS2, color = as.factor(mat_trait_de$guild))) + 
-  scale_colour_manual(values=c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
-                               "#3F4921", "#AD6F3B"))
+               aes(x = NMDS1, y = NMDS2, color = as.factor(mat_trait_de$guild))) # + 
+  #  scale_colour_manual(values=c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
+  #                              "#3F4921", "#AD6F3B"))
 
 ggplot() + geom_point(data=subset(fort.d,score=="sites"),
                              mapping = aes(x=NMDS1,y=NMDS2,color =as.factor(mat_trait_de$guild),size = 2),
@@ -761,9 +761,9 @@ ggplot() + geom_point(data=subset(fort.d,score=="sites"),
           panel.grid.minor=element_blank(),
           panel.background=element_blank(),
           axis.line=element_line(colour="black")) + 
-    annotate("text", x=-1, y=-1, label=paste('Stress =',round(ordination_d$stress,2))) + 
-  scale_colour_manual(values=c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
-                               "#3F4921", "#AD6F3B"))
+    annotate("text", x=-1, y=-1, label=paste('Stress =',round(ordination_d$stress,2))) #+ 
+  #  scale_colour_manual(values=c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", 
+  #                              "#3F4921", "#AD6F3B"))
 
 de_abundance = as.data.frame(cbind(genome2guild$guild,mat_trait$`mat_ori$id`,
                                    mag_stat[,7:27]))
