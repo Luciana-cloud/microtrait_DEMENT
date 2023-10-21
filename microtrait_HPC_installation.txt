@@ -89,38 +89,4 @@ tictoc::toc(log = "TRUE")
 rds_files = list.files('/pub/lucianac/MAG_burn',full.names = T, recursive = F, pattern = ".microtrait.rds$")
 genomeset_results = make.genomeset.results(rds_files = rds_files,ids = sub(".microtrait.rds", "", basename(rds_files)),ncores = 1)
 
-# For burn dataset because T and growth rate was not working
-
-combine.results <- function(rds_files, ids = NULL, type, ncores = 1) {
-  # reminder for "foreach" way to parallelize
-  # rds_files = unlist(purrr::map_depth(results, 1, "rds_file"))
-  if (is.null(ids)) {
-    ids = sub("\\..*", "", sub(".rds", "", basename(rds_files)), perl = T)
-  }
-  cl <- parallel::makeCluster(ncores)
-  doParallel::registerDoParallel(cl)
-  results_rowbinded = foreach(i = 1:length(rds_files), .packages = c("dplyr", "tibble"), .export = "fetch.results", .combine = "rbind") %dopar% {
-    fetch.results(rds_files[i], ids[i], type = type)
-  }
-  results_rowbinded = results_rowbinded %>% tibble::as_tibble()
-  results_matrix = switch(type,
-                          trait_atgranularity1 = {results_rowbinded %>% tidyr::spread(`microtrait_trait-name`, `microtrait_trait-value`)},
-                          trait_atgranularity2 = {results_rowbinded %>% tidyr::spread(`microtrait_trait-name`, `microtrait_trait-value`)},
-                          trait_atgranularity3 = {results_rowbinded %>% tidyr::spread(`microtrait_trait-name`, `microtrait_trait-value`)},
-                          # distinct() needed here, multiple hits/genome
-                          # drop=FALSE to add columns for undetected hmms
-                          gene = {results_rowbinded %>% tibble::add_column(n = factor(1, levels = c(0,1), ordered = T)) %>% distinct() %>% tidyr::spread(hmm, n, drop = FALSE, fill = 0)},
-                          rule = {results_rowbinded %>% tidyr::spread(`microtrait_rule-name`, `microtrait_rule-asserted`)},
-                          growthrate = {results_rowbinded %>% tidyr::spread(`microtrait_trait-name`, `microtrait_trait-value`)},
-                          optimumT = {results_rowbinded %>% tidyr::spread(`microtrait_trait-name`, `microtrait_trait-value`)}
-  )
-  parallel::stopCluster(cl)
-  # todo: NULLify rownames earlier
-  row.names(results_matrix) = NULL
-  results_matrix
-}
-ids = NULL
-ncores = 1
-trait_matrixatgranularity3 = combine.results(rds_files, type = "trait_atgranularity3", ids = ids, ncores = ncores) %>% tibble::as_tibble()
-results = as.data.frame(trait_matrixatgranularity3)
-write.csv(results, file = "/pub/lucianac/MAG_burn/trait_burn.csv")								   
+# If this does not work, please check for loops in microtrait_postprocessing file. 	   
