@@ -16,6 +16,7 @@ library(EcolUtils)
 # remotes::install_github("gavinsimpson/ggvegan")
 library(ggvegan)
 library(fmsb)
+library(factoextra)
 
 # LOMA RIDGE ####
 
@@ -404,6 +405,142 @@ mat_sd              = mat_sd %>% select((erase.5sd$trait))
 
 write.csv(mat_sd, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/shrubland.drought.best.predictors.csv")
 
+# Selected genes ####
+
+shrubland.drought = read.csv(file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/shrubland.drought.best.predictors.csv")
+shrubland.ambient = read.csv(file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/shrubland.ambient.best.predictors.csv")
+grassland.drought = read.csv(file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/grassland.drought.best.predictors.csv")
+grassland.ambient = read.csv(file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/grassland.ambient.best.predictors.csv")
+gene.select       = as.data.frame(unique(c(colnames(shrubland.drought[2:109]),
+                                    colnames(shrubland.ambient[2:95]),
+                                    colnames(grassland.drought[2:100]),
+                                    colnames(grassland.ambient[2:127]))))
+colnames(gene.select)        = c("gene")
+mat.gene.loma                = as.data.frame(cbind(hmm_loma$id,
+                                            hmm_loma %>% select(gene.select$gene)))
+colnames(mat.gene.loma)[1]   = "loma.id"
+
+write.csv(mat.gene.loma, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/loma.genes.selected.csv")
+
+# Functional groups ####
+
+# Hierarchical Clustering 
+set.seed(1)
+distance.loma  = vegdist(mat.gene.loma[2:292], method = "jaccard", binary = TRUE)
+cluster.loma   = hclust(distance.loma, method="ward.D2")
+
+# similarity within guilds ####
+my_vec       = c()
+nguilds.1    = seq(2, nrow(mat.gene.loma), 2)
+
+for(i in nguilds.1) {
+  v                      = cutree(cluster.loma,k=i)
+  genome2guild           = data.frame(guild = factor(v))
+  rownames(genome2guild) = names(v)
+  adonis_2               = vegan::adonis2(distance.loma ~ guild, data = genome2guild, perm = 1)
+  temp                   = adonis_2$R2
+  temp_1                 = temp[1]
+  my_out                 = temp_1
+  my_vec   <- c(my_vec, my_out)   
+}
+mat_r2_1  = as.data.frame(cbind(nguilds.1,my_vec))
+
+# Similarity among guilds ####
+v                      = cutree(cluster.loma,k=33)
+genome2guild           = data.frame(guild = factor(v))
+rownames(genome2guild) = names(v)
+adonis_1               = pairwiseAdonis::pairwise.adonis(distance.loma,genome2guild$guild,
+                                                         perm = 999,p.adjust.m='BH')
+test.clus.1            = adonis.pair(distance.loma, genome2guild[,"guild"], nper = 999, 
+                                     corr.method = "fdr")
+adonis_2               = vegan::adonis2(distance.loma ~ guild, data = genome2guild, perm = 999)
+
+# Plotting clustering ####
+fviz_dend(cluster.loma, k = 33,                 # Cut in four groups
+          cex = 0.25,
+          color_labels_by_k = TRUE,  # color labels by groups
+          ggtheme = theme_gray()     # Change theme
+)
+
+# Plotting similarity ####
+ggplot(data=mat_r2_1,aes(x=nguilds.1,y=my_vec)) + geom_line() +
+  xlab("Number of guilds") + ylab("Similarity within guilds") +
+  theme(text = element_text(size = 16)) + 
+  geom_hline(yintercept =0.5148247, linetype="dashed", color = "red") + 
+  geom_vline(xintercept = 33, linetype="dashed", color = "red") +
+  theme_classic()
+
+# Ordination of the 43 functional groups ####
+mat.gene.loma          = as.data.frame(cbind(genome2guild,mat.gene.loma))
+write.csv(mat.gene.loma, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/loma.genes.guilds.selected.csv")
+set.seed(1992)
+ordination_1           = metaMDS(mat.gene.loma[3:293],autotransform = F,trymax = 500)
+fort.1                 = fortify(ordination_1)
+write.csv(fort.1, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/loma.fort.1.csv")
+
+# Ordination 1 ####
+fort.1                 = read.csv(file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/loma.fort.1.csv")
+ggplot() + geom_point(data=subset(fort.1,score=="sites"),
+                           mapping = aes(x=NMDS1,y=NMDS2,color =as.factor(mat.gene.loma$guild),size = 2),
+                           alpha=0.5) + 
+  geom_segment(data=subset(fort.1,score=="species"),
+               mapping=aes(x=0,y=0,xend=NMDS1,yend=NMDS2),
+               arrow=arrow(length=unit(0.015,"npc"),
+                           type="closed"),
+               colour="darkgray",
+               linewidth=0.8) + 
+  geom_text(data=subset(fort.1,score=="species"), # "species"
+            mapping=aes(label=label,x=NMDS1*1.1,y=NMDS2*1.1)) + 
+  geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
+  geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.background=element_blank(),
+        axis.line=element_line(colour="black")) + 
+  annotate("text", x=-1, y=-1, label=paste('Stress =',round(ordination_1$stress,2)))
+
+# Ordination 2 ####
+ggplot() + geom_point(data=subset(fort.1,score=="sites"),
+                      mapping = aes(x=NMDS1,y=NMDS2,color =as.factor(mat.gene.loma$guild),size = 2),
+                      alpha=0.5) + 
+  geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
+  geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.background=element_blank(),
+        axis.line=element_line(colour="black")) + 
+  annotate("text", x=-1, y=-1, label=paste('Stress =',round(ordination_1$stress,2))) + 
+  stat_ellipse(data = subset(fort.1,score=="sites"), 
+               aes(x = NMDS1, y = NMDS2, color = as.factor(mat.gene.loma$guild)))
+
+# Abundance of functional groups under conditions ####
+fg_abundance                = as.data.frame(cbind(mat.gene.loma$guild,mag_stat))
+colnames(fg_abundance)[1]   = "guild"
+
+grassland.a    = fg_abundance %>% group_by(guild) %>% 
+  summarise(abundance = sum(Average)/sum(fg_abundance$Average)) %>% 
+  mutate(condition = rep("grassland.ambient" , nrow(grassland.a)))
+grassland.d    = fg_abundance %>% group_by(guild) %>% 
+  summarise(abundance = sum(Average.1)/sum(fg_abundance$Average.1)) %>% 
+  mutate(condition = rep("grassland.drought" , nrow(grassland.a)))
+shrubland.a    = fg_abundance %>% group_by(guild) %>% 
+  summarise(abundance = sum(Average.2)/sum(fg_abundance$Average.2)) %>% 
+  mutate(condition = rep("shrubland.ambient" , nrow(grassland.a)))
+shrubland.d    = fg_abundance %>% group_by(guild) %>% 
+  summarise(abundance = sum(Average.3)/sum(fg_abundance$Average.3)) %>% 
+  mutate(condition = rep("shrubland.drought" , nrow(grassland.a)))
+
+fg_ab.fig      =  as.data.frame(rbind(grassland.a,grassland.d,shrubland.a,
+                                      shrubland.d))
+colnames(fg_ab.fig) = c("guild","abundance","condition")
+write.csv(fg_ab.fig, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/fg_ab.loma.csv")
+
+ggplot(fg_ab.fig, aes(fill=as.factor(guild), y=abundance, x=condition)) + 
+  geom_bar(position="fill", stat="identity") + 
+  theme(text = element_text(size=25)) + 
+  labs(y="Abundance",x = element_blank()) + 
+  theme(legend.title = element_blank())
+
 # FIRE DATA ####
 
 # Calling data and preprocessing ####
@@ -635,16 +772,295 @@ erase.4hs         = as.data.frame(c(temp.hs.3.1.50[["predictors"]],
 colnames(erase.4hs) = c("trait")
 mat.hs              = mat.hs %>% select((erase.4hs$trait))
 
+# Best predictors statistics - step 5 ####
+mat.hs            = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/high.shallow.best.predictors.csv",dec=".")
+m.all             = lm(mat_hs[,1213]~.,data=mat.hs[2:50])
+temp.hs.5         = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hs[,1213]~.,data=mat.hs[51:76])
+temp.hs.5.1       = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hs[,1213]~.,data=mat.hs[77:144])
+temp.hs.5.2       = ols_step_forward_p(m.all, details = FALSE)
+erase.5hs         = as.data.frame(c(temp.hs.5[["predictors"]],
+                                    temp.hs.5.1[["predictors"]],
+                                    temp.hs.5.2[["predictors"]]))
+colnames(erase.5hs) = c("trait")
+mat.hs              = mat.hs %>% select((erase.5hs$trait))
+
+# Best predictors statistics - step 6 ####
+m.all             = lm(mat_hs[,1213]~.,data=mat.hs[1:62])
+temp.hs.6         = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hs[,1213]~.,data=mat.hs[63:128])
+temp.hs.6.1       = ols_step_forward_p(m.all, details = FALSE)
+erase.6hs         = as.data.frame(c(temp.hs.6[["predictors"]],
+                                    temp.hs.6.1[["predictors"]]))
+colnames(erase.6hs) = c("trait")
+mat.hs              = mat.hs %>% select((erase.6hs$trait))
+
 write.csv(mat.hs, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/high.shallow.best.predictors.csv")
 
 # High deep ####
 mat_trait_dh   = hmm_fire %>% mutate(H.deep_abund = mag_abun$Avg_high_deep)
 mat_hd         = (as.matrix(mat_trait_dh[3:1215]))
+
 # Best predictors statistics - step 1 ####
+m.all             = lm(mat_hd[,1213]~.,data=mat_trait_dh[3:50])
+temp.hd.1.50      = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hd[,1213]~.,data=mat_trait_dh[51:100])
+temp.hd.51.100    = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hd[,1213]~.,data=mat_trait_dh[101:110])
+temp.hd.101.110   = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hd[,1213]~.,data=mat_trait_dh[111:115])
+temp.hd.111.115   = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hd[,1213]~.,data=mat_trait_dh[116:150])
+temp.hd.116.150   = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hd[,1213]~.,data=mat_trait_dh[151:160])
+temp.hd.151.160   = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hd[,1213]~.,data=mat_trait_dh[161:170])
+temp.hd.161.170   = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hd[,1213]~.,data=mat_trait_dh[171:174])
+temp.hd.171.174   = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hd[,1213]~.,data=mat_trait_dh[175:176])
+temp.hd.175.176   = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hd[,1213]~.,data=mat_trait_dh[177:180])
+temp.hd.177.180   = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hd[,1213]~.,data=mat_trait_dh[181:200])
+temp.hd.181.200   = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hd[,1213]~.,data=mat_trait_dh[201:300])
+temp.hd.201.300   = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hd[,1213]~.,data=mat_trait_dh[301:400])
+temp.hd.301.400   = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hd[,1213]~.,data=mat_trait_dh[401:410])
+temp.hd.401.410   = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hd[,1213]~.,data=mat_trait_dh[411:414])
+temp.hd.411.414   = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hd[,1213]~.,data=mat_trait_dh[415:500])
+temp.hd.415.500   = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hd[,1213]~.,data=mat_trait_dh[501:520])
+temp.hd.501.520   = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hd[,1213]~.,data=mat_trait_dh[521:650])
+temp.hd.521.650   = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hd[,1213]~.,data=mat_trait_dh[651:800])
+temp.hd.651.800   = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hd[,1213]~.,data=mat_trait_dh[801:900])
+temp.hd.801.900   = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hd[,1213]~.,data=mat_trait_dh[901:950])
+temp.hd.901.950   = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hd[,1213]~.,data=mat_trait_dh[951:1050])
+temp.hd.951.1050  = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hd[,1213]~.,data=mat_trait_dh[1051:1212])
+temp.hd.1051.1212 = ols_step_forward_p(m.all, details = FALSE)
+erase.1hd         = as.data.frame(c(temp.hd.1.50[["predictors"]],
+                                    temp.hd.51.100[["predictors"]],
+                                    temp.hd.101.110[["predictors"]],
+                                    temp.hd.111.115[["predictors"]],
+                                    temp.hd.116.150[["predictors"]],
+                                    temp.hd.151.160[["predictors"]],
+                                    temp.hd.161.170[["predictors"]],
+                                    temp.hd.171.174[["predictors"]],
+                                    temp.hd.175.176[["predictors"]],
+                                    temp.hd.177.180[["predictors"]],
+                                    temp.hd.181.200[["predictors"]],
+                                    temp.hd.201.300[["predictors"]],
+                                    temp.hd.301.400[["predictors"]],
+                                    temp.hd.401.410[["predictors"]],
+                                    temp.hd.411.414[["predictors"]],
+                                    temp.hd.415.500[["predictors"]],
+                                    temp.hd.501.520[["predictors"]],
+                                    temp.hd.521.650[["predictors"]],
+                                    temp.hd.651.800[["predictors"]],
+                                    temp.hd.801.900[["predictors"]],
+                                    temp.hd.901.950[["predictors"]],
+                                    temp.hd.951.1050[["predictors"]],
+                                    temp.hd.1051.1212[["predictors"]]))
+colnames(erase.1hd) = c("trait")
+mat.hd              = mat_trait_dh %>% select((erase.1hd$trait))
+
+# Best predictors statistics - step 2 ####
+mat.hd            = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/high.deep.best.predictors.csv",dec=".")
+m.all             = lm(mat_hd[,1213]~.,data=mat.hd[2:100])
+temp.hd.1.1.100   = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hd[,1213]~.,data=mat.hd[101:200])
+temp.hd.1.101.200 = ols_step_forward_p(m.all, details = FALSE)
+m.all             = lm(mat_hd[,1213]~.,data=mat.hd[201:274])
+temp.hd.1.201.274 = ols_step_forward_p(m.all, details = FALSE)
+erase.2hd         = as.data.frame(c(temp.hd.1.1.100[["predictors"]],
+                                    temp.hd.1.101.200[["predictors"]],
+                                    temp.hd.1.201.274[["predictors"]]))
+colnames(erase.2hd) = c("trait")
+mat.hd              = mat.hd %>% select((erase.2hd$trait))
+
+# Best predictors statistics - step 3 ####
+m.all             = lm(mat_hd[,1213]~.,data=mat.hd[1:163])
+temp.hd.2         = ols_step_forward_p(m.all, details = FALSE)
+erase.3hd         = as.data.frame(c(temp.hd.2[["predictors"]]))
+colnames(erase.3hd) = c("trait")
+mat.hd              = mat.hd %>% select((erase.3hd$trait))
+
+write.csv(mat.hd, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/high.deep.best.predictors.csv")
+
+# Selected genes ####
+
+low.shallow  = read.csv(file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/low.shallow.best.predictors.csv")
+low.deep     = read.csv(file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/low.deep.best.predictors.csv")
+high.shallow = read.csv(file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/high.deep.best.predictors.csv")
+high.deep    = read.csv(file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/high.shallow.best.predictors.csv")
+gene.select  = as.data.frame(unique(c(colnames(low.shallow[2:109]),
+                                           colnames(low.deep[2:84]),
+                                           colnames(high.shallow[2:76]),
+                                           colnames(high.deep[2:121]))))
+colnames(gene.select)        = c("gene")
+mat.gene.fire                = as.data.frame(cbind(hmm_fire$id,
+                                                   hmm_fire %>% select(gene.select$gene)))
+colnames(mat.gene.fire)[1]   = "loma.id"
+
+write.csv(mat.gene.fire, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/fire.genes.selected.csv")
+
+# Functional groups ####
+
+# Hierarchical Clustering 
+set.seed(1)
+distance.fire  = vegdist(mat.gene.fire[2:309], method = "jaccard", binary = TRUE)
+cluster.fire   = hclust(distance.fire, method="ward.D2")
+
+# similarity within guilds ####
+my_vec       = c()
+nguilds.1    = seq(2, nrow(mat.gene.fire), 2)
+
+for(i in nguilds.1) {
+  v                      = cutree(cluster.fire,k=i)
+  genome2guild           = data.frame(guild = factor(v))
+  rownames(genome2guild) = names(v)
+  adonis_2               = vegan::adonis2(distance.fire ~ guild, data = genome2guild, perm = 1)
+  temp                   = adonis_2$R2
+  temp_1                 = temp[1]
+  my_out                 = temp_1
+  my_vec   <- c(my_vec, my_out)   
+}
+mat_r2_1  = as.data.frame(cbind(nguilds.1,my_vec))
+
+# Similarity among guilds ####
+v                      = cutree(cluster.fire,k=42)
+genome2guild           = data.frame(guild = factor(v))
+rownames(genome2guild) = names(v)
+adonis_1               = pairwiseAdonis::pairwise.adonis(distance.fire,genome2guild$guild,
+                                                         perm = 999,p.adjust.m='BH')
+test.clus.1            = adonis.pair(distance.fire, genome2guild[,"guild"], nper = 999, 
+                                     corr.method = "fdr")
+adonis_2               = vegan::adonis2(distance.fire ~ guild, data = genome2guild, perm = 999)
+
+# Plotting clustering ####
+fviz_dend(cluster.fire, k = 33,                 # Cut in four groups
+          cex = 0.25,
+          color_labels_by_k = TRUE,  # color labels by groups
+          ggtheme = theme_gray()     # Change theme
+)
+
+# Plotting similarity ####
+ggplot(data=mat_r2_1,aes(x=nguilds.1,y=my_vec)) + geom_line() +
+  xlab("Number of guilds") + ylab("Similarity within guilds") +
+  theme(text = element_text(size = 16)) + 
+  geom_hline(yintercept =0.5560235, linetype="dashed", color = "red") + 
+  geom_vline(xintercept = 42, linetype="dashed", color = "red") +
+  theme_classic()
+
+# Ordination of the 43 functional groups ####
+mat.gene.fire          = as.data.frame(cbind(genome2guild,mat.gene.fire))
+write.csv(mat.gene.fire, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/fire.genes.guilds.selected.csv")
+set.seed(1)
+ordination_1           = metaMDS(mat.gene.fire[3:310],autotransform = T,trymax = 500)
+fort.1                 = fortify(ordination_1)
+write.csv(fort.1, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/fire.fort.1.csv")
+
+# Ordination 1 ####
+ggplot() + geom_point(data=subset(fort.1,score=="sites"),
+                      mapping = aes(x=NMDS1,y=NMDS2,color =as.factor(mat.gene.fire$guild),size = 2),
+                      alpha=0.5) + 
+  geom_segment(data=subset(fort.1,score=="species"),
+               mapping=aes(x=0,y=0,xend=NMDS1,yend=NMDS2),
+               arrow=arrow(length=unit(0.015,"npc"),
+                           type="closed"),
+               colour="darkgray",
+               linewidth=0.8) + 
+  geom_text(data=subset(fort.1,score=="species"), # "species"
+            mapping=aes(label=label,x=NMDS1*1.1,y=NMDS2*1.1)) + 
+  geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
+  geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.background=element_blank(),
+        axis.line=element_line(colour="black")) + 
+  annotate("text", x=-1, y=-1, label=paste('Stress =',round(ordination_1$stress,2)))
+
+# Ordination 2 ####
+ggplot() + geom_point(data=subset(fort.1,score=="sites"),
+                      mapping = aes(x=NMDS1,y=NMDS2,color =as.factor(mat.gene.fire$guild),size = 2),
+                      alpha=0.5) + 
+  geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
+  geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.background=element_blank(),
+        axis.line=element_line(colour="black")) + 
+  annotate("text", x=-1, y=-1, label=paste('Stress =',round(ordination_1$stress,2))) + 
+  stat_ellipse(data = subset(fort.1,score=="sites"), 
+               aes(x = NMDS1, y = NMDS2, color = as.factor(mat.gene.fire$guild)))
+
+# Abundance of functional groups under conditions ####
+fg_abundance                = as.data.frame(cbind(mat.gene.fire$guild,mag_abun))
+colnames(fg_abundance)[1]   = "guild"
+
+low_shallow    = fg_abundance %>% group_by(guild) %>% 
+  summarise(abundance = sum(Avg_low_shallow)/sum(fg_abundance$Avg_low_shallow)) %>% 
+  mutate(condition = rep("low_shallow" , nrow(low_shallow)))
+low_deep       = fg_abundance %>% group_by(guild) %>% 
+  summarise(abundance = sum(Avg_low_deep)/sum(fg_abundance$Avg_low_deep)) %>% 
+  mutate(condition = rep("low_deep" , nrow(low_deep)))
+high_deep      = fg_abundance %>% group_by(guild) %>% 
+  summarise(abundance = sum(Avg_high_deep)/sum(fg_abundance$Avg_high_deep)) %>% 
+  mutate(condition = rep("high_deep" , nrow(high_deep)))
+high_shallow   = fg_abundance %>% group_by(guild) %>% 
+  summarise(abundance = sum(Avg_high_shallow)/sum(fg_abundance$Avg_high_shallow)) %>% 
+  mutate(condition = rep("high_shallow" , nrow(high_shallow)))
+
+fg_ab.fig      =  as.data.frame(rbind(low_shallow,low_deep,high_deep,
+                                      high_shallow))
+colnames(fg_ab.fig) = c("guild","abundance","condition")
+write.csv(fg_ab.fig, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/fg_ab.fire.csv")
+
+ggplot(fg_ab.fig, aes(fill=as.factor(guild), y=abundance, x=condition)) + 
+  geom_bar(position="fill", stat="identity") + 
+  theme(text = element_text(size=25)) + 
+  labs(y="Abundance",x = element_blank()) + 
+  theme(legend.title = element_blank())
+
+# LOMA-FIRE ####
+
+# Calling data and preprocessing ####
+hmm_loma    = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/hmm_Loma.csv",dec=".")
+gene_loma   = read.delim("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/litter_mags_metadata.txt",dec=".")
+mag_stat    = read.delim("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/mag_stats.txt") 
+mag_abun    = read.delim("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/mag_adundance.txt") 
+mag_stat    = mag_stat %>% full_join(mag_abun)
+hmm_fire    = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/hmm_Fire.csv",dec=".")
+mag_abun    = read.delim("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/mag_adundance_fire.txt") 
+mag_abun    = mag_abun[-c(440,546), ]
+
+# Selected genes ####
+mat.gene.loma = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/loma.genes.selected.csv",dec=".")
+mat.gene.fire = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/fire.genes.selected.csv",dec=".")
+T.gene.select = as.data.frame(unique(c(colnames(mat.gene.loma[3:293]),
+                                       colnames(mat.gene.fire[2:310]))))
+colnames(T.gene.select)      = c("gene")
+temp.fire                    = hmm_fire %>% select(T.gene.select$gene)
+temp.loma                    = hmm_loma %>% select(T.gene.select$gene)
+
+mat.gene.fire                = as.data.frame(cbind(hmm_fire$id,
+                                                   hmm_fire %>% select(gene.select$gene)))
+colnames(mat.gene.fire)[1]   = "loma.id"
 
 
 
-write.csv(mat.hs, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/high.deep.best.predictors.csv")
+
 
 
 
