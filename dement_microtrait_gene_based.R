@@ -17,6 +17,7 @@ library(EcolUtils)
 library(ggvegan)
 library(fmsb)
 library(factoextra)
+library(igraph)
 
 # LOMA RIDGE ####
 
@@ -1036,40 +1037,207 @@ ggplot(fg_ab.fig, aes(fill=as.factor(guild), y=abundance, x=condition)) +
 # LOMA-FIRE ####
 
 # Calling data and preprocessing ####
-hmm_loma    = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/hmm_Loma.csv",dec=".")
-gene_loma   = read.delim("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/litter_mags_metadata.txt",dec=".")
-mag_stat    = read.delim("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/mag_stats.txt") 
-mag_abun    = read.delim("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/mag_adundance.txt") 
-mag_stat    = mag_stat %>% full_join(mag_abun)
-hmm_fire    = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/hmm_Fire.csv",dec=".")
-mag_abun    = read.delim("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/mag_adundance_fire.txt") 
-mag_abun    = mag_abun[-c(440,546), ]
+hmm_loma         = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/hmm_Loma_full.csv",dec=".")
+gene_loma        = read.delim("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/litter_mags_metadata.txt",dec=".")
+mag_stat         = read.delim("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/mag_stats.txt") 
+mag_abun.loma    = read.delim("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/mag_adundance.txt") 
+mag_stat         = mag_stat %>% full_join(mag_abun.loma)
+hmm_fire         = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/hmm_Fire_full.csv",dec=".")
+mag_abun.fire    = read.delim("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/mag_adundance_fire.txt") 
+mag_abun.fire    = mag_abun.fire[-c(440,546), ]
 
 # Selected genes ####
 mat.gene.loma = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/loma.genes.selected.csv",dec=".")
 mat.gene.fire = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/fire.genes.selected.csv",dec=".")
 T.gene.select = as.data.frame(unique(c(colnames(mat.gene.loma[3:293]),
-                                       colnames(mat.gene.fire[2:310]))))
+                                       colnames(mat.gene.fire[3:310]))))
 colnames(T.gene.select)      = c("gene")
-temp.fire                    = hmm_fire %>% select(T.gene.select$gene)
-temp.loma                    = hmm_loma %>% select(T.gene.select$gene)
+temp.fire                    = as.data.frame(cbind(hmm_fire$id,hmm_fire %>% select(T.gene.select$gene)))
+temp.loma                    = as.data.frame(cbind(hmm_loma$id,hmm_loma %>% select(T.gene.select$gene)))
+colnames(temp.fire)[1]       = c("id")
+colnames(temp.loma)[1]       = c("id")
+total.mags                   = as.data.frame(rbind(temp.fire,temp.loma))
 
-mat.gene.fire                = as.data.frame(cbind(hmm_fire$id,
-                                                   hmm_fire %>% select(gene.select$gene)))
-colnames(mat.gene.fire)[1]   = "loma.id"
+# Hierarchical Clustering 
+set.seed(1)
+distance.total  = vegdist(total.mags[2:506], method = "jaccard", binary = TRUE)
+cluster.total   = hclust(distance.total, method="ward.D2")
 
+# similarity within guilds ####
+my_vec       = c()
+nguilds.1    = seq(2, nrow(total.mags), 2)
 
+for(i in nguilds.1) {
+  v                      = cutree(cluster.total,k=i)
+  genome2guild           = data.frame(guild = factor(v))
+  rownames(genome2guild) = names(v)
+  adonis_2               = vegan::adonis2(distance.total ~ guild, data = genome2guild, perm = 1)
+  temp                   = adonis_2$R2
+  temp_1                 = temp[1]
+  my_out                 = temp_1
+  my_vec   <- c(my_vec, my_out)   
+}
+mat_r2_1  = as.data.frame(cbind(nguilds.1,my_vec))
 
+# Similarity among guilds ####
+v                      = cutree(cluster.total,k=63)
+genome2guild           = data.frame(guild = factor(v))
+rownames(genome2guild) = names(v)
+adonis_1               = pairwiseAdonis::pairwise.adonis(distance.total,genome2guild$guild,
+                                                         perm = 999,p.adjust.m='BH')
+test.clus.1            = adonis.pair(distance.total, genome2guild[,"guild"], nper = 999, 
+                                     corr.method = "fdr")
+adonis_2               = vegan::adonis2(distance.total ~ guild, data = genome2guild, perm = 999)
 
+# Plotting clustering ####
+fviz_dend(cluster.total, k = 63,                 # Cut in four groups
+          cex = 0.25,
+          color_labels_by_k = TRUE,  # color labels by groups
+          ggtheme = theme_gray()     # Change theme
+)
 
+# Plotting similarity ####
+ggplot(data=mat_r2_1,aes(x=nguilds.1,y=my_vec)) + geom_line() +
+  xlab("Number of guilds") + ylab("Similarity within guilds") +
+  theme(text = element_text(size = 16)) + 
+  geom_hline(yintercept =0.5455844, linetype="dashed", color = "red") + 
+  geom_vline(xintercept = 63, linetype="dashed", color = "red") +
+  theme_classic()
+
+# Ordination of the 63 functional groups ####
+mat.gene.total         = as.data.frame(cbind(genome2guild,total.mags))
+write.csv(mat.gene.total, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/total.genes.guilds.selected.csv")
+set.seed(1)
+ordination_1           = metaMDS(mat.gene.total[3:507],autotransform = T,trymax = 5000)
+fort.1                 = fortify(ordination_1)
+write.csv(fort.1, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/total.fort.1.csv")
+
+# Ordination 1 ####
+ggplot() + geom_point(data=subset(fort.1,score=="sites"),
+                      mapping = aes(x=NMDS1,y=NMDS2,color =as.factor(mat.gene.total$guild),size = 2),
+                      alpha=0.5) + 
+  geom_segment(data=subset(fort.1,score=="species"),
+               mapping=aes(x=0,y=0,xend=NMDS1,yend=NMDS2),
+               arrow=arrow(length=unit(0.015,"npc"),
+                           type="closed"),
+               colour="darkgray",
+               linewidth=0.8) + 
+  geom_text(data=subset(fort.1,score=="species"), # "species"
+            mapping=aes(label=label,x=NMDS1*1.1,y=NMDS2*1.1)) + 
+  geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
+  geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.background=element_blank(),
+        axis.line=element_line(colour="black")) + 
+  annotate("text", x=-1, y=-1, label=paste('Stress =',round(ordination_1$stress,2)))
+
+# Ordination 2 ####
+ggplot() + geom_point(data=subset(fort.1,score=="sites"),
+                      mapping = aes(x=NMDS1,y=NMDS2,color =as.factor(mat.gene.total$guild),size = 2),
+                      alpha=0.5) + 
+  geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
+  geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.background=element_blank(),
+        axis.line=element_line(colour="black")) + 
+  annotate("text", x=-1, y=-1, label=paste('Stress =',round(ordination_1$stress,2))) + 
+  stat_ellipse(data = subset(fort.1,score=="sites"), 
+               aes(x = NMDS1, y = NMDS2, color = as.factor(mat.gene.total$guild)))
+
+# Ordination 3 ####
+
+mat.gene.total         = mat.gene.total %>% mutate(condition = c(rep("fire" , nrow(mag_abun.fire)),
+                                                                     rep("loma" , nrow(mag_abun.loma))))
+ggplot() + geom_point(data=subset(fort.1,score=="sites"),
+                      mapping = aes(x=NMDS1,y=NMDS2,color =as.factor(mat.gene.total$guild),shape=as.factor(mat.gene.total$condition),size = 2),
+                      alpha=0.5) + 
+  geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
+  geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.background=element_blank(),
+        axis.line=element_line(colour="black")) + 
+  annotate("text", x=-1, y=-1, label=paste('Stress =',round(ordination_1$stress,2)))
+
+# Abundance of functional groups under conditions ####
+
+# Microbial network ####
+myedgeslist <- data.frame(to = mat.gene.total$guild,
+                          from = mat.gene.total$condition)
+mygraph <- myedgeslist %>% igraph::graph_from_data_frame(directed = T) 
+mygraph %>% igraph::plot.igraph()
 
 
 # NEON DATA - DECOMPOSERS ####
 
 # Calling data and preprocessing ####
-hmm_neon    = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_neon/hmm_neon.csv",dec=".")
+hmm_neon       = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_neon/hmm_neon.csv",dec=".")
+col.names      = as.data.frame(colnames(hmm_neon))
 
+# Selecting decomposers genes ####
+hmm_neon_decom = as.data.frame(cbind(hmm_neon$id,hmm_neon[,1793:1833]))
+colnames(hmm_neon_decom)[1]   = "id"
+temp.1         = as.data.frame(cbind((colSums(hmm_neon_decom[,2:42]))))
+erase.1        = temp.1 %>% filter(V1==0)
+erase.1$row_names = row.names(erase.1)
+hmm_neon_decom = hmm_neon_decom[ , !(names(hmm_neon_decom) %in% erase.1$row_names)]
+a              = as.data.frame(rowSums(hmm_neon_decom[2:40]))
+hmm_neon_decom = hmm_neon_decom[-c(76,308,378,473,531),]
 
+# Hierarchical Clustering 
+set.seed(1)
+distance.neon  = vegdist(hmm_neon_decom[2:40], method = "jaccard", binary = TRUE)
+cluster.neon   = hclust(distance.neon, method="ward.D2")
+
+# similarity within guilds ####
+my_vec       = c()
+nguilds.1    = seq(2, nrow(hmm_neon_decom), 2)
+
+for(i in nguilds.1) {
+  v                      = cutree(cluster.neon,k=i)
+  genome2guild           = data.frame(guild = factor(v))
+  rownames(genome2guild) = names(v)
+  adonis_2               = vegan::adonis2(distance.neon ~ guild, data = genome2guild, perm = 1)
+  temp                   = adonis_2$R2
+  temp_1                 = temp[1]
+  my_out                 = temp_1
+  my_vec   <- c(my_vec, my_out)   
+}
+mat_r2_1  = as.data.frame(cbind(nguilds.1,my_vec))
+
+# Similarity among guilds ####
+v                      = cutree(cluster.neon,k=63)
+genome2guild           = data.frame(guild = factor(v))
+rownames(genome2guild) = names(v)
+adonis_1               = pairwiseAdonis::pairwise.adonis(distance.neon,genome2guild$guild,
+                                                         perm = 999,p.adjust.m='BH')
+test.clus.1            = adonis.pair(distance.neon, genome2guild[,"guild"], nper = 999, 
+                                     corr.method = "fdr")
+adonis_2               = vegan::adonis2(distance.neon ~ guild, data = genome2guild, perm = 999)
+
+# Plotting clustering ####
+fviz_dend(cluster.neon, k = 63,                 # Cut in four groups
+          cex = 0.25,
+          color_labels_by_k = TRUE,  # color labels by groups
+          ggtheme = theme_gray()     # Change theme
+)
+
+# Plotting similarity ####
+ggplot(data=mat_r2_1,aes(x=nguilds.1,y=my_vec)) + geom_line() +
+  xlab("Number of guilds") + ylab("Similarity within guilds") +
+  theme(text = element_text(size = 16)) + 
+  geom_hline(yintercept =0.5455844, linetype="dashed", color = "red") + 
+  geom_vline(xintercept = 63, linetype="dashed", color = "red") +
+  theme_classic()
+
+# Ordination of the 63 functional groups ####
+mat.gene.total         = as.data.frame(cbind(genome2guild,total.mags))
+write.csv(mat.gene.total, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/total.genes.guilds.selected.csv")
+set.seed(1)
+ordination_1           = metaMDS(mat.gene.total[3:507],autotransform = T,trymax = 5000)
+fort.1                 = fortify(ordination_1)
 
 
 
