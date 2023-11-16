@@ -1208,7 +1208,7 @@ for(i in nguilds.1) {
 mat_r2_1  = as.data.frame(cbind(nguilds.1,my_vec))
 
 # Similarity among guilds ####
-v                      = cutree(cluster.neon,k=63)
+v                      = cutree(cluster.neon,k=48)
 genome2guild           = data.frame(guild = factor(v))
 rownames(genome2guild) = names(v)
 adonis_1               = pairwiseAdonis::pairwise.adonis(distance.neon,genome2guild$guild,
@@ -1218,7 +1218,7 @@ test.clus.1            = adonis.pair(distance.neon, genome2guild[,"guild"], nper
 adonis_2               = vegan::adonis2(distance.neon ~ guild, data = genome2guild, perm = 999)
 
 # Plotting clustering ####
-fviz_dend(cluster.neon, k = 63,                 # Cut in four groups
+fviz_dend(cluster.neon, k = 48,                 # Cut in four groups
           cex = 0.25,
           color_labels_by_k = TRUE,  # color labels by groups
           ggtheme = theme_gray()     # Change theme
@@ -1228,17 +1228,48 @@ fviz_dend(cluster.neon, k = 63,                 # Cut in four groups
 ggplot(data=mat_r2_1,aes(x=nguilds.1,y=my_vec)) + geom_line() +
   xlab("Number of guilds") + ylab("Similarity within guilds") +
   theme(text = element_text(size = 16)) + 
-  geom_hline(yintercept =0.5455844, linetype="dashed", color = "red") + 
-  geom_vline(xintercept = 63, linetype="dashed", color = "red") +
+  geom_hline(yintercept =0.6104834, linetype="dashed", color = "red") + 
+  geom_vline(xintercept = 48, linetype="dashed", color = "red") +
   theme_classic()
 
-# Ordination of the 63 functional groups ####
-mat.gene.total         = as.data.frame(cbind(genome2guild,total.mags))
-write.csv(mat.gene.total, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/total.genes.guilds.selected.csv")
+# Ordination of the 48 functional groups ####
+mat.gene.neon         = as.data.frame(cbind(genome2guild,hmm_neon_decom))
+write.csv(mat.gene.neon, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_neon/total.genes.guilds.selected.csv")
 set.seed(1)
-ordination_1           = metaMDS(mat.gene.total[3:507],autotransform = T,trymax = 5000)
+ordination_1           = metaMDS(mat.gene.neon[3:41],autotransform = T,trymax = 100)
 fort.1                 = fortify(ordination_1)
 
+# Ordination 1 ####
+ggplot() + geom_point(data=subset(fort.1,score=="sites"),
+                      mapping = aes(x=NMDS1,y=NMDS2,color =as.factor(mat.gene.neon$guild),size = 2),
+                      alpha=0.5) + 
+  geom_segment(data=subset(fort.1,score=="species"),
+               mapping=aes(x=0,y=0,xend=NMDS1,yend=NMDS2),
+               arrow=arrow(length=unit(0.015,"npc"),
+                           type="closed"),
+               colour="darkgray",
+               linewidth=0.8) + 
+  geom_text(data=subset(fort.1,score=="species"), # "species"
+            mapping=aes(label=label,x=NMDS1*1.1,y=NMDS2*1.1)) + 
+  geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
+  geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.background=element_blank(),
+        axis.line=element_line(colour="black")) + 
+  annotate("text", x=-1, y=-1, label=paste('Stress =',round(ordination_1$stress,2)))
 
-
+# Ordination 2 ####
+ggplot() + geom_point(data=subset(fort.1,score=="sites"),
+                      mapping = aes(x=NMDS1,y=NMDS2,color =as.factor(mat.gene.neon$guild),size = 2),
+                      alpha=0.5) + 
+  geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
+  geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.background=element_blank(),
+        axis.line=element_line(colour="black")) + 
+  annotate("text", x=-1, y=-1, label=paste('Stress =',round(ordination_1$stress,2))) + 
+  stat_ellipse(data = subset(fort.1,score=="sites"), 
+               aes(x = NMDS1, y = NMDS2, color = as.factor(mat.gene.neon$guild)))
 
