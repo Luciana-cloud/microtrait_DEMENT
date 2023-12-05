@@ -1163,6 +1163,66 @@ ggplot() + geom_point(data=subset(fort.1,score=="sites"),
 
 # Abundance of functional groups under conditions ####
 
+total.guilds    = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/total.genes.guilds.selected.csv",dec=".")
+
+# Abundance of functional groups LOMA ####
+
+total.guilds.loma = total.guilds[636:1168,1:3]
+fg_abundance      = as.data.frame(cbind(total.guilds.loma[2],mag_stat))
+colnames(fg_abundance)[1]   = "guild"
+
+grassland.a    = fg_abundance %>% group_by(guild) %>% 
+  summarise(abundance = sum(Average)/sum(fg_abundance$Average)) %>% 
+  mutate(condition = rep("grassland.ambient" , nrow(grassland.a)))
+grassland.d    = fg_abundance %>% group_by(guild) %>% 
+  summarise(abundance = sum(Average.1)/sum(fg_abundance$Average.1)) %>% 
+  mutate(condition = rep("grassland.drought" , nrow(grassland.a)))
+shrubland.a    = fg_abundance %>% group_by(guild) %>% 
+  summarise(abundance = sum(Average.2)/sum(fg_abundance$Average.2)) %>% 
+  mutate(condition = rep("shrubland.ambient" , nrow(grassland.a)))
+shrubland.d    = fg_abundance %>% group_by(guild) %>% 
+  summarise(abundance = sum(Average.3)/sum(fg_abundance$Average.3)) %>% 
+  mutate(condition = rep("shrubland.drought" , nrow(grassland.a)))
+
+fg_ab.fig      =  as.data.frame(rbind(grassland.a,grassland.d,shrubland.a,
+                                      shrubland.d))
+colnames(fg_ab.fig) = c("guild","abundance","condition")
+
+ggplot(fg_ab.fig, aes(fill=as.factor(guild), y=abundance, x=condition)) + 
+  geom_bar(position="fill", stat="identity") + 
+  theme(text = element_text(size=25)) + 
+  labs(y="Abundance",x = element_blank()) + 
+  theme(legend.title = element_blank())
+
+# Abundance of functional groups FIRE ####
+
+total.guilds.fire           = total.guilds[1:635,1:3]
+fg_abundance                = as.data.frame(cbind(total.guilds.fire[2],mag_abun.fire))
+colnames(fg_abundance)[1]   = "guild"
+
+low_shallow    = fg_abundance %>% group_by(guild) %>% 
+  summarise(abundance = sum(Avg_low_shallow)/sum(fg_abundance$Avg_low_shallow)) %>% 
+  mutate(condition = rep("low_shallow" , nrow(low_shallow)))
+low_deep       = fg_abundance %>% group_by(guild) %>% 
+  summarise(abundance = sum(Avg_low_deep)/sum(fg_abundance$Avg_low_deep)) %>% 
+  mutate(condition = rep("low_deep" , nrow(low_deep)))
+high_deep      = fg_abundance %>% group_by(guild) %>% 
+  summarise(abundance = sum(Avg_high_deep)/sum(fg_abundance$Avg_high_deep)) %>% 
+  mutate(condition = rep("high_deep" , nrow(high_deep)))
+high_shallow   = fg_abundance %>% group_by(guild) %>% 
+  summarise(abundance = sum(Avg_high_shallow)/sum(fg_abundance$Avg_high_shallow)) %>% 
+  mutate(condition = rep("high_shallow" , nrow(high_shallow)))
+
+fg_ab.fig      =  as.data.frame(rbind(low_shallow,low_deep,high_deep,
+                                      high_shallow))
+colnames(fg_ab.fig) = c("guild","abundance","condition")
+
+ggplot(fg_ab.fig, aes(fill=as.factor(guild), y=abundance, x=condition)) + 
+  geom_bar(position="fill", stat="identity") + 
+  theme(text = element_text(size=25)) + 
+  labs(y="Abundance",x = element_blank()) + 
+  theme(legend.title = element_blank())
+
 # Microbial network ####
 myedgeslist <- data.frame(to = mat.gene.total$guild,
                           from = mat.gene.total$condition)
