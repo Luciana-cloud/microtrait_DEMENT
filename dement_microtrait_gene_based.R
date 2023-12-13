@@ -1106,11 +1106,14 @@ ggplot(data=mat_r2_1,aes(x=nguilds.1,y=my_vec)) + geom_line() +
 
 # Ordination of the 63 functional groups ####
 mat.gene.total         = as.data.frame(cbind(genome2guild,total.mags))
-write.csv(mat.gene.total, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/total.genes.guilds.selected.csv")
+#write.csv(mat.gene.total, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/total.genes.guilds.selected.csv")
 set.seed(1)
 ordination_1           = metaMDS(mat.gene.total[3:507],autotransform = T,trymax = 5000)
 fort.1                 = fortify(ordination_1)
-write.csv(fort.1, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/total.fort.1.csv")
+#write.csv(fort.1, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/total.fort.1.csv")
+
+mat.gene.total    = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/total.genes.guilds.selected.csv",dec=".")
+fort.1            = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/total.fort.1.csv",dec=".")
 
 # Ordination 1 ####
 ggplot() + geom_point(data=subset(fort.1,score=="sites"),
@@ -1184,15 +1187,25 @@ shrubland.d    = fg_abundance %>% group_by(guild) %>%
   summarise(abundance = sum(Average.3)/sum(fg_abundance$Average.3)) %>% 
   mutate(condition = rep("shrubland.drought" , nrow(grassland.a)))
 
-fg_ab.fig      =  as.data.frame(rbind(grassland.a,grassland.d,shrubland.a,
+fg_ab.fig.l      =  as.data.frame(rbind(grassland.a,grassland.d,shrubland.a,
                                       shrubland.d))
-colnames(fg_ab.fig) = c("guild","abundance","condition")
+colnames(fg_ab.fig.l) = c("guild","abundance","condition")
 
-ggplot(fg_ab.fig, aes(fill=as.factor(guild), y=abundance, x=condition)) + 
+numbers   = c(2,6,10,11,13,14,16,17,19,21,28,29,32,33,35,44,47,49)
+test.1    = cbind(numbers,rep(0,length(numbers)),rep("grassland.ambient",length(numbers)))
+test.2    = cbind(numbers,rep(0,length(numbers)),rep("grassland.drought",length(numbers)))
+test.3    = cbind(numbers,rep(0,length(numbers)),rep("shrubland.ambient",length(numbers)))
+test.4    = cbind(numbers,rep(0,length(numbers)),rep("shrubland.drought",length(numbers)))
+test      = rbind(test.1,test.2,test.3,test.4)
+colnames(test) = c("guild","abundance","condition")
+
+fg_ab.fig.loma = as.data.frame(rbind(fg_ab.fig.l,test))
+
+ggplot(fg_ab.fig.loma, aes(fill=as.factor(guild), y=as.numeric(abundance), x=condition)) + 
   geom_bar(position="fill", stat="identity") + 
   theme(text = element_text(size=25)) + 
   labs(y="Abundance",x = element_blank()) + 
-  theme(legend.title = element_blank())
+  theme(legend.title = element_blank()) 
 
 # Abundance of functional groups FIRE ####
 
@@ -1217,18 +1230,117 @@ fg_ab.fig      =  as.data.frame(rbind(low_shallow,low_deep,high_deep,
                                       high_shallow))
 colnames(fg_ab.fig) = c("guild","abundance","condition")
 
-ggplot(fg_ab.fig, aes(fill=as.factor(guild), y=abundance, x=condition)) + 
+numbers   = c(50,51,52,53,54,55,56,57,58,59,60,61,62,63)
+test.1    = cbind(numbers,rep(0,length(numbers)),rep("low_shallow",length(numbers)))
+test.2    = cbind(numbers,rep(0,length(numbers)),rep("low_deep",length(numbers)))
+test.3    = cbind(numbers,rep(0,length(numbers)),rep("high_deep",length(numbers)))
+test.4    = cbind(numbers,rep(0,length(numbers)),rep("high_shallow",length(numbers)))
+test      = rbind(test.1,test.2,test.3,test.4)
+colnames(test) = c("guild","abundance","condition")
+
+fg_ab.fig.1  = as.data.frame(rbind(fg_ab.fig,test))
+
+ggplot(fg_ab.fig.1, aes(fill=as.factor(guild), y=as.numeric(abundance), x=condition)) + 
   geom_bar(position="fill", stat="identity") + 
   theme(text = element_text(size=25)) + 
   labs(y="Abundance",x = element_blank()) + 
   theme(legend.title = element_blank())
+
+# Extra analysis ####
+
+fg_ab.fig.loma.1 = fg_ab.fig.loma[fg_ab.fig.loma$guild %in% c(50,51,52,53,54,55,56,57,58,59,60,61,62,63), ]
+fg_ab.fig.fire.1 = fg_ab.fig.1[fg_ab.fig.1$guild %in% c(2,6,10,11,13,14,16,17,19,21,28,29,32,33,35,44,47,49), ]
+
+fg_ab.fig.loma.m = fg_ab.fig.loma.1 %>% group_by(guild) %>% 
+  summarise(mean = mean(as.numeric(abundance)))
+fg_ab.fig.fire.m = fg_ab.fig.fire.1 %>% group_by(guild) %>% 
+  summarise(mean = mean(as.numeric(abundance)))
+data             = as.data.frame(cbind(subset(fort.1,score=="sites"),mat.gene.total$guild))
+colnames(data)[6] = "guild"
+data.1           = subset(fort.1,score=="species")
+
+# Loma ####
+
+data.loma        = data[data$guild %in% c(50,51,52,53,54,55,56,57,58,59,60,61,62,63), ]
+
+ggplot() + geom_point(data=data.loma,
+                      mapping = aes(x=NMDS1,y=NMDS2,color =as.factor(guild),size = 2),
+                      alpha=0.5) + 
+  geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
+  geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.background=element_blank(),
+        axis.line=element_line(colour="black")) + 
+  stat_ellipse(data = data.loma, 
+               aes(x = NMDS1, y = NMDS2, color = as.factor(guild))) 
+
+# Fire ####
+
+data.fire        = data[data$guild %in% c(2,6,10,11,13,14,16,17,19,21,28,29,32,33,35,44,47,49), ]
+
+ggplot() + geom_point(data=data.fire,
+                      mapping = aes(x=NMDS1,y=NMDS2,color =as.factor(guild),size = 2),
+                      alpha=0.5) + 
+  geom_abline(intercept=0,slope=0,linetype="dashed",linewidth=0.8,colour="gray") + 
+  geom_vline(aes(xintercept=0),linetype="dashed",linewidth=0.8,colour="gray") + 
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.background=element_blank(),
+        axis.line=element_line(colour="black")) + 
+  stat_ellipse(data = data.fire, 
+               aes(x = NMDS1, y = NMDS2, color = as.factor(guild)))
+
+# Abundant groups ####
+
+guild.loma.57   = mat.gene.total[mat.gene.total$guild==57,]
+guild.loma.57.1 = ((guild.loma.57[,3:509] %>% summarize_if(is.numeric, sum, na.rm=TRUE)/nrow(guild.loma.57)))
+
+guild.fire.10         = mat.gene.total[mat.gene.total$guild==10,]
+guild.fire.10.1       = ((guild.fire.10[,3:509] %>% summarize_if(is.numeric, sum, na.rm=TRUE)/nrow(guild.fire.10)))
+guild.mixed           = as.data.frame(t(rbind(guild.loma.57.1,guild.fire.10.1)))
+colnames(guild.mixed) = c("loma","fire")
+erase                 = as.data.frame(rowSums(guild.mixed))
+erase.1               = as.data.frame(cbind(rownames(erase),erase))
+rownames(erase.1)     = NULL
+erase.1               = erase.1[erase.1$`rowSums(guild.mixed)`>0.5,]
+colnames(erase.1)     = c("gene","total")
+guild.mixed           = as.data.frame(cbind(rownames(guild.mixed),guild.mixed))
+rownames(guild.mixed) = NULL
+colnames(guild.mixed)[1] = "gene"
+guild.mixed.1         = guild.mixed[guild.mixed$gene %in% erase.1$gene,]
+
+write.csv(guild.mixed.1, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/guild.mixed.1.csv")
+guild.mixed.1    = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/guild.mixed.1.csv",dec=".")
+
+guild.mixed.2    = order(guild.mixed.1$loma,decreasing=TRUE,na.last=TRUE)
+# barplot
+
+loma.bar           = cbind(guild.mixed.1[,1:2],rep("loma",nrow(guild.mixed.1)),
+                           rep("down",nrow(guild.mixed.1)))
+colnames(loma.bar) = c("gene","total","condition","variable")
+fire.bar           = cbind(guild.mixed.1[,c(1,3)],
+                           rep("fire",nrow(guild.mixed.1)),rep("up",nrow(guild.mixed.1)))
+colnames(fire.bar) = c("gene","total","condition","variable")
+guild.mixed.bar = as.data.frame(rbind(loma.bar,fire.bar))
+
+write.csv(guild.mixed.bar, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/guild.mixed.bar.csv")
+
+guild.mixed.bar    = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/guild.mixed.bar.csv",dec=".")
+
+ggplot(guild.mixed.bar, aes(gene), ylim(-1:1)) + 
+  geom_bar(data = subset(guild.mixed.bar, variable == "up"), 
+           aes(y = total, fill = condition), stat = "identity", position = "dodge") +
+  geom_bar(data = subset(guild.mixed.bar, variable == "down"), 
+           aes(y = -total, fill = condition), stat = "identity", position = "dodge") + 
+  geom_hline(yintercept = 0,colour = "grey90")
+
 
 # Microbial network ####
 myedgeslist <- data.frame(to = mat.gene.total$guild,
                           from = mat.gene.total$condition)
 mygraph <- myedgeslist %>% igraph::graph_from_data_frame(directed = T) 
 mygraph %>% igraph::plot.igraph()
-
 
 # NEON DATA - DECOMPOSERS ####
 
