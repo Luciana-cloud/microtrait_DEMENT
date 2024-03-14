@@ -17,6 +17,10 @@ a                   = as.data.frame(colnames(full_mat))
 GH_rule             = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/microtrait_GH.txt", header = TRUE)
 prot_rule           = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/microtrait_proteins.txt", header = TRUE)
 osmo_rule           = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/microtrait_osymolites.txt", header = TRUE)
+biofilm_rule        = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/microtrait_biofilm.txt", header = TRUE)
+high.T_rule         = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/microtrait_high_T.txt", header = TRUE)
+low.T_rule          = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/microtrait_low_T.txt", header = TRUE)
+pH_rule             = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/microtrait_pH_stress.txt", header = TRUE)
 
 # CAZy GENE COST PER MEAN GENOME SIZE PER FUNCTIONAL GROUP ----
 
@@ -139,3 +143,105 @@ ggplot(GHs_full.1, aes(size,sum.2,colour=factor(guild))) + geom_point() +
   xlab("Genome size") + ylab("Total GH costs")
 
 
+
+# BIOFILM GENE COST PER MEAN GENOME SIZE PER FUNCTIONAL GROUP ----
+
+BIOFILM_TOTAL = full_mat %>% select(any_of(biofilm_rule$microtrait_hmm.name))
+BIOFILM_TOTAL = as_data_frame(cbind(full_mat[c("guild","id","size")],BIOFILM_TOTAL))
+
+BIOFILM_TOTAL_m = BIOFILM_TOTAL %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                   list(mean=mean), na.rm=TRUE))
+BIOFILM_TOTAL_m = BIOFILM_TOTAL_m %>% mutate(BIOFILM_total = rowSums(BIOFILM_TOTAL_m[,3:ncol(BIOFILM_TOTAL_m)]))
+
+ggplot(BIOFILM_TOTAL_m, aes(size_mean,BIOFILM_total,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total biofilm costs per FG") # It seems that group 62 is too big
+
+ggplot(BIOFILM_TOTAL_m, aes(x = size_mean,y = BIOFILM_total)) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total biofilm costs per FG") + geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
+
+BIOFILM_TOTAL_m.1 = BIOFILM_TOTAL_m[-c(62), ]
+
+ggplot(BIOFILM_TOTAL_m.1, aes(x = size_mean,y = BIOFILM_total,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total biofilm costs per FG")
+
+ggplot(BIOFILM_TOTAL_m.1, aes(x = size_mean,y = BIOFILM_total)) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total biofilm costs per FG") + geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
+
+# HEAT TOLERANCE GENE COST PER MEAN GENOME SIZE PER FUNCTIONAL GROUP ----
+
+HEAT.T_TOTAL = full_mat %>% select(any_of(high.T_rule$microtrait_hmm.name))
+HEAT.T_TOTAL = as_data_frame(cbind(full_mat[c("guild","id","size")],HEAT.T_TOTAL))
+
+HEAT.T_TOTAL_m = HEAT.T_TOTAL %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                         list(mean=mean), na.rm=TRUE))
+HEAT.T_TOTAL_m = HEAT.T_TOTAL_m %>% mutate(HEAT.T_total = rowSums(HEAT.T_TOTAL_m[,3:ncol(HEAT.T_TOTAL_m)]))
+
+ggplot(HEAT.T_TOTAL_m, aes(size_mean,HEAT.T_total,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total heat tolerance costs per FG") # It seems that group 62 is too big
+
+ggplot(HEAT.T_TOTAL_m, aes(x = size_mean,y = HEAT.T_total)) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total heat tolerance costs per FG") + geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
+
+HEAT.T_TOTAL_m.1 = HEAT.T_TOTAL_m[-c(62), ]
+
+ggplot(HEAT.T_TOTAL_m.1, aes(x = size_mean,y = HEAT.T_total,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total heat tolerance costs per FG")
+
+ggplot(HEAT.T_TOTAL_m.1, aes(x = size_mean,y = HEAT.T_total)) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total heat tolerance costs per FG") + geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
+
+
+# LOW TEMPERATURE TOLERANCE GENE COST PER MEAN GENOME SIZE PER FUNCTIONAL GROUP ----
+
+LOW.T_TOTAL = full_mat %>% select(any_of(low.T_rule$microtrait_hmm.name))
+LOW.T_TOTAL = as_data_frame(cbind(full_mat[c("guild","id","size")],LOW.T_TOTAL))
+
+LOW.T_TOTAL_m = LOW.T_TOTAL %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                       list(mean=mean), na.rm=TRUE))
+LOW.T_TOTAL_m = LOW.T_TOTAL_m %>% mutate(LOW.T_total = rowSums(LOW.T_TOTAL_m[,3:ncol(LOW.T_TOTAL_m)]))
+
+ggplot(LOW.T_TOTAL_m, aes(size_mean,LOW.T_total,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total low temperature tolerance costs per FG") # It seems that group 62 is too big
+
+ggplot(LOW.T_TOTAL_m, aes(x = size_mean,y = LOW.T_total)) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total low temperature tolerance costs per FG") + geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
+
+LOW.T_TOTAL_m.1 = LOW.T_TOTAL_m[-c(62), ]
+
+ggplot(LOW.T_TOTAL_m.1, aes(x = size_mean,y = LOW.T_total,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total low temperature tolerance costs per FG")
+
+ggplot(LOW.T_TOTAL_m.1, aes(x = size_mean,y = LOW.T_total)) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total low temperature tolerance costs per FG") + geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
+
+
+# PH TOLERANCE GENE COST PER MEAN GENOME SIZE PER FUNCTIONAL GROUP ----
+
+PH_TOTAL = full_mat %>% select(any_of(pH_rule$microtrait_hmm.name))
+PH_TOTAL = as_data_frame(cbind(full_mat[c("guild","id","size")],PH_TOTAL))
+
+PH_TOTAL_m = PH_TOTAL %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                     list(mean=mean), na.rm=TRUE))
+PH_TOTAL_m = PH_TOTAL_m %>% mutate(PH_total = rowSums(PH_TOTAL_m[,3:ncol(PH_TOTAL_m)]))
+
+ggplot(PH_TOTAL_m, aes(size_mean,PH_total,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total pH tolerance costs per FG") # It seems that group 62 is too big
+
+ggplot(PH_TOTAL_m, aes(x = size_mean,y = PH_total)) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total pH tolerance costs per FG") + geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
+
+PH_TOTAL_m.1 = PH_TOTAL_m[-c(62), ]
+
+ggplot(PH_TOTAL_m.1, aes(x = size_mean,y = PH_total,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total pH tolerance costs per FG")
+
+ggplot(PH_TOTAL_m.1, aes(x = size_mean,y = PH_total)) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total pH tolerance costs per FG") + geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
