@@ -21,6 +21,7 @@ biofilm_rule        = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-demen
 high.T_rule         = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/microtrait_high_T.txt", header = TRUE)
 low.T_rule          = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/microtrait_low_T.txt", header = TRUE)
 pH_rule             = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/microtrait_pH_stress.txt", header = TRUE)
+transp_rule         = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/microtrait_transporters.txt", header = TRUE,sep = "\t")
 
 # CAZy GENE COST PER MEAN GENOME SIZE PER FUNCTIONAL GROUP ----
 
@@ -245,3 +246,153 @@ ggplot(PH_TOTAL_m.1, aes(x = size_mean,y = PH_total,colour=factor(guild))) + geo
 ggplot(PH_TOTAL_m.1, aes(x = size_mean,y = PH_total)) + geom_point() +
   xlab("Mean genome size per FG") + ylab("Mean total pH tolerance costs per FG") + geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
   geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
+
+# TRANSPORT GENE COST PER MEAN GENOME SIZE PER FUNCTIONAL GROUP ----
+# TOTAL ----
+length(unique(transp_rule$microtrait_hmm.name))
+
+transp_rule  = transp_rule %>% filter(function.==c("transporter"))
+TRANSP_TOTAL = full_mat %>% select(any_of(transp_rule$microtrait_hmm.name))
+TRANSP_TOTAL = as_data_frame(cbind(full_mat[c("guild","id","size")],TRANSP_TOTAL))
+
+TRANSP_TOTAL_m = TRANSP_TOTAL %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                               list(mean=mean), na.rm=TRUE))
+TRANSP_TOTAL_m = TRANSP_TOTAL_m %>% mutate(TRANSP_TOTAL = rowSums(TRANSP_TOTAL_m[,3:ncol(TRANSP_TOTAL_m)]))
+
+ggplot(TRANSP_TOTAL_m, aes(size_mean,TRANSP_TOTAL,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean transporter costs per FG") # It seems that group 62 is too big
+
+ggplot(TRANSP_TOTAL_m, aes(x = size_mean,y = TRANSP_TOTAL)) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean transporter costs per FG") + geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.x = 1e7,label.y = 85) + stat_regline_equation(label.x = 1e7,label.y = 80)
+
+TRANSP_TOTAL_m.1 = TRANSP_TOTAL_m[-c(62), ]
+
+ggplot(TRANSP_TOTAL_m.1, aes(x = size_mean,y = TRANSP_TOTAL,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean transporter costs per FG")
+
+ggplot(TRANSP_TOTAL_m.1, aes(x = size_mean,y = TRANSP_TOTAL)) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean transporter costs per FG") + geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 75) + stat_regline_equation(label.y = 70)
+
+# AMINOACIDS ----
+transp_rule_ami  = transp_rule %>% filter(class==c("aminoacid","peptide"))
+AMI_TRANSP_TOTAL = full_mat %>% select(any_of(transp_rule_ami$microtrait_hmm.name))
+AMI_TRANSP_TOTAL = as_data_frame(cbind(full_mat[c("guild","id","size")],AMI_TRANSP_TOTAL))
+
+AMI_TRANSP_TOTAL_m = AMI_TRANSP_TOTAL %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                       list(mean=mean), na.rm=TRUE))
+AMI_TRANSP_TOTAL_m = AMI_TRANSP_TOTAL_m %>% mutate(AMI_TRANSP_TOTAL = rowSums(AMI_TRANSP_TOTAL_m[,3:ncol(AMI_TRANSP_TOTAL_m)]))
+
+ggplot(AMI_TRANSP_TOTAL_m, aes(size_mean,AMI_TRANSP_TOTAL,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean aminoacid transporter costs per FG") # It seems that group 62 is too big
+
+ggplot(AMI_TRANSP_TOTAL_m, aes(x = size_mean,y = AMI_TRANSP_TOTAL)) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean aminoacid transporter costs per FG") + geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
+
+AMI_TRANSP_TOTAL_m.1 = AMI_TRANSP_TOTAL_m[-c(62), ]
+
+ggplot(AMI_TRANSP_TOTAL_m.1, aes(x = size_mean,y = AMI_TRANSP_TOTAL,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean aminoacid transporter costs per FG")
+
+ggplot(AMI_TRANSP_TOTAL_m.1, aes(x = size_mean,y = AMI_TRANSP_TOTAL)) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean aminoacid transporter costs per FG") + geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
+
+
+# CARBOHYDRATE ----
+transp_rule_carb = transp_rule %>% filter(class==c("carbohydrate"))
+CARB_TRANSP_TOTAL = full_mat %>% select(any_of(transp_rule_carb$microtrait_hmm.name))
+CARB_TRANSP_TOTAL = as_data_frame(cbind(full_mat[c("guild","id","size")],CARB_TRANSP_TOTAL))
+
+CARB_TRANSP_TOTAL_m = CARB_TRANSP_TOTAL %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                               list(mean=mean), na.rm=TRUE))
+CARB_TRANSP_TOTAL_m = CARB_TRANSP_TOTAL_m %>% mutate(CARB_TRANSP_TOTAL = rowSums(CARB_TRANSP_TOTAL_m[,3:ncol(CARB_TRANSP_TOTAL_m)]))
+
+ggplot(CARB_TRANSP_TOTAL_m, aes(size_mean,CARB_TRANSP_TOTAL,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean carbohydrate transporter costs per FG") # It seems that group 62 is too big
+
+ggplot(CARB_TRANSP_TOTAL_m, aes(x = size_mean,y = CARB_TRANSP_TOTAL)) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean carbohydrate transporter costs per FG") + geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
+
+CARB_TRANSP_TOTAL_m.1 = CARB_TRANSP_TOTAL_m[-c(62), ]
+
+ggplot(CARB_TRANSP_TOTAL_m.1, aes(x = size_mean,y = CARB_TRANSP_TOTAL,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean carbohydrate transporter costs per FG")
+
+ggplot(CARB_TRANSP_TOTAL_m.1, aes(x = size_mean,y = CARB_TRANSP_TOTAL)) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean carbohydrate transporter costs per FG") + geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
+
+
+# LOMA + FIRE ANALYSIS ----
+
+# CAZy GENE COST ----
+
+GH_LOMA = full_mat[636:1168,] %>% select(any_of(GH_rule$microtrait_hmm.name))
+GH_LOMA = as_data_frame(cbind(full_mat[636:1168,][c("guild","id","size")],GH_LOMA))
+
+GH_LOMA_m = GH_LOMA %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                               list(mean=mean), na.rm=TRUE))
+GH_LOMA_m = GH_LOMA_m %>% mutate(GH_total = rowSums(GH_LOMA_m[,3:ncol(GH_LOMA_m)]))
+
+GH_LOMA_m = GH_LOMA_m[-c(44), ]
+
+ggplot(GH_LOMA_m, aes(size_mean,GH_total,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total GH costs per FG") # It seems that group 62 is too big
+
+ggplot(GH_LOMA_m, aes(x = size_mean,y = GH_total)) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total GH costs per FG") + 
+  geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
+
+GH_FIRE = full_mat[1:635,] %>% select(any_of(GH_rule$microtrait_hmm.name))
+GH_FIRE = as_data_frame(cbind(full_mat[1:635,][c("guild","id","size")],GH_FIRE))
+
+GH_FIRE_m = GH_FIRE %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                             list(mean=mean), na.rm=TRUE))
+GH_FIRE_m = GH_FIRE_m %>% mutate(GH_total = rowSums(GH_FIRE_m[,3:ncol(GH_FIRE_m)]))
+
+ggplot(GH_FIRE_m, aes(size_mean,GH_total,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total GH costs per FG") # It seems that group 62 is too big
+
+ggplot(GH_FIRE_m, aes(x = size_mean,y = GH_total)) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total GH costs per FG") + 
+  geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
+
+# PROTEIN GENE COST ----
+PROTEIN_LOMA = full_mat[636:1168,] %>% select(any_of(prot_rule$microtrait_rule.name))
+PROTEIN_LOMA = as_data_frame(cbind(full_mat[636:1168,][c("guild","id","size")],PROTEIN_LOMA))
+
+PROTEIN_LOMA_m = PROTEIN_LOMA %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                             list(mean=mean), na.rm=TRUE))
+PROTEIN_LOMA_m = PROTEIN_LOMA_m %>% mutate(PROTEIN_total = rowSums(PROTEIN_LOMA_m[,3:ncol(PROTEIN_LOMA_m)]))
+
+PROTEIN_LOMA_m = PROTEIN_LOMA_m[-c(44), ]
+
+ggplot(PROTEIN_LOMA_m, aes(size_mean,PROTEIN_total,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total Protein costs per FG") # It seems that group 62 is too big
+
+ggplot(PROTEIN_LOMA_m, aes(x = size_mean,y = PROTEIN_total)) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean Protein GH costs per FG") + 
+  geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
+
+PROTEIN_FIRE = full_mat[1:635,] %>% select(any_of(prot_rule$microtrait_rule.name))
+PROTEIN_FIRE = as_data_frame(cbind(full_mat[1:635,][c("guild","id","size")],PROTEIN_FIRE))
+
+PROTEIN_FIRE_m = PROTEIN_FIRE %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                             list(mean=mean), na.rm=TRUE))
+PROTEIN_FIRE_m = PROTEIN_FIRE_m %>% mutate(PROTEIN_total = rowSums(PROTEIN_FIRE_m[,3:ncol(PROTEIN_FIRE_m)]))
+
+ggplot(PROTEIN_FIRE_m, aes(size_mean,PROTEIN_total,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total GH costs per FG") # It seems that group 62 is too big
+
+ggplot(PROTEIN_FIRE_m, aes(x = size_mean,y = PROTEIN_total)) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total GH costs per FG") + 
+  geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
+
