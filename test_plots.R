@@ -377,7 +377,7 @@ ggplot(PROTEIN_LOMA_m, aes(size_mean,PROTEIN_total,colour=factor(guild))) + geom
   xlab("Mean genome size per FG") + ylab("Mean total Protein costs per FG") # It seems that group 62 is too big
 
 ggplot(PROTEIN_LOMA_m, aes(x = size_mean,y = PROTEIN_total)) + geom_point() +
-  xlab("Mean genome size per FG") + ylab("Mean Protein GH costs per FG") + 
+  xlab("Mean genome size per FG") + ylab("Mean Protein costs per FG") + 
   geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
   geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
 
@@ -389,10 +389,76 @@ PROTEIN_FIRE_m = PROTEIN_FIRE %>% group_by(guild) %>% summarise(across(where(is.
 PROTEIN_FIRE_m = PROTEIN_FIRE_m %>% mutate(PROTEIN_total = rowSums(PROTEIN_FIRE_m[,3:ncol(PROTEIN_FIRE_m)]))
 
 ggplot(PROTEIN_FIRE_m, aes(size_mean,PROTEIN_total,colour=factor(guild))) + geom_point() +
-  xlab("Mean genome size per FG") + ylab("Mean total GH costs per FG") # It seems that group 62 is too big
+  xlab("Mean genome size per FG") + ylab("Mean total Protein costs per FG") # It seems that group 62 is too big
 
 ggplot(PROTEIN_FIRE_m, aes(x = size_mean,y = PROTEIN_total)) + geom_point() +
-  xlab("Mean genome size per FG") + ylab("Mean total GH costs per FG") + 
+  xlab("Mean genome size per FG") + ylab("Mean total Protein costs per FG") + 
   geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
   geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
 
+# OSMOLYTE GENE COST ----
+OSMOLYTE_LOMA = full_mat[636:1168,] %>% select(any_of(osmo_rule$microtrait_hmm.name))
+OSMOLYTE_LOMA = as_data_frame(cbind(full_mat[636:1168,][c("guild","id","size")],OSMOLYTE_LOMA))
+
+OSMOLYTE_LOMA_m = OSMOLYTE_LOMA %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                       list(mean=mean), na.rm=TRUE))
+OSMOLYTE_LOMA_m = OSMOLYTE_LOMA_m %>% mutate(OSMOLYTE_total = rowSums(OSMOLYTE_LOMA_m[,3:ncol(OSMOLYTE_LOMA_m)]))
+
+OSMOLYTE_LOMA_m = OSMOLYTE_LOMA_m[-c(44), ]
+
+ggplot(OSMOLYTE_LOMA_m, aes(size_mean,OSMOLYTE_total,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total osmolyte costs per FG") # It seems that group 62 is too big
+
+ggplot(OSMOLYTE_LOMA_m, aes(x = size_mean,y = OSMOLYTE_total)) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean osmolyte costs per FG") + 
+  geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
+
+OSMOLYTE_FIRE = full_mat[1:635,] %>% select(any_of(osmo_rule$microtrait_hmm.name))
+OSMOLYTE_FIRE = as_data_frame(cbind(full_mat[1:635,][c("guild","id","size")],OSMOLYTE_FIRE))
+
+OSMOLYTE_FIRE_m = OSMOLYTE_FIRE %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                       list(mean=mean), na.rm=TRUE))
+OSMOLYTE_FIRE_m = OSMOLYTE_FIRE_m %>% mutate(OSMOLYTE_total = rowSums(OSMOLYTE_FIRE_m[,3:ncol(OSMOLYTE_FIRE_m)]))
+
+ggplot(OSMOLYTE_FIRE_m, aes(size_mean,OSMOLYTE_total,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total osmolyte costs per FG") # It seems that group 62 is too big
+
+ggplot(OSMOLYTE_FIRE_m, aes(x = size_mean,y = OSMOLYTE_total)) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total osmolyte costs per FG") + 
+  geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
+
+# TRANSPORTER GENE COST ----
+transp_rule  = transp_rule %>% filter(function.==c("transporter"))
+TRANSPORTER_LOMA = full_mat[636:1168,] %>% select(any_of(transp_rule$microtrait_hmm.name))
+TRANSPORTER_LOMA = as_data_frame(cbind(full_mat[636:1168,][c("guild","id","size")],TRANSPORTER_LOMA))
+
+TRANSPORTER_LOMA_m = TRANSPORTER_LOMA %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                         list(mean=mean), na.rm=TRUE))
+TRANSPORTER_LOMA_m = TRANSPORTER_LOMA_m %>% mutate(TRANSPORTER_total = rowSums(TRANSPORTER_LOMA_m[,3:ncol(TRANSPORTER_LOMA_m)]))
+
+TRANSPORTER_LOMA_m = TRANSPORTER_LOMA_m[-c(44), ]
+
+ggplot(TRANSPORTER_LOMA_m, aes(size_mean,TRANSPORTER_total,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total transporter costs per FG") # It seems that group 62 is too big
+
+ggplot(TRANSPORTER_LOMA_m, aes(x = size_mean,y = TRANSPORTER_total)) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean transporter costs per FG") + 
+  geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 85) + stat_regline_equation(label.y = 80)
+
+TRANSPORTER_FIRE = full_mat[1:635,] %>% select(any_of(transp_rule$microtrait_hmm.name))
+TRANSPORTER_FIRE = as_data_frame(cbind(full_mat[1:635,][c("guild","id","size")],TRANSPORTER_FIRE))
+
+TRANSPORTER_FIRE_m = TRANSPORTER_FIRE %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                         list(mean=mean), na.rm=TRUE))
+TRANSPORTER_FIRE_m = TRANSPORTER_FIRE_m %>% mutate(TRANSPORTER_total = rowSums(TRANSPORTER_FIRE_m[,3:ncol(TRANSPORTER_FIRE_m)]))
+
+ggplot(TRANSPORTER_FIRE_m, aes(size_mean,TRANSPORTER_total,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total transporter costs per FG") # It seems that group 62 is too big
+
+ggplot(TRANSPORTER_FIRE_m, aes(x = size_mean,y = TRANSPORTER_total)) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total transporter costs per FG") + 
+  geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 85) + stat_regline_equation(label.y = 80)
