@@ -1,1 +1,10 @@
-# Exploring fitness traits tradeoffs and microbial life history strategies using genome-scale data
+# Integrating omics data into soil trait-based models: Is genome size a potential master trait and does it matter?
+
+Predicting soil biogeochemical processes requires a refined representation of the soil microbial community in models. Traditional Monod-based models lump the complexity of the soil microbial community into one single pool. Empirical evidence, however, suggests that identifying who is there and what they do is essential to understanding and predicting changes in soil functions driven by microbial communities in the light of global change. Trait-based models can characterize different members of the soil community based on trait information and, thus, represent an avenue to explore how changes in environmental conditions affect microbial community assembly and the subsequent impact on soil biogeochemical processes. However, model parameters are commonly retrieved from physiological laboratory assays, which are limited to the culturable minority of soil microbiome taxa. In this context, omics data emerge as an alternative to estimate trait values for a larger portion of the soil microbiome. We developed a pipeline to generate emergent functional groups based on metagenome-assembled genomes MAGs from microbial communities in grassland and shrubland litter. Preliminary results show a clear positive correlation between functional group genome sizes and trait parameters, so model parameters could be represented by genome size only, reducing model complexity and uncertainties related to model parameterization. These correlations may also extend to other environments, suggesting genome size as a potential master trait.
+
+## Research questions
+
+1. **Is genome size a potential master trait?** 
+	Compare relationships among genome size and traits of functional groups across MAGs from different environments.
+2. **Does it matter?** 
+	Replace DEMENT trait values by genome size driven parameters. 
