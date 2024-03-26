@@ -2,6 +2,7 @@ library(dplyr)
 library(tidyverse)
 library(ggplot2)
 library(ggpubr)
+library(readxl)
 
 # CALLED DATA ----
 
@@ -14,14 +15,14 @@ colnames(fire_stat) = c("id","size")
 total_stat          = as.data.frame(rbind(fire_stat,loma_stat))
 full_mat            = left_join(total.guilds, total_stat, by=c('id'))
 a                   = as.data.frame(colnames(full_mat))
-GH_rule             = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/microtrait_GH.txt", header = TRUE)
-prot_rule           = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/microtrait_proteins.txt", header = TRUE)
-osmo_rule           = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/microtrait_osymolites.txt", header = TRUE)
-biofilm_rule        = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/microtrait_biofilm.txt", header = TRUE)
-high.T_rule         = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/microtrait_high_T.txt", header = TRUE)
-low.T_rule          = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/microtrait_low_T.txt", header = TRUE)
-pH_rule             = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/microtrait_pH_stress.txt", header = TRUE)
-transp_rule         = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/microtrait_transporters.txt", header = TRUE,sep = "\t")
+GH_rule             = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Data/microtrait_GH.txt", header = TRUE)
+prot_rule           = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Data/microtrait_proteins.txt", header = TRUE)
+osmo_rule           = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Data/microtrait_osymolites.txt", header = TRUE)
+biofilm_rule        = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Data/microtrait_biofilm.txt", header = TRUE)
+high.T_rule         = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Data/microtrait_high_T.txt", header = TRUE)
+low.T_rule          = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Data/microtrait_low_T.txt", header = TRUE)
+pH_rule             = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Data/microtrait_pH_stress.txt", header = TRUE)
+transp_rule         = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Data/microtrait_transporters.txt", header = TRUE,sep = "\t")
 
 # CAZy GENE COST PER MEAN GENOME SIZE PER FUNCTIONAL GROUP ----
 
@@ -462,3 +463,40 @@ ggplot(TRANSPORTER_FIRE_m, aes(x = size_mean,y = TRANSPORTER_total)) + geom_poin
   xlab("Mean genome size per FG") + ylab("Mean total transporter costs per FG") + 
   geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
   geom_point() + stat_cor(label.y = 85) + stat_regline_equation(label.y = 80)
+
+
+# GC content relationship ----
+
+fire_metadata = read_excel("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/MAG_Dataset_BurnSeverity_ARNelson.xlsx")
+fire_metadata = fire_metadata[-c(440,546), ]
+fire_stat     =as.data.frame(cbind(fire_stat,fire_metadata$GC))
+colnames(fire_stat) = c("id","size","CG")
+
+GH_FIRE = full_mat[1:635,] %>% select(any_of(GH_rule$microtrait_hmm.name))
+GH_FIRE = as_data_frame(cbind(full_mat[1:635,][c("guild","id","size")],GH_FIRE))
+GH_FIRE = left_join(GH_FIRE, fire_stat, by=c('id',"size"))
+GH_FIRE = GH_FIRE %>% select(CG, everything())
+
+GH_FIRE_m = GH_FIRE %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                             list(mean=mean), na.rm=TRUE))
+GH_FIRE_m = GH_FIRE_m %>% select(`fire_metadata$GC`, everything())
+GH_FIRE_m = GH_FIRE_m %>% mutate(GH_total = rowSums(GH_FIRE_m[,4:ncol(GH_FIRE_m)]))
+
+ggplot(GH_FIRE_m, aes(CG_mean,GH_total,colour=factor(guild))) + geom_point() +
+  xlab("Mean GC content") + ylab("Mean total GH costs per FG")
+
+ggplot(GH_FIRE_m, aes(x = CG_mean,y = GH_total)) + geom_point() +
+  xlab("Mean GC content") + ylab("Mean total GH costs per FG") + 
+  geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
+
+ggplot(GH_FIRE_m, aes(x = CG_mean,y = (size_mean))) + geom_point() +
+  xlab("Mean GC content") + ylab("Mean genome size") + 
+  geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x + I(x^2)) +
+  geom_point() + stat_cor(label.y = 10e6) + stat_regline_equation(label.y = 0)
+
+ggplot(GH_FIRE, aes(x = CG,y = size)) + geom_point() +
+  xlab("GC content") + ylab("Genome size") + 
+  geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x + I(x^2)) +
+  geom_point() + stat_cor(label.y = 10e6) + stat_regline_equation(label.y = 30)
+
