@@ -3,6 +3,12 @@ library(tidyverse)
 library(ggplot2)
 library(ggpubr)
 library(readxl)
+library(readr)
+library(vegan)
+library(devtools)
+library(ggvegan)
+library(pairwiseAdonis)
+library(EcolUtils)
 
 # CALLED DATA ----
 
@@ -500,3 +506,274 @@ ggplot(GH_FIRE, aes(x = CG,y = size)) + geom_point() +
   geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x + I(x^2)) +
   geom_point() + stat_cor(label.y = 10e6) + stat_regline_equation(label.y = 30)
 
+# Isolates ----
+
+# Calling data
+isolates      = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/isolates_GOLD/isolates_rds/hmm_isolates.csv",dec=".")
+df_1          = read.delim("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/isolates_GOLD/soils_unpublished.tsv",sep="\t")
+df_1          = subset(df_1, select = -c(23))
+df_2          = read.delim("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/isolates_GOLD/soils.tsv",sep="\t")
+df_2          = subset(df_2, select = -c(14,16,18))
+iso.metadata  = as.data.frame(rbind(df_1,df_2))
+iso.metadata  = filter(iso.metadata, High.Quality %in% c("Yes"))
+
+# Clean data
+test          = as.data.frame(isolates[3:2300])
+sums          = as.data.frame(rowSums(test, na.rm = FALSE, dims = 1))
+temp          = cbind(sums,isolates$id,1:nrow(isolates))
+isolates      = isolates[isolates$id %in% iso.metadata$taxon_oid, ]
+
+# Other data
+hmm_loma      = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/hmm_Loma_full.csv",dec=".")
+gene_loma     = read.delim("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/litter_mags_metadata.txt",dec=".")
+mag_stat      = read.delim("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/mag_stats.txt") 
+mag_abun.loma = read.delim("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/mag_adundance.txt") 
+mag_stat      = mag_stat %>% full_join(mag_abun.loma)
+hmm_fire      = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/hmm_Fire_full.csv",dec=".")
+mag_abun.fire = read.delim("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/mag_adundance_fire.txt") 
+mag_abun.fire = mag_abun.fire[-c(440,546), ]
+
+# Selecting genes based on Loma and Fire examples
+mat.gene.loma = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/loma.genes.selected.csv",dec=".")
+mat.gene.fire = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/fire.genes.selected.csv",dec=".")
+T.gene.select = as.data.frame(unique(c(colnames(mat.gene.loma[3:293]),
+                                       colnames(mat.gene.fire[3:310]))))
+colnames(T.gene.select)      = c("gene")
+temp.fire                    = as.data.frame(cbind(hmm_fire$id,hmm_fire %>% select(T.gene.select$gene)))
+temp.loma                    = as.data.frame(cbind(hmm_loma$id,hmm_loma %>% select(T.gene.select$gene)))
+colnames(temp.fire)[1]       = c("id")
+colnames(temp.loma)[1]       = c("id")
+temp.isolates                = as.data.frame(cbind(isolates$id,isolates %>% select(T.gene.select$gene)))
+colnames(temp.isolates)[1]   = c("id")
+total.mags                   = as.data.frame(rbind(temp.fire,temp.loma,temp.isolates))
+
+# write.csv(total.mags, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/isolates_GOLD/isolates_rds/total.mags.csv")
+total.mags                   = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/isolates_GOLD/isolates_rds/total.mags.csv",dec=".")
+
+# Grouping (I am using the preexisting functional groups from Loma and the MAGs)
+set.seed(1)
+distance.total  = vegdist(total.mags[3:507], method = "jaccard", binary = TRUE)
+cluster.total   = hclust(distance.total, method="ward.D2")
+
+# similarity within guilds
+my_vec       = c()
+nguilds.1    = seq(2, nrow(total.mags), 2)
+
+for(i in nguilds.1) {
+  v                      = cutree(cluster.total,k=i)
+  genome2guild           = data.frame(guild = factor(v))
+  rownames(genome2guild) = names(v)
+  adonis_2               = vegan::adonis2(distance.total ~ guild, data = genome2guild, perm = 1)
+  temp                   = adonis_2$R2
+  temp_1                 = temp[1]
+  my_out                 = temp_1
+  my_vec   <- c(my_vec, my_out)   
+}
+mat_r2_1  = as.data.frame(cbind(nguilds.1,my_vec))
+
+# Similarity among guilds ####
+v                      = cutree(cluster.total,k=148)
+genome2guild           = data.frame(guild = factor(v))
+rownames(genome2guild) = names(v)
+adonis_1               = pairwiseAdonis::pairwise.adonis(distance.total,genome2guild$guild,
+                                                         perm = 999,p.adjust.m='BH')
+test.clus.1            = adonis.pair(distance.total, genome2guild[,"guild"], nper = 1, 
+                                     corr.method = "fdr")
+adonis_2               = vegan::adonis2(distance.total ~ guild, data = genome2guild, perm = 1)
+mat.gene.total         = as.data.frame(cbind(genome2guild,total.mags))
+# write.csv(mat.gene.total, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/isolates_GOLD/isolates_rds/mat.gene.total.csv")
+mat.gene.total         = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/isolates_GOLD/isolates_rds/mat.gene.total.csv",dec=".")
+
+# Select isolates ####
+mat.gene.isolates      = mat.gene.total[1169:6469,]
+iso.metadata.1         = iso.metadata[iso.metadata$taxon_oid %in% isolates$id, ]
+names(iso.metadata.1)[names(iso.metadata.1) == 'taxon_oid'] <- 'id'
+iso.metadata.gsize     = iso.metadata.1 %>% select(id,Genome.Size....assembled)
+names(iso.metadata.gsize)[names(iso.metadata.gsize) == 'Genome.Size....assembled'] <- 'Genome.Size'
+mat.gene.isolates.1    = merge(mat.gene.isolates, iso.metadata.gsize, by="id")
+
+# CAZy gene cost per functional group of isolates ----
+
+GH_rule     = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Data/microtrait_GH.txt", header = TRUE)
+GH_TOTAL    = mat.gene.isolates.1 %>% select(any_of(GH_rule$microtrait_hmm.name))
+GH_TOTAL.1  = as_data_frame(cbind(mat.gene.isolates.1[c("guild","id","Genome.Size")],
+                                          GH_TOTAL))
+GH_TOTAL_m  = GH_TOTAL.1 %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                               list(mean=mean), na.rm=TRUE))
+GH_TOTAL_m  = GH_TOTAL_m %>% mutate(GH_total = rowSums(GH_TOTAL_m[,3:ncol(GH_TOTAL_m)]))
+
+ggplot(GH_TOTAL_m, aes(Genome.Size_mean,GH_total,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total GH costs per FG") 
+
+ggplot(GH_TOTAL_m, aes(x = Genome.Size_mean,y = GH_total)) + geom_point() +
+  xlab("Mean genome size per FG (isolates)") + 
+  ylab("Mean total GH costs per FG (isolates)") + 
+  geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
+
+# Protein gene cost per functional group of isolates ----
+
+prot_rule   = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Data/microtrait_proteins.txt", header = TRUE)
+PT_TOTAL    = mat.gene.isolates.1 %>% select(any_of(prot_rule$microtrait_rule.name))
+PT_TOTAL.1  = as_data_frame(cbind(mat.gene.isolates.1[c("guild","id","Genome.Size")],
+                                  PT_TOTAL))
+PT_TOTAL_m  = PT_TOTAL.1 %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                  list(mean=mean), na.rm=TRUE))
+PT_TOTAL_m  = PT_TOTAL_m %>% mutate(PT_TOTAL = rowSums(PT_TOTAL_m[,3:ncol(PT_TOTAL_m)]))
+
+ggplot(PT_TOTAL_m, aes(Genome.Size_mean,PT_TOTAL,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total protein costs per FG") 
+
+ggplot(PT_TOTAL_m, aes(x = Genome.Size_mean,y = PT_TOTAL)) + geom_point() +
+  xlab("Mean genome size per FG (isolates)") + 
+  ylab("Mean total protein costs per FG (isolates)") + 
+  geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
+
+# Osmolyte gene cost per functional group of isolates ----
+
+osmo_rule   = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Data/microtrait_osymolites.txt", header = TRUE)
+OS_TOTAL    = mat.gene.isolates.1 %>% select(any_of(osmo_rule$microtrait_hmm.name))
+OS_TOTAL.1  = as_data_frame(cbind(mat.gene.isolates.1[c("guild","id","Genome.Size")],
+                                  OS_TOTAL))
+OS_TOTAL_m  = OS_TOTAL.1 %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                  list(mean=mean), na.rm=TRUE))
+OS_TOTAL_m  = OS_TOTAL_m %>% mutate(OS_TOTAL = rowSums(OS_TOTAL_m[,3:ncol(OS_TOTAL_m)]))
+
+ggplot(OS_TOTAL_m, aes(Genome.Size_mean,OS_TOTAL,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total osmolyte costs per FG") 
+
+ggplot(OS_TOTAL_m, aes(x = Genome.Size_mean,y = OS_TOTAL)) + geom_point() +
+  xlab("Mean genome size per FG (isolates)") + 
+  ylab("Mean total osmolyte costs per FG (isolates)") + 
+  geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
+
+# Biofilm gene cost per functional group of isolates ----
+
+biofilm_rule = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Data/microtrait_biofilm.txt", header = TRUE)
+BI_TOTAL     = mat.gene.isolates.1 %>% select(any_of(biofilm_rule$microtrait_hmm.name))
+BI_TOTAL.1   = as_data_frame(cbind(mat.gene.isolates.1[c("guild","id","Genome.Size")],
+                                   BI_TOTAL))
+BI_TOTAL_m   = BI_TOTAL.1 %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                   list(mean=mean), na.rm=TRUE))
+BI_TOTAL_m   = BI_TOTAL_m %>% mutate(BI_TOTAL = rowSums(BI_TOTAL_m[,3:ncol(BI_TOTAL_m)]))
+
+ggplot(BI_TOTAL_m, aes(Genome.Size_mean,BI_TOTAL,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total biofilm costs per FG") 
+
+ggplot(BI_TOTAL_m, aes(x = Genome.Size_mean,y = BI_TOTAL)) + geom_point() +
+  xlab("Mean genome size per FG (isolates)") + 
+  ylab("Mean total biofilm costs per FG (isolates)") + 
+  geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 10) + stat_regline_equation(label.y = 9)
+
+# High tolerance gene cost per functional group of isolates ----
+
+high.T_rule  = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Data/microtrait_high_T.txt", header = TRUE)
+HT_TOTAL     = mat.gene.isolates.1 %>% select(any_of(high.T_rule$microtrait_hmm.name))
+HT_TOTAL.1   = as_data_frame(cbind(mat.gene.isolates.1[c("guild","id","Genome.Size")],
+                                   HT_TOTAL))
+HT_TOTAL_m   = HT_TOTAL.1 %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                   list(mean=mean), na.rm=TRUE))
+HT_TOTAL_m   = HT_TOTAL_m %>% mutate(HT_TOTAL = rowSums(HT_TOTAL_m[,3:ncol(HT_TOTAL_m)]))
+
+ggplot(HT_TOTAL_m, aes(Genome.Size_mean,HT_TOTAL,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total high temperature gene costs per FG") 
+
+ggplot(HT_TOTAL_m, aes(x = Genome.Size_mean,y = HT_TOTAL)) + geom_point() +
+  xlab("Mean genome size per FG (isolates)") + 
+  ylab("Mean total high temperature gene costs per FG (isolates)") + 
+  geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 10) + stat_regline_equation(label.y = 9)
+
+# Low tolerance gene cost per functional group of isolates ----
+
+low.T_rule   = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Data/microtrait_low_T.txt", header = TRUE)
+LT_TOTAL     = mat.gene.isolates.1 %>% select(any_of(low.T_rule$microtrait_hmm.name))
+LT_TOTAL.1   = as_data_frame(cbind(mat.gene.isolates.1[c("guild","id","Genome.Size")],
+                                   LT_TOTAL))
+LT_TOTAL_m   = LT_TOTAL.1 %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                   list(mean=mean), na.rm=TRUE))
+LT_TOTAL_m   = LT_TOTAL_m %>% mutate(LT_TOTAL = rowSums(LT_TOTAL_m[,3:ncol(LT_TOTAL_m)]))
+
+ggplot(LT_TOTAL_m, aes(Genome.Size_mean,LT_TOTAL,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total low temperature gene costs per FG") 
+
+ggplot(LT_TOTAL_m, aes(x = Genome.Size_mean,y = LT_TOTAL)) + geom_point() +
+  xlab("Mean genome size per FG (isolates)") + 
+  ylab("Mean total low temperature gene costs per FG (isolates)") + 
+  geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 6) + stat_regline_equation(label.y = 5)
+
+# pH gene cost per functional group of isolates ----
+
+pH_rule      = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Data/microtrait_pH_stress.txt", header = TRUE)
+pH_TOTAL     = mat.gene.isolates.1 %>% select(any_of(pH_rule$microtrait_hmm.name))
+pH_TOTAL.1   = as_data_frame(cbind(mat.gene.isolates.1[c("guild","id","Genome.Size")],
+                                   pH_TOTAL))
+pH_TOTAL_m   = pH_TOTAL.1 %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                   list(mean=mean), na.rm=TRUE))
+pH_TOTAL_m   = pH_TOTAL_m %>% mutate(pH_TOTAL = rowSums(pH_TOTAL_m[,3:ncol(pH_TOTAL_m)]))
+
+ggplot(pH_TOTAL_m, aes(Genome.Size_mean,pH_TOTAL,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total pH gene costs per FG") 
+
+ggplot(pH_TOTAL_m, aes(x = Genome.Size_mean,y = pH_TOTAL)) + geom_point() +
+  xlab("Mean genome size per FG (isolates)") + 
+  ylab("Mean total pH gene costs per FG (isolates)") + 
+  geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 10) + stat_regline_equation(label.y = 9)
+
+# Transporters gene cost per functional group of isolates ----
+
+transp_rule  = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Data/microtrait_transporters.txt", header = TRUE,sep = "\t")
+transp_rule  = transp_rule %>% filter(function.==c("transporter"))
+Ts_TOTAL     = mat.gene.isolates.1 %>% select(any_of(transp_rule$microtrait_hmm.name))
+Ts_TOTAL.1   = as_data_frame(cbind(mat.gene.isolates.1[c("guild","id","Genome.Size")],
+                                   Ts_TOTAL))
+Ts_TOTAL_m   = Ts_TOTAL.1 %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                   list(mean=mean), na.rm=TRUE))
+Ts_TOTAL_m   = Ts_TOTAL_m %>% mutate(Ts_TOTAL = rowSums(Ts_TOTAL_m[,3:ncol(Ts_TOTAL_m)]))
+
+ggplot(Ts_TOTAL_m, aes(Genome.Size_mean,Ts_TOTAL,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean total transporters gene costs per FG") 
+
+ggplot(Ts_TOTAL_m, aes(x = Genome.Size_mean,y = Ts_TOTAL)) + geom_point() +
+  xlab("Mean genome size per FG (isolates)") + 
+  ylab("Mean transporters gene costs per FG (isolates)") + 
+  geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 100) + stat_regline_equation(label.y = 90)
+
+# AMINOACIDS ----
+
+transp_rule_ami  = transp_rule %>% filter(class==c("aminoacid","peptide"))
+AMI_TRANSP_TOTAL = mat.gene.isolates.1 %>% select(any_of(transp_rule_ami$microtrait_hmm.name))
+AMI_TRANSP_TOTAL = as_data_frame(cbind(mat.gene.isolates.1[c("guild","id","Genome.Size")],AMI_TRANSP_TOTAL))
+
+AMI_TRANSP_TOTAL_m = AMI_TRANSP_TOTAL %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                               list(mean=mean), na.rm=TRUE))
+AMI_TRANSP_TOTAL_m = AMI_TRANSP_TOTAL_m %>% mutate(AMI_TRANSP_TOTAL = rowSums(AMI_TRANSP_TOTAL_m[,3:ncol(AMI_TRANSP_TOTAL_m)]))
+
+ggplot(AMI_TRANSP_TOTAL_m, aes(Genome.Size_mean,AMI_TRANSP_TOTAL,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean aminoacid transporter costs per FG") # It seems that group 62 is too big
+
+ggplot(AMI_TRANSP_TOTAL_m, aes(x = Genome.Size_mean,y = AMI_TRANSP_TOTAL)) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean aminoacid transporter costs per FG") + geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
+
+# CARBOHYDRATE ----
+transp_rule_carb = transp_rule %>% filter(class==c("carbohydrate"))
+CARB_TRANSP_TOTAL = mat.gene.isolates.1 %>% select(any_of(transp_rule_carb$microtrait_hmm.name))
+CARB_TRANSP_TOTAL = as_data_frame(cbind(mat.gene.isolates.1[c("guild","id","Genome.Size")],CARB_TRANSP_TOTAL))
+
+CARB_TRANSP_TOTAL_m = CARB_TRANSP_TOTAL %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                                 list(mean=mean), na.rm=TRUE))
+CARB_TRANSP_TOTAL_m = CARB_TRANSP_TOTAL_m %>% mutate(CARB_TRANSP_TOTAL = rowSums(CARB_TRANSP_TOTAL_m[,3:ncol(CARB_TRANSP_TOTAL_m)]))
+
+ggplot(CARB_TRANSP_TOTAL_m, aes(Genome.Size_mean,CARB_TRANSP_TOTAL,colour=factor(guild))) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean carbohydrate transporter costs per FG") # It seems that group 62 is too big
+
+ggplot(CARB_TRANSP_TOTAL_m, aes(x = Genome.Size_mean,y = CARB_TRANSP_TOTAL)) + geom_point() +
+  xlab("Mean genome size per FG") + ylab("Mean carbohydrate transporter costs per FG") + geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point() + stat_cor(label.y = 35) + stat_regline_equation(label.y = 30)
