@@ -43,7 +43,7 @@ library("ComplexHeatmap")
 library("gRodon")
 library("microtrait")
 
-genomes_files = list.files('/pub/lucianac/MAG_burn')
+genomes_files = list.files('/pub/lucianac/isolates_2')
 message("Number of cores:", parallel::detectCores(), "\n")
 
 tictoc::tic.clearlog()

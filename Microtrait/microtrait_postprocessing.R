@@ -5,6 +5,7 @@ library(tidyverse)
 
 setwd("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/microtrait_results")
 setwd("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/microtrait_results")
+setwd("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/isolates_GOLD/isolates_rds")
 
 genomes_files = list.files()
 
@@ -37,14 +38,17 @@ df.3 = as.data.frame(sapply(f, function(x) ifelse(is.null(x), NA, x)))
 df.3[nrow(df.3) + 1,] <- NA # optional steps
 
 trait_matrixatgranularity3 = as.data.frame(cbind(df,df.1,df.2,df.3))
+trait_matrixatgranularity3 = as.data.frame(cbind(df,df.1))
 
 # Changing colum names #### 
 
-names = levels(((df_with_special_characters[["trait_counts_atgranularity3"]])[,1]))
-colnames(trait_matrixatgranularity3) = c("id",names,"ogt","growthrate_d")
+names = levels(df_with_special_characters[["trait_counts_atgranularity3"]][["microtrait_trait-name"]])
+#colnames(trait_matrixatgranularity3) = c("id",names,"ogt","growthrate_d")
+colnames(trait_matrixatgranularity3) = c("id",names)
 
 #write.csv(apply(trait_matrixatgranularity3,2,as.character), file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/trait_matrixatgranularity3_Loma.csv")
 #write.csv(apply(trait_matrixatgranularity3,2,as.character), file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/trait_matrixatgranularity3_Fire.csv")
+#write.csv(apply(trait_matrixatgranularity3,2,as.character), file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/isolates_GOLD/isolates_rds/trait_granularity_3_isolates.csv")
 
 # Extracting proteins from rds files ####
 
@@ -68,7 +72,7 @@ df.1 = do.call("rbind",d)
 # Finding the proteins in all the genomes ####
 
 f      = list()
-hmm_key    = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/hmm_microtrait.csv",dec=".")
+hmm_key    = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Data/hmm_microtrait.csv",dec=".")
 
 for (i in 1:length(c)){
   test_2 = as.data.frame(c[[i]])
@@ -83,6 +87,7 @@ rownames(hmm) = 1:nrow(hmm)
 hmm[,2:2299]  = as.integer(hmm[,2:2299] == TRUE)
 #write.csv(apply(hmm,2,as.character), file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/hmm_Loma_full.csv")
 #write.csv(apply(hmm,2,as.character), file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/hmm_Fire_full.csv")
+#write.csv(apply(hmm,2,as.character), file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/isolates_GOLD/isolates_rds/hmm_isolates.csv")
 temp.1        = as.data.frame(cbind((colSums(hmm[,2:2299]))))
 erase.1       = temp.1 %>% filter(V1==0)
 erase.1$row_names = row.names(erase.1)
@@ -90,7 +95,6 @@ hmm           = hmm[ , !(names(hmm) %in% erase.1$row_names)]
 
 #write.csv(apply(hmm,2,as.character), file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/hmm_Loma.csv")
 #write.csv(apply(hmm,2,as.character), file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/hmm_Fire.csv")
-
 
 
 
