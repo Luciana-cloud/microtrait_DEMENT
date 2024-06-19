@@ -190,8 +190,8 @@ for(i in a){
 }
 
 # save each new data frame as an individual .csv file based on its name
-list            = lapply(ls(pattern="best.predictors"), get)
-data_list_names = ls(pattern="best.predictors")
+list            = lapply(ls(pattern="best.predictors_"), get)
+data_list_names = ls(pattern="best.predictors_")
 names(list) <- data_list_names
 
 for(i in names(list)){
@@ -218,11 +218,11 @@ High_deep     = High_deep %>% mutate(treatment = rep("High_deep",each=nrow(High_
 data.fire     = as.data.frame(rbind(Low_shallow,Low_deep,High_shallow,High_deep))
 
 a = unique(data.fire$treatment)
-for(i in a){
+for(i in a[c(3,4)]){
   project  = data.fire %>% filter(treatment == i)
   mat_file = as.data.frame(project[,c(3:1214,1215)])
   # Reduce columns with zero
-  temp.1            = as.data.frame(cbind((colSums(mat_file[,c(1:1296)]))))
+  temp.1            = as.data.frame(cbind((colSums(mat_file[,c(1:1212)]))))
   erase.1           = temp.1 %>% filter(V1==0)
   erase.1$row_names = row.names(erase.1)
   mat_file          = mat_file[,!(names(mat_file) %in% erase.1$row_names)]
@@ -245,8 +245,8 @@ for(i in a){
 }
 
 # save each new data frame as an individual .csv file based on its name
-list            = lapply(ls(pattern="best.predictors"), get)
-data_list_names = ls(pattern="best.predictors")
+list            = lapply(ls(pattern="best.predictors_"), get)
+data_list_names = ls(pattern="best.predictors_")
 names(list) <- data_list_names
 
 for(i in names(list)){
