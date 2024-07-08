@@ -552,8 +552,11 @@ adonis = FG_test(MAG_number[13],190,222)      # 190 FG
 adonis = FG_test(MAG_number[13],199,1)        # 199 FG
 adonis = FG_test(MAG_number[13],177,3)        # 177 FG
 adonis = FG_test(MAG_number[13],269,2)        # 269 FG
+adonis = FG_test(MAG_number[13],179,333)      # 179 FG
+adonis = FG_test(MAG_number[13],239,111)      # 239 FG
+adonis = FG_test(MAG_number[13],245,22)       # 245 FG
 
-adonis_5000 = c(209,229,205,205,224,190,199,177,269)
+adonis_5000 = c(209,229,205,205,224,190,199,177,269,239,245)
 
 # Extrapolating the number of functional groups for the whole datasets ----
 
@@ -576,4 +579,7 @@ ggplot(data,aes(V1,V2)) +
   stat_cor(label.x = 30, label.y = 130, size = 4) +
   stat_regline_equation(label.x = 30, label.y = 150, size = 4)
 
+# Final functional groups for the total dataset
+
+FG = 16.597382 + 0.041440*32515
 
