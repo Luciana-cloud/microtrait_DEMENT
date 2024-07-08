@@ -21,6 +21,7 @@ library(car)
 #install.packages("collinear")
 library(collinear)
 library(glmnet)
+library(parallelDist)
 
 # CALLING DATA----
 
@@ -390,8 +391,189 @@ MAG_EAA2017.PLOT = as.data.frame(rbind(hmm_fire.EAA2017.PLOT,hmm_loma.EAA2017.PL
                                        hmm_img.EAA2017.PLOT,isolates.EAA2017.PLOT))
 write.csv(MAG_EAA2017.PLOT, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_EAA2017.PLOT.csv")
 
-# HPC ANALYSIS----
+# FUNCTIONAL GROUP ANALYSIS----
 
-# See file test.file.R
+# Call the MAG-Microtrait datasets
+global_dataset                = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_global.csv",dec=".")
+#global_LOMA                  = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_LOMA.csv",dec=".")
+#global_FIRE                  = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_FIRE.csv",dec=".")
+#global_HARVARD               = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_HARVARD.FOREST.csv",dec=".")
+#global_MAG_EAA2017           = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_EAA2017.PLOT.csv",dec=".")
+
+# Curve for functional groups (1. Random selection of matrix size;
+# 2. Distance matrix and pairwise adonis; 3. Store N° of MAGs and N° of functional groups;
+# 4. Plot and fit the curve)
+
+MAG_number = c(100,200,500,600,750,800,900,1000,1500,2000,3500,4000,5000,
+               6000,7000,8000,9000,10000)
+
+FG_test = function(i,k,seed) {
+  set.seed(seed)
+  rand_df                = global_dataset[sample(nrow(global_dataset), size=i), ]
+  distance.total         = parDist(x = as.matrix(rand_df[3:length(rand_df)]),
+                            method = "fJaccard",
+                            threads = 10) # Adapt the number of threads
+  cluster.total          = hclust(distance.total, method="ward.D2")
+  v                      = cutree(cluster.total,k=k)
+  genome2guild           = data.frame(guild = factor(v))
+  rownames(genome2guild) = names(v)
+  adonis_1               = pairwiseAdonis::pairwise.adonis(distance.total,genome2guild$guild,
+                                                           perm = 999,p.adjust.m='BH')
+  return(as.data.frame(adonis_1))
+}
+
+# i = 100 ----
+adonis = FG_test(MAG_number[1],9,1)        # 9 FG
+adonis = FG_test(MAG_number[1],11,11)      # 11 FG
+adonis = FG_test(MAG_number[1],10,111)     # 10 FG
+adonis = FG_test(MAG_number[1],14,2)       # 14 FG
+adonis = FG_test(MAG_number[1],13,22)      # 13 FG
+adonis = FG_test(MAG_number[1],14,222)     # 14 FG
+adonis = FG_test(MAG_number[1],10,3)       # 10 FG
+adonis = FG_test(MAG_number[1],10,33)      # 10 FG
+adonis = FG_test(MAG_number[1],12,333)     # 12 FG
+adonis = FG_test(MAG_number[1],11,27)      # 11 FG
+adonis = FG_test(MAG_number[1],5,2707)     # 5 FG
+adonis = FG_test(MAG_number[1],9,27071990) # 9 FG
+adonis_100 = c(9,11,10,14,13,14,10,10,12,11,5,9)
+
+# i = 200 ----
+adonis = FG_test(MAG_number[2],18,1)        # 18 FG
+adonis = FG_test(MAG_number[2],15,11)       # 15 FG
+adonis = FG_test(MAG_number[2],21,111)      # 21 FG
+adonis = FG_test(MAG_number[2],22,2)        # 22 FG
+adonis = FG_test(MAG_number[2],22,22)       # 22 FG
+adonis = FG_test(MAG_number[2],14,222)      # 14 FG
+adonis = FG_test(MAG_number[2],17,3)        # 17 FG
+adonis = FG_test(MAG_number[2],14,33)       # 14 FG
+adonis = FG_test(MAG_number[2],23,333)      # 23 FG
+adonis = FG_test(MAG_number[2],21,27)       # 21 FG
+adonis = FG_test(MAG_number[2],17,2707)     # 17 FG
+adonis = FG_test(MAG_number[2],21,27071990) # 21 FG
+adonis_200 = c(18,15,21,22,22,14,17,14,23,21,14,21)
+
+# i = 1000 ----
+adonis = FG_test(MAG_number[8],60,1)        # 60 FG
+adonis = FG_test(MAG_number[8],57,11)       # 57 FG
+adonis = FG_test(MAG_number[8],65,111)      # 65 FG
+adonis = FG_test(MAG_number[8],63,2)        # 63 FG
+adonis = FG_test(MAG_number[8],72,22)       # 72 FG
+adonis = FG_test(MAG_number[8],64,222)      # 64 FG
+adonis = FG_test(MAG_number[8],60,3)        # 60 FG
+adonis = FG_test(MAG_number[8],65,33)       # 65 FG
+adonis = FG_test(MAG_number[8],52,333)      # 52 FG
+adonis = FG_test(MAG_number[8],67,27)       # 67 FG
+adonis = FG_test(MAG_number[8],95,2707)     # 95 FG
+adonis = FG_test(MAG_number[8],56,27071990) # 56 FG
+adonis_1000 = c(60,57,65,63,72,64,60,65,52,67,95,56)
+
+# i = 750 ----
+adonis = FG_test(MAG_number[5],48,1)        # 48 FG
+adonis = FG_test(MAG_number[5],41,11)       # 41 FG
+adonis = FG_test(MAG_number[5],57,111)      # 57 FG
+adonis = FG_test(MAG_number[5],45,2)        # 45 FG
+adonis = FG_test(MAG_number[5],65,22)       # 65 FG
+adonis = FG_test(MAG_number[5],45,222)      # 45 FG
+adonis = FG_test(MAG_number[5],42,3)        # 42 FG
+adonis = FG_test(MAG_number[5],59,33)       # 59 FG
+adonis = FG_test(MAG_number[5],42,333)      # 42 FG
+adonis = FG_test(MAG_number[5],51,27)       # 51 FG
+adonis = FG_test(MAG_number[5],63,2707)     # 63 FG
+adonis = FG_test(MAG_number[5],55,27071990) # 55 FG
+adonis_750 = c(48,41,57,45,65,45,42,59,42,41,63,55)
+
+# i = 500 ----
+adonis = FG_test(MAG_number[3],33,1)        # 33 FG
+adonis = FG_test(MAG_number[3],33,11)       # 33 FG
+adonis = FG_test(MAG_number[3],45,111)      # 45 FG
+adonis = FG_test(MAG_number[3],41,2)        # 41 FG
+adonis = FG_test(MAG_number[3],40,22)       # 40 FG
+adonis = FG_test(MAG_number[3],29,222)      # 29 FG
+adonis = FG_test(MAG_number[3],35,3)        # 35 FG
+adonis = FG_test(MAG_number[3],47,33)       # 47 FG
+adonis = FG_test(MAG_number[3],28,333)      # 28 FG
+adonis = FG_test(MAG_number[3],36,27)       # 36 FG
+adonis = FG_test(MAG_number[3],42,2707)     # 42 FG
+adonis = FG_test(MAG_number[3],33,27071990) # 33 FG
+adonis_500 = c(33,33,45,41,40,29,35,47,28,36,42,33)
+
+# i = 1500 ----
+adonis = FG_test(MAG_number[9],107,1)        # 107 FG
+adonis = FG_test(MAG_number[9],86,11)        # 86 FG
+adonis = FG_test(MAG_number[9],85,111)       # 85 FG
+adonis = FG_test(MAG_number[9],87,2)         # 87 FG
+adonis = FG_test(MAG_number[9],87,22)        # 87 FG
+adonis = FG_test(MAG_number[9],89,222)       # 89 FG
+adonis = FG_test(MAG_number[9],73,3)         # 73 FG
+adonis = FG_test(MAG_number[9],79,33)        # 79 FG
+adonis = FG_test(MAG_number[9],69,333)       # 69 FG
+adonis = FG_test(MAG_number[9],98,27)        # 98 FG
+adonis = FG_test(MAG_number[9],82,2707)      # 82 FG
+adonis = FG_test(MAG_number[9],76,27071990)  # 76 FG
+adonis_1500 = c(107,86,85,87,87,89,73,79,69,98,82,76)
+
+# i = 2000 ----
+adonis = FG_test(MAG_number[10],107,1)       # 107 FG
+adonis = FG_test(MAG_number[10],119,11)      # 119 FG
+adonis = FG_test(MAG_number[10],90,111)      # 90 FG
+adonis = FG_test(MAG_number[10],117,2)       # 117 FG
+adonis = FG_test(MAG_number[10],99,22)       # 99 FG
+adonis = FG_test(MAG_number[10],101,222)     # 101 FG
+adonis = FG_test(MAG_number[10],90,3)        # 90 FG
+adonis = FG_test(MAG_number[10],123,33)      # 123 FG
+adonis = FG_test(MAG_number[10],93,333)      # 93 FG
+adonis = FG_test(MAG_number[10],115,27)      # 115 FG
+adonis = FG_test(MAG_number[10],126,2707)    # 82 FG
+adonis = FG_test(MAG_number[10],96,27071990) # 96 FG
+adonis_2000 = c(107,119,90,117,99,101,90,123,93,115,126,96)
+
+# i = 3500 ----
+adonis = FG_test(MAG_number[11],181,1)        # 181 FG
+adonis = FG_test(MAG_number[11],175,2707)     # 175 FG
+adonis = FG_test(MAG_number[11],167,2)        # 167 FG
+adonis = FG_test(MAG_number[11],154,27071990) # 154 FG
+adonis = FG_test(MAG_number[11],141,3)        # 141 FG 
+adonis = FG_test(MAG_number[11],148,222)      # 148 FG 
+adonis = FG_test(MAG_number[11],159,22)       # 159 FG 
+adonis = FG_test(MAG_number[11],157,11)       # 157 FG 
+adonis = FG_test(MAG_number[11],164,33)       # 164 FG 
+adonis = FG_test(MAG_number[11],185,27)       # 185 FG 
+adonis = FG_test(MAG_number[11],192,111)      # 192 FG 
+adonis = FG_test(MAG_number[11],140,333)      # 140 FG 
+adonis_3500 = c(181,175,167,154,141,148,159,157,164,185,192,140)
+
+# i = 5000 ----
+adonis = FG_test(MAG_number[13],209,11)       # 209 FG
+adonis = FG_test(MAG_number[13],229,2707)     # 229 FG
+adonis = FG_test(MAG_number[13],205,27071990) # 205 FG
+adonis = FG_test(MAG_number[13],205,33)       # 205 FG
+adonis = FG_test(MAG_number[13],224,27)       # 224 FG
+adonis = FG_test(MAG_number[13],190,222)      # 190 FG
+adonis = FG_test(MAG_number[13],199,1)        # 199 FG
+adonis = FG_test(MAG_number[13],177,3)        # 177 FG
+adonis = FG_test(MAG_number[13],269,2)        # 269 FG
+
+adonis_5000 = c(209,229,205,205,224,190,199,177,269)
+
+# Extrapolating the number of functional groups for the whole datasets ----
+
+plot_file = as.data.frame(cbind(adonis_100,adonis_200,adonis_500,adonis_750,
+                            adonis_1000,adonis_1500,adonis_2000,adonis_3500,
+                            adonis_5000)) %>% 
+  summarise_each(funs( mean( .,na.rm = TRUE)))
+
+MAG_number.1 = as.data.frame(c(100,200,500,750,1000,1500,2000,3500,5000))
+colnames(MAG_number.1) = "mag"
+plot_file = as.data.frame(t(plot_file))
+
+data = as.data.frame(cbind(MAG_number.1$mag,plot_file$V1))
+
+model = lm(plot_file$V1 ~ MAG_number.1$mag)
+
+ggplot(data,aes(V1,V2)) +
+  geom_point() +
+  geom_smooth(method='lm') + 
+  stat_cor(label.x = 30, label.y = 130, size = 4) +
+  stat_regline_equation(label.x = 30, label.y = 150, size = 4)
 
 
