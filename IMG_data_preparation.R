@@ -22,12 +22,16 @@ library(car)
 library(collinear)
 library(glmnet)
 library(parallelDist)
+library(googledrive)
+library(googlesheets4)
+library(readxl)
+library(ggpmisc)
 
 # CALLING DATA----
 
 hmm_img       = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/IMG_MAG_results/hmm_MAG_IMG.csv",dec=".")
-coverage_img  = read_excel("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/IMG_MAG_results/bin_avg_coverage.xlsx")
-meta_img.nr   = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/IMG_MAG_results/IMG_bindata_withmeta_norestricted.csv",dec=".")
+coverage_img  = read_sheet("https://docs.google.com/spreadsheets/d/1KkgbeRIVynmgl_tulWIJ4U4zvNCzVbA-trdRSYVPZCA/edit?gid=709301844#gid=709301844")
+meta_img.nr   = read_sheet("https://docs.google.com/spreadsheets/d/1pjlOXDIDhWv8bujJ4P9BdYC-sSA_kueDAi9T8FLgpm8/edit?gid=67047753#gid=67047753")
 
 # Change column name to match
 colnames(hmm_img)[2]      = "bin_id"
@@ -41,8 +45,15 @@ data_combined = data_combined %>% filter(Domain == "Bacteria")
 write.csv(data_combined, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/IMG_MAG_results/IMG_global_datasets.csv")
 
 # Summary MAGs by project to select what project to use for extracting filtering genes
-data_combined = data_combined[!(is.na(data_combined$avg_coverage)),]
-data_combined = data_combined[!(is.na(data_combined$aaeB)),]
+data_combined   = data_combined[!(is.na(data_combined$avg_coverage)),]
+data_combined   = data_combined[!(is.na(data_combined$aaeB)),]
+data_combined   = apply(data_combined,2,as.character)
+write.csv(data_combined, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/IMG_global_dataset.csv")
+data_combined.1 = as.data.frame(data_combined) %>% select(2,44,69:1789)
+sheet_write(data_combined.1,
+            ss = "https://docs.google.com/spreadsheets/d/1Da-yl4fXD7jdFiDe_2jNfmLUl2RgR1GXACd5h-Bte1Y/edit?gid=0#gid=0",
+            sheet = "IMG_gene_dataset") ***
+
 data_combined_IMG.ID  = data_combined %>% group_by(IMG.Genome.ID) %>% count()
 data_combined_IMG.ID  = data_combined_IMG.ID %>% filter(n > 20)
 
@@ -148,10 +159,10 @@ for(i in names(list)){
 # SELECTION OF GENES PER PROJECT - LOMA----
 
 # Calling data and preprocessing
-hmm_loma    = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/hmm_Loma.csv",dec=".")
-gene_loma   = read.delim("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/litter_mags_metadata.txt",dec=".")
-mag_stat    = read.delim("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/mag_stats.txt") 
-mag_abun    = read.delim("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/mag_adundance.txt") 
+hmm_loma    = read_sheet("https://docs.google.com/spreadsheets/d/1pjlOXDIDhWv8bujJ4P9BdYC-sSA_kueDAi9T8FLgpm8/edit?gid=67047753#gid=67047753")
+gene_loma   = read_sheet("https://docs.google.com/spreadsheets/d/1j_GH0_JJANgAVytYBc6jPXaQXbiYUkh4SCfJswLJk7Y/edit?gid=349813226#gid=349813226")
+mag_stat    = read_sheet("https://docs.google.com/spreadsheets/d/1uwpo3aUPodFvRzg_hPHH_mPNVq-gKUJOAEOakohL7ng/edit?gid=1062499715#gid=1062499715") 
+mag_abun    = read_sheet("https://docs.google.com/spreadsheets/d/1IIXeOK2qYqIgU2AFi0Yedx-qkLMisexrLyUFxUuncrg/edit?gid=264725796#gid=264725796") 
 mag_stat    = mag_stat %>% full_join(mag_abun)
 
 # Dataframes from each treatment
@@ -207,8 +218,8 @@ for(i in names(list)){
 # SELECTION OF GENES PER PROJECT - FIRE----
 
 # Calling data and preprocessing
-hmm_fire    = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/hmm_Fire.csv",dec=".")
-mag_abun    = read.delim("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/mag_adundance_fire.txt") 
+hmm_fire    = read_sheet("https://docs.google.com/spreadsheets/d/1hudmGyDbKOVfpNNZ1mRTRK0edNPm9henzCvpZA0HJNc/edit?gid=1400821528#gid=1400821528")
+mag_abun    = read_sheet("https://docs.google.com/spreadsheets/d/1F6dv4zx0vK83IzfEU02VC9_GJYVERmIV84uwhBV4RL4/edit?gid=1006296082#gid=1006296082") 
 mag_abun    = mag_abun[-c(440,546), ]
 
 # Dataframes from each treatment
@@ -573,13 +584,342 @@ data = as.data.frame(cbind(MAG_number.1$mag,plot_file$V1))
 
 model = lm(plot_file$V1 ~ MAG_number.1$mag)
 
-ggplot(data,aes(V1,V2)) +
+Figure_S1 = ggplot(data,aes(V1,V2)) +
   geom_point() +
   geom_smooth(method='lm') + 
   stat_cor(label.x = 30, label.y = 130, size = 4) +
-  stat_regline_equation(label.x = 30, label.y = 150, size = 4)
+  stat_regline_equation(label.x = 30, label.y = 150, size = 4) + 
+  xlab("# of MAGs") + ylab("# of Functional Groups") + 
+  theme(text = element_text(size=20))
 
-# Final functional groups for the total dataset
+png("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figures/Figure_S1.png",
+    width=3500,height=1969,res=300)
+print(Figure_S1)
+dev.off()
 
-FG = 16.597382 + 0.041440*32515
+# Final functional groups for the total dataset----
+FG = 16.597382 + 0.041440*32515 # Number of Functional groups for whole dataset
+
+# Calling distance matrix
+load("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/FG_parallel/distance.total.RData")
+cluster.total   = hclust(distance.total, method="ward.D2")
+v                      = cutree(cluster.total,k=round(FG))
+genome2guild           = data.frame(guild = factor(v))
+rownames(genome2guild) = names(v)
+global_dataset.1       = as.data.frame(cbind(genome2guild,global_dataset))
+write.csv(global_dataset.1, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/global_datasets_guild.csv")
+
+# Gene overlapping analysis----
+
+# Genome size analysis----
+
+# Call data again
+# IMG-MAG
+hmm_img     = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/IMG_global_dataset.csv",dec=".")
+hmm_img     = as.data.frame(hmm_img) %>% select(3,26,70:1790)
+colnames(hmm_img)[1]  = "id"
+colnames(hmm_img)[2]  = "genome.size"
+
+# Loma-MAG
+hmm_loma    = read_sheet("https://docs.google.com/spreadsheets/d/1pjlOXDIDhWv8bujJ4P9BdYC-sSA_kueDAi9T8FLgpm8/edit?gid=67047753#gid=67047753")
+gene_loma   = read_sheet("https://docs.google.com/spreadsheets/d/1j_GH0_JJANgAVytYBc6jPXaQXbiYUkh4SCfJswLJk7Y/edit?gid=349813226#gid=349813226")
+hmm_loma    = gene_loma %>% full_join(hmm_loma)
+hmm_loma[3] = NULL
+colnames(hmm_loma)[2]  = "genome.size"
+
+# Wildfire-MAG
+hmm_fire    = read_sheet("https://docs.google.com/spreadsheets/d/1hudmGyDbKOVfpNNZ1mRTRK0edNPm9henzCvpZA0HJNc/edit?gid=1400821528#gid=1400821528")
+fire_stat   = read_sheet("https://docs.google.com/spreadsheets/d/1Ck_WNZbSZHJ5aVSSH7rdq9uNUYRqyQ5b-0RC7MtvdVk/edit?gid=963628746#gid=963628746")
+fire_stat   = fire_stat[-c(440,546), ]
+hmm_fire    = fire_stat %>% full_join(hmm_fire)
+hmm_fire[3] = NULL
+colnames(hmm_fire)[2]  = "genome.size"
+
+# IMG-Isolates
+isolates      = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/isolates_GOLD/isolates_rds/hmm_isolates.csv",dec=".")
+df_1          = read_sheet("https://docs.google.com/spreadsheets/d/1QFSw5U0tf_G6LYYUmkCIkVAnCKaPehnIbYDvu0x4Bzc/edit?gid=1504418445#gid=1504418445")
+df_1          = subset(df_1, select = -c(23))
+df_2          = read_sheet("https://docs.google.com/spreadsheets/d/12sKqTlsMWOSDus66dfz3ao6M9IBK_iPnpfGPMCnCt1E/edit?gid=2065174436#gid=2065174436")
+df_2          = subset(df_2, select = -c(14,16,18))
+iso.metadata  = as.data.frame(rbind(df_1,df_2))
+iso.metadata  = filter(iso.metadata, High.Quality %in% c("Yes"))
+test          = as.data.frame(isolates[3:2300])
+sums          = as.data.frame(rowSums(test, na.rm = FALSE, dims = 1))
+temp          = cbind(sums,isolates$id,1:nrow(isolates))
+isolates      = isolates[isolates$id %in% iso.metadata$taxon_oid, ]
+iso.metadata  = iso.metadata[iso.metadata$taxon_oid %in% isolates$id, ]
+colnames(iso.metadata)[1]  = "id"
+isolates      = iso.metadata %>% full_join(isolates)
+isolates      = as.data.frame(isolates) %>% select(1,23,26:2323)
+colnames(isolates)[2]  = "genome.size"
+
+# Erase temporary files
+rm(gene_loma,fire_stat,df_1,df_2,iso.metadata,test,sums,temp)
+
+# Bind the big matrix
+hmm_img     = mutate(hmm_img, across(everything(), as.factor))
+hmm_loma    = mutate(hmm_loma, across(everything(), as.factor))
+hmm_fire    = mutate(hmm_fire, across(everything(), as.factor))
+isolates    = mutate(isolates, across(everything(), as.factor))
+total_genes = bind_rows(hmm_img,hmm_loma,hmm_fire,isolates)
+total_genes[is.na(total_genes)] = 0
+
+# Guild number
+total_genes.guild     = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/global_datasets_guild.csv",dec=".")
+total.guild           = as.data.frame(total_genes.guild) %>% select(4,2)
+total.g.size          = as.data.frame(total_genes) %>% select(1,2)
+
+# Total guilds for the 940 selected genes
+total_genes.guild     = left_join(total.g.size,total_genes.guild, by=c('id'))
+total_genes.guild.940 = as.data.frame(total_genes.guild) %>% select(1,2,4,6:941)
+write.csv(total_genes.guild.940, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/total_genes.guild.940.csv")
+
+# Total guilds for the complete MAG-genes matrix
+total_genes           = left_join(total.guild, total_genes, by=c('id'))
+write.csv(total_genes, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/total_genes.full.csv")
+
+# 940 MAG-Gene matrix----
+# Call Trait Keys 
+GH_rule = read_sheet("https://docs.google.com/spreadsheets/d/1U6qWJJHossiK3kIwV2XYNKgsXkVrUc42QHiigMhX8Wg/edit?gid=1910000517#gid=1910000517")
+GH_rule = as.data.frame(rbind("id","guild","genome.size",GH_rule))
+PR_rule = read_sheet("https://docs.google.com/spreadsheets/d/1y8kqtT9mBdf-34wDUO9LN11kN0Ugz7vk9G2ZlZSc31Y/edit?gid=1394473486#gid=1394473486")
+PR_rule = as.data.frame(rbind("id","guild","genome.size",PR_rule))
+transp_rule = read_sheet("https://docs.google.com/spreadsheets/d/1NJGOHKHM8IpKEZNAs69R_XlftkZ_GrhzOhQvTZfPz_w/edit?gid=1971062019#gid=1971062019")
+osmo_rule   = read_sheet("https://docs.google.com/spreadsheets/d/1WQ27I2Hd9jtCOv3z3cZnSB_A3xTt9bP5tZlOjiU4wVg/edit?gid=379499472#gid=379499472")
+osmo_rule   = as.data.frame(rbind("id","guild","genome.size",osmo_rule))
+
+# Genome-size for MAGs----
+key_MAGs = bind_rows(hmm_img,hmm_loma,hmm_fire)
+key_MAGs = as.data.frame(key_MAGs$id)
+colnames(key_MAGs) = "key"
+total_genes.guild.940_MAG = total_genes.guild.940[total_genes.guild.940$id %in% key_MAGs$key, ]
+write.csv(total_genes.guild.940_MAG, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/total_genes.guild.940_MAG.csv")
+
+total_genes.guild.940_MAG = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/total_genes.guild.940_MAG.csv",dec=".")
+
+# Genome-size for Isolates----
+key_isolates = as.data.frame(isolates$id)
+colnames(key_isolates) = "key"
+total_genes.guild.940_ISO = total_genes.guild.940[total_genes.guild.940$id %in% key_isolates$key, ]
+write.csv(total_genes.guild.940_ISO, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/total_genes.guild.940_ISO.csv")
+
+total_genes.guild.940_ISO = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/total_genes.guild.940_ISO.csv",dec=".")
+
+# LINEAR REGRESSIONS----
+
+# GH - genes (MAG)----
+GH_TOTAL.MAG = total_genes.guild.940_MAG %>% select(any_of(GH_rule$`microtrait_hmm-name`))
+GH_TOTAL.MAG$genome.size = as.numeric(as.character(GH_TOTAL.MAG$genome.size))
+GH_TOTAL_m   = GH_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                               list(mean=mean), na.rm=TRUE))
+GH_TOTAL_m   = GH_TOTAL_m %>% mutate(GH_total = rowSums(GH_TOTAL_m[,3:ncol(GH_TOTAL_m)]))
+
+ggplot(data = GH_TOTAL_m, aes(x = genome.size_mean, y = GH_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Mean genome size per FG") + 
+  ylab("CAZy") +
+  geom_point() + theme(text = element_text(size=20))
+
+GH_TOTAL_m.1 = GH_TOTAL_m[-c(247), ] # Erasing super big Functional Group
+
+Figure_test_1 = ggplot(data = GH_TOTAL_m.1, aes(x = genome.size_mean, y = (GH_total))) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("CAZy") +
+  geom_point() + theme(text = element_text(size=14)) + xlim(0,1.25e7) + ylim(0,30)
+
+# Protein - genes (MAG)----
+PR_TOTAL.MAG = total_genes.guild.940_MAG %>% select(any_of(PR_rule$`microtrait_rule-name`))
+PR_TOTAL.MAG$genome.size = as.numeric(as.character(PR_TOTAL.MAG$genome.size))
+PR_TOTAL_m   = PR_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                     list(mean=mean), na.rm=TRUE))
+PR_TOTAL_m   = PR_TOTAL_m %>% mutate(PR_total = rowSums(PR_TOTAL_m[,3:ncol(PR_TOTAL_m)]))
+
+ggplot(data = PR_TOTAL_m, aes(x = genome.size_mean, y = PR_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Mean genome size per FG") + 
+  ylab("Mean total protein costs per FG") +
+  geom_point() + theme(text = element_text(size=20))
+
+PR_TOTAL_m.1 = PR_TOTAL_m[-c(247), ] # Erasing super big Functional Group
+
+Figure_test_2 = ggplot(data = PR_TOTAL_m.1, aes(x = genome.size_mean, y = PR_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("Protein Enzymes") +
+  geom_point() + theme(text = element_text(size=14)) + xlim(0,1.25e7) + ylim(0,50)
+
+# Transport - genes (MAG)----
+transp_rule  = transp_rule %>% filter(function_gene == c("transporter"))
+transp_rule  = as.data.frame(rbind("id","guild","genome.size",transp_rule))
+TRANSP_TOTAL = total_genes.guild.940_MAG %>% select(any_of(transp_rule$`microtrait_hmm-name`))
+TRANSP_TOTAL$genome.size = as.numeric(as.character(TRANSP_TOTAL$genome.size))
+TRANSP_TOTAL_m   = TRANSP_TOTAL %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                         list(mean=mean), na.rm=TRUE))
+TRANSP_TOTAL_m   = TRANSP_TOTAL_m %>% mutate(transp_total = rowSums(TRANSP_TOTAL_m[,3:ncol(TRANSP_TOTAL_m)]))
+
+ggplot(data = TRANSP_TOTAL_m, aes(x = genome.size_mean, y = transp_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Mean genome size per FG") + 
+  ylab("Mean total transporter costs per FG") +
+  geom_point() + theme(text = element_text(size=20))
+
+TRANSP_TOTAL_m.1 = TRANSP_TOTAL_m[-c(247), ] # Erasing super big Functional Group
+
+Figure_test_3 = ggplot(data = TRANSP_TOTAL_m.1, aes(x = genome.size_mean, y = transp_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("Transporter") +
+  geom_point() + theme(text = element_text(size=14)) + xlim(0,1.25e7) + ylim(0,200)
+
+# Transport - Aminoacids (MAG)----
+transp_rule_ami    = transp_rule %>% filter(class==c("aminoacid","peptide"))
+transp_rule_ami    = as.data.frame(rbind("id","guild","genome.size",transp_rule_ami))
+AMI_TRANSP_TOTAL   = total_genes.guild.940_MAG %>% select(any_of(transp_rule_ami$`microtrait_hmm-name`))
+AMI_TRANSP_TOTAL$genome.size = as.numeric(as.character(AMI_TRANSP_TOTAL$genome.size))
+AMI_TRANSP_TOTAL_m = AMI_TRANSP_TOTAL %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                               list(mean=mean), na.rm=TRUE))
+AMI_TRANSP_TOTAL_m = AMI_TRANSP_TOTAL_m %>% mutate(AMI_TRANSP_TOTAL = rowSums(AMI_TRANSP_TOTAL_m[,3:ncol(AMI_TRANSP_TOTAL_m)]))
+
+ggplot(data = AMI_TRANSP_TOTAL_m, aes(x = genome.size_mean, y = AMI_TRANSP_TOTAL)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Mean genome size per FG") + 
+  ylab("Mean total aminoacid transporter costs per FG") +
+  geom_point() + theme(text = element_text(size=20))
+
+AMI_TRANSP_TOTAL_m.1 = AMI_TRANSP_TOTAL_m[-c(247), ] # Erasing super big Functional Group
+
+Figure_test_4 = ggplot(data = AMI_TRANSP_TOTAL_m.1, aes(x = genome.size_mean, y = AMI_TRANSP_TOTAL)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Mean genome size per FG") + 
+  ylab("Mean total aminoacid transporter costs per FG") +
+  geom_point() + theme(text = element_text(size=20))
+
+# Transport - Carbohydrate (MAG)----
+transp_rule_car    = transp_rule %>% filter(class==c("carbohydrate"))
+transp_rule_car    = as.data.frame(rbind("id","guild","genome.size",transp_rule_car))
+CAR_TRANSP_TOTAL   = total_genes.guild.940_MAG %>% select(any_of(transp_rule_car$`microtrait_hmm-name`))
+CAR_TRANSP_TOTAL$genome.size = as.numeric(as.character(CAR_TRANSP_TOTAL$genome.size))
+CAR_TRANSP_TOTAL_m = CAR_TRANSP_TOTAL %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                               list(mean=mean), na.rm=TRUE))
+CAR_TRANSP_TOTAL_m = CAR_TRANSP_TOTAL_m %>% mutate(CAR_TRANSP_TOTAL = rowSums(CAR_TRANSP_TOTAL_m[,3:ncol(CAR_TRANSP_TOTAL_m)]))
+
+ggplot(data = CAR_TRANSP_TOTAL_m, aes(x = genome.size_mean, y = CAR_TRANSP_TOTAL)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Mean genome size per FG") + 
+  ylab("Mean total carbohydrate costs per FG") +
+  geom_point() + theme(text = element_text(size=20))
+
+CAR_TRANSP_TOTAL_m.1 = CAR_TRANSP_TOTAL_m[-c(247), ] # Erasing super big Functional Group
+
+Figure_test_5 = ggplot(data = CAR_TRANSP_TOTAL_m.1, aes(x = genome.size_mean, y = CAR_TRANSP_TOTAL)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Mean genome size per FG") + 
+  ylab("Mean total carbohydrate costs per FG") +
+  geom_point() + theme(text = element_text(size=20))
+
+# Osmolytes - genes (MAG)----
+OSMO_TOTAL.MAG = total_genes.guild.940_MAG %>% select(any_of(osmo_rule$`microtrait_hmm-name`))
+OSMO_TOTAL.MAG$genome.size = as.numeric(as.character(OSMO_TOTAL.MAG$genome.size))
+OSMO_TOTAL.MAG_m   = OSMO_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                             list(mean=mean), na.rm=TRUE))
+OSMO_TOTAL.MAG_m   = OSMO_TOTAL.MAG_m %>% mutate(OSMO_total = rowSums(OSMO_TOTAL.MAG_m[,3:ncol(OSMO_TOTAL.MAG_m)]))
+
+ggplot(data = OSMO_TOTAL.MAG_m, aes(x = genome.size_mean, y = OSMO_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Mean genome size per FG") + 
+  ylab("Mean total osmolytes costs per FG") +
+  geom_point() + theme(text = element_text(size=20))
+
+OSMO_TOTAL.MAG_m.1 = OSMO_TOTAL.MAG_m[-c(247), ] # Erasing super big Functional Group
+
+Figure_test_6 = ggplot(data = OSMO_TOTAL.MAG_m.1, aes(x = genome.size_mean, y = OSMO_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("Osmolytes") +
+  geom_point() + theme(text = element_text(size=14)) + xlim(0,1.25e7) + ylim(0,32)
+
+# GH - genes (Isolates)----
+GH_TOTAL.ISO = total_genes.guild.940_ISO %>% select(any_of(GH_rule$`microtrait_hmm-name`))
+GH_TOTAL.ISO$genome.size = as.numeric(as.character(GH_TOTAL.ISO$genome.size))
+GH_TOTAL_m   = GH_TOTAL.ISO %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                     list(mean=mean), na.rm=TRUE))
+GH_TOTAL_m   = GH_TOTAL_m %>% mutate(GH_total = rowSums(GH_TOTAL_m[,4:ncol(GH_TOTAL_m)]))
+
+Figure_test_1.ISO = ggplot(data = GH_TOTAL_m, aes(x = genome.size_mean, y = GH_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
+  ylab("CAZy") +
+  geom_point() + theme(text = element_text(size=14)) + xlim(0,1.25e7) + ylim(0,30)
+
+# Protein - genes (Isolates)----
+PH_TOTAL.ISO = total_genes.guild.940_ISO %>% select(any_of(PR_rule$`microtrait_rule-name`))
+PH_TOTAL.ISO$genome.size = as.numeric(as.character(PH_TOTAL.ISO$genome.size))
+PH_TOTAL_m   = PH_TOTAL.ISO %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                       list(mean=mean), na.rm=TRUE))
+PH_TOTAL_m   = PH_TOTAL_m %>% mutate(PR_total = rowSums(PH_TOTAL_m[,4:ncol(PH_TOTAL_m)]))
+
+Figure_test_2.ISO = ggplot(data = PH_TOTAL_m, aes(x = genome.size_mean, y = PR_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
+  ylab("Protein Enzyme") +
+  geom_point() + theme(text = element_text(size=14)) + xlim(0,1.25e7) + ylim(0,50)
+
+# Transport - genes (Isolates)----
+transp_rule    = transp_rule %>% filter(function_gene == c("transporter"))
+transp_rule    = as.data.frame(rbind("id","guild","genome.size",transp_rule))
+TRANSP_TOTAL.i = total_genes.guild.940_ISO %>% select(any_of(transp_rule$`microtrait_hmm-name`))
+TRANSP_TOTAL.i$genome.size = as.numeric(as.character(TRANSP_TOTAL.i$genome.size))
+TRANSP_TOTAL_m = TRANSP_TOTAL.i %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                         list(mean=mean), na.rm=TRUE))
+TRANSP_TOTAL_m = TRANSP_TOTAL_m %>% mutate(transp_total = rowSums(TRANSP_TOTAL_m[,4:ncol(TRANSP_TOTAL_m)]))
+
+Figure_test_3.ISO = ggplot(data = TRANSP_TOTAL_m, aes(x = genome.size_mean, y = transp_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
+  ylab("Transporter") +
+  geom_point() + theme(text = element_text(size=14)) + xlim(0,1.25e7) + ylim(0,200)
+
+# Transport - Aminoacids (Isolates)----
+transp_rule_ami    = transp_rule %>% filter(class==c("aminoacid","peptide"))
+transp_rule_ami    = as.data.frame(rbind("id","guild","genome.size",transp_rule_ami))
+AMI_TRANSP_TOTAL.i = total_genes.guild.940_ISO %>% select(any_of(transp_rule_ami$`microtrait_hmm-name`))
+AMI_TRANSP_TOTAL.i$genome.size = as.numeric(as.character(AMI_TRANSP_TOTAL.i$genome.size))
+AMI_TRANSP_TOTAL.i_m = AMI_TRANSP_TOTAL.i %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                                   list(mean=mean), na.rm=TRUE))
+AMI_TRANSP_TOTAL.i_m = AMI_TRANSP_TOTAL.i_m %>% mutate(AMI_TRANSP_TOTAL = rowSums(AMI_TRANSP_TOTAL.i_m[,3:ncol(AMI_TRANSP_TOTAL.i_m)]))
+
+Figure_test_4.ISO = ggplot(data = AMI_TRANSP_TOTAL.i_m, aes(x = genome.size_mean, y = AMI_TRANSP_TOTAL)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Mean genome size per FG") + 
+  ylab("Mean total aminoacid transporter costs per FG") +
+  geom_point() + theme(text = element_text(size=20))
+
+# Transport - Carbohydrate (Isolates)----
+transp_rule_car    = transp_rule %>% filter(class==c("carbohydrate"))
+transp_rule_car    = as.data.frame(rbind("id","guild","genome.size",transp_rule_car))
+CAR_TRANSP_TOTAL.i = total_genes.guild.940_ISO %>% select(any_of(transp_rule_car$`microtrait_hmm-name`))
+CAR_TRANSP_TOTAL.i$genome.size = as.numeric(as.character(CAR_TRANSP_TOTAL.i$genome.size))
+CAR_TRANSP_TOTAL.i_m = CAR_TRANSP_TOTAL.i %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                                   list(mean=mean), na.rm=TRUE))
+CAR_TRANSP_TOTAL.i_m = CAR_TRANSP_TOTAL.i_m %>% mutate(CAR_TRANSP_TOTAL = rowSums(CAR_TRANSP_TOTAL.i_m[,3:ncol(CAR_TRANSP_TOTAL.i_m)]))
+
+Figure_test_5.ISO = ggplot(data = CAR_TRANSP_TOTAL.i_m, aes(x = genome.size_mean, y = CAR_TRANSP_TOTAL)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Mean genome size per FG") + 
+  ylab("Mean total carbohydrate costs per FG") +
+  geom_point() + theme(text = element_text(size=20))
+
+# Osmolytes - genes (Isolates)----
+OSMO_TOTAL.TOTAL.i = total_genes.guild.940_ISO %>% select(any_of(osmo_rule$`microtrait_hmm-name`))
+OSMO_TOTAL.TOTAL.i$genome.size = as.numeric(as.character(OSMO_TOTAL.TOTAL.i$genome.size))
+OSMO_TOTAL.TOTAL.i_m   = OSMO_TOTAL.TOTAL.i %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                             list(mean=mean), na.rm=TRUE))
+OSMO_TOTAL_m   = OSMO_TOTAL.TOTAL.i_m %>% mutate(OSMO_total = rowSums(OSMO_TOTAL.TOTAL.i_m[,4:ncol(OSMO_TOTAL.TOTAL.i_m)]))
+
+Figure_test_6.ISO = ggplot(data = OSMO_TOTAL_m, aes(x = genome.size_mean, y = OSMO_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome SizeG") + 
+  ylab("Osmolytes") +
+  geom_point() + theme(text = element_text(size=14)) + xlim(0,1.25e7) + ylim(0,32)
 
