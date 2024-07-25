@@ -258,7 +258,7 @@ ggplot(PH_TOTAL_m.1, aes(x = size_mean,y = PH_total)) + geom_point() +
 # TOTAL ----
 length(unique(transp_rule$microtrait_hmm.name))
 
-transp_rule  = transp_rule %>% filter(function.==c("transporter"))
+transp_rule  = transp_rule %>% filter(function_gene==c("transporter"))
 TRANSP_TOTAL = full_mat %>% select(any_of(transp_rule$microtrait_hmm.name))
 TRANSP_TOTAL = as_data_frame(cbind(full_mat[c("guild","id","size")],TRANSP_TOTAL))
 
