@@ -26,6 +26,7 @@ library(googledrive)
 library(googlesheets4)
 library(readxl)
 library(ggpmisc)
+library(GGally)
 
 # CALLING DATA----
 
@@ -728,11 +729,17 @@ ggplot(data = GH_TOTAL_m, aes(x = genome.size_mean, y = GH_total)) +
 
 GH_TOTAL_m.1 = GH_TOTAL_m[-c(247), ] # Erasing super big Functional Group
 
+sheet_write(GH_TOTAL_m.1,
+            ss = "https://docs.google.com/spreadsheets/d/1BvCCY4WmRk9Gaz01XGvhUgBpd6ZE8gHLzQSZsNv_J-4/edit?gid=0#gid=0",
+            sheet = "GH_MAG")
+
 Figure_test_1 = ggplot(data = GH_TOTAL_m.1, aes(x = genome.size_mean, y = (GH_total))) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
   ylab("CAZy") +
-  geom_point() + theme(text = element_text(size=14)) + xlim(0,1.25e7) + ylim(0,30)
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,30)
+  
 
 # Protein - genes (MAG)----
 PR_TOTAL.MAG = total_genes.guild.940_MAG %>% select(any_of(PR_rule$`microtrait_rule-name`))
@@ -749,11 +756,16 @@ ggplot(data = PR_TOTAL_m, aes(x = genome.size_mean, y = PR_total)) +
 
 PR_TOTAL_m.1 = PR_TOTAL_m[-c(247), ] # Erasing super big Functional Group
 
+sheet_write(PR_TOTAL_m.1,
+            ss = "https://docs.google.com/spreadsheets/d/18x3e2MPXYvhWrQ5HoGj_MmAXJfhHko-bP7TfDp9vCQM/edit?gid=0#gid=0",
+            sheet = "Protein_MAG")
+
 Figure_test_2 = ggplot(data = PR_TOTAL_m.1, aes(x = genome.size_mean, y = PR_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
   ylab("Protein Enzymes") +
-  geom_point() + theme(text = element_text(size=14)) + xlim(0,1.25e7) + ylim(0,50)
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,50)
 
 # Transport - genes (MAG)----
 transp_rule  = transp_rule %>% filter(function_gene == c("transporter"))
@@ -772,11 +784,16 @@ ggplot(data = TRANSP_TOTAL_m, aes(x = genome.size_mean, y = transp_total)) +
 
 TRANSP_TOTAL_m.1 = TRANSP_TOTAL_m[-c(247), ] # Erasing super big Functional Group
 
+sheet_write(TRANSP_TOTAL_m.1,
+            ss = "https://docs.google.com/spreadsheets/d/1SHPSWR5bB-31cVpd98uaJ0225PYDiPEXh1jeCeez-Dw/edit?gid=0#gid=0",
+            sheet = "Transporter_MAG")
+
 Figure_test_3 = ggplot(data = TRANSP_TOTAL_m.1, aes(x = genome.size_mean, y = transp_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
   ylab("Total Transporter") +
-  geom_point() + theme(text = element_text(size=14)) + xlim(0,1.25e7) + ylim(0,200)
+  geom_point() + theme_classic()+ theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,200)
 
 # Transport - Aminoacids (MAG)----
 transp_rule        = transp_rule %>% filter(function_gene==c("transporter"))
@@ -796,11 +813,16 @@ ggplot(data = AMI_TRANSP_TOTAL_m, aes(x = genome.size_mean, y = AMI_TRANSP_TOTAL
 
 AMI_TRANSP_TOTAL_m.1 = AMI_TRANSP_TOTAL_m[-c(247), ] # Erasing super big Functional Group
 
+sheet_write(AMI_TRANSP_TOTAL_m.1,
+            ss = "https://docs.google.com/spreadsheets/d/1roWnESdGSQ3DiCGBogrfLBFzjwrLrPUHYEYqVNpNEsI/edit?gid=0#gid=0",
+            sheet = "Aminoacids_T_MAG")
+
 Figure_test_4 = ggplot(data = AMI_TRANSP_TOTAL_m.1, aes(x = genome.size_mean, y = log(AMI_TRANSP_TOTAL+1))) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
   ylab("Aminoacid Transporter") +
-  geom_point() + theme(text = element_text(size=14)) + xlim(0,1.25e7) + ylim(0,5)
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,5)
 
 # Transport - Carbohydrate (MAG)----
 transp_rule_car    = transp_rule %>% filter(class==c("carbohydrate"))
@@ -819,11 +841,16 @@ ggplot(data = CAR_TRANSP_TOTAL_m, aes(x = genome.size_mean, y = CAR_TRANSP_TOTAL
 
 CAR_TRANSP_TOTAL_m.1 = CAR_TRANSP_TOTAL_m[-c(247), ] # Erasing super big Functional Group
 
+sheet_write(CAR_TRANSP_TOTAL_m.1,
+            ss = "https://docs.google.com/spreadsheets/d/1c08rBTbHN6G8mVN8ybqMWvsJQgZzQ8Z1B72I_AlF06M/edit?gid=0#gid=0",
+            sheet = "GH_T_MAG")
+
 Figure_test_5 = ggplot(data = CAR_TRANSP_TOTAL_m.1, aes(x = genome.size_mean, y = log(CAR_TRANSP_TOTAL+1))) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
   ylab("Carbohydrate Transport") +
-  geom_point() + theme(text = element_text(size=14)) + xlim(0,1.25e7) + ylim(0,5)
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,5)
 
 # Osmolytes - genes (MAG)----
 OSMO_TOTAL.MAG = total_genes.guild.940_MAG %>% select(any_of(osmo_rule$`microtrait_hmm-name`))
@@ -840,11 +867,16 @@ ggplot(data = OSMO_TOTAL.MAG_m, aes(x = genome.size_mean, y = OSMO_total)) +
 
 OSMO_TOTAL.MAG_m.1 = OSMO_TOTAL.MAG_m[-c(247), ] # Erasing super big Functional Group
 
+sheet_write(OSMO_TOTAL.MAG_m.1,
+            ss = "https://docs.google.com/spreadsheets/d/1dzeG2XKS0fhznOMWXEa521XzC4YO5IUGfc4ShiUJ5yM/edit?gid=0#gid=0",
+            sheet = "Osmolyte_MAG")
+
 Figure_test_6 = ggplot(data = OSMO_TOTAL.MAG_m.1, aes(x = genome.size_mean, y = OSMO_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
   ylab("Osmolytes") +
-  geom_point() + theme(text = element_text(size=14)) + xlim(0,1.25e7) + ylim(0,32)
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,32)
 
 # Biofilm - genes (MAG)----
 BIO_TOTAL.MAG = total_genes.guild.940_MAG %>% select(any_of(biofilm_rule$`microtrait_hmm-name`))
@@ -861,11 +893,16 @@ ggplot(data = BIO_TOTAL.MAG_m, aes(x = genome.size_mean, y = BIO_total)) +
 
 BIO_TOTAL.MAG_m.1 = BIO_TOTAL.MAG_m[-c(247), ] # Erasing super big Functional Group
 
+sheet_write(BIO_TOTAL.MAG_m.1,
+            ss = "https://docs.google.com/spreadsheets/d/1k32wnkrBHdG31a79sFvxVboZ-DwhWe28n9qk7H9lnOI/edit?gid=0#gid=0",
+            sheet = "Biofilm_MAG")
+
 Figure_test_7 = ggplot(data = BIO_TOTAL.MAG_m.1, aes(x = genome.size_mean, y = BIO_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
   ylab("Biofilm") +
-  geom_point() + theme(text = element_text(size=14)) + xlim(0,1.25e7) + ylim(0,16)
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,16)
 
 # High Temp - genes (MAG)----
 TEMP.MAG = total_genes.guild.940_MAG %>% select(any_of(high.T_rule$`microtrait_hmm-name`))
@@ -882,11 +919,16 @@ ggplot(data = TEMP.MAG_m, aes(x = genome.size_mean, y = TEMP_total)) +
 
 TEMP.MAG_m.1 = TEMP.MAG_m[-c(247), ] # Erasing super big Functional Group
 
+sheet_write(TEMP.MAG_m.1,
+            ss = "https://docs.google.com/spreadsheets/d/1WYvJIxHLaksDbD0thH3DWOVViQ7gC8KU9OEb9cVqp50/edit?gid=0#gid=0",
+            sheet = "TEMP_MAG")
+
 Figure_test_8 = ggplot(data = TEMP.MAG_m.1, aes(x = genome.size_mean, y = TEMP_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
   ylab("Heat Resistance") +
-  geom_point() + theme(text = element_text(size=14)) + xlim(0,1.25e7) + ylim(0,15)
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,15)
 
 # pH - genes (MAG)----
 PH.MAG = total_genes.guild.940_MAG %>% select(any_of(pH_rule$`microtrait_hmm-name`))
@@ -903,11 +945,16 @@ ggplot(data = PH.MAG_m, aes(x = genome.size_mean, y = PH_total)) +
 
 PH.MAG_m.1 = PH.MAG_m[-c(247), ] # Erasing super big Functional Group
 
+sheet_write(PH.MAG_m.1,
+            ss = "https://docs.google.com/spreadsheets/d/1za5oqXIRLFYkg6eV-BhL6MVlftTkDv78jQCZoYOnYBQ/edit?gid=0#gid=0",
+            sheet = "PH_MAG")
+
 Figure_test_9 = ggplot(data = PH.MAG_m.1, aes(x = genome.size_mean, y = PH_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
   ylab("pH Resistance") +
-  geom_point() + theme(text = element_text(size=14)) + xlim(0,1.25e7) + ylim(0,20)
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,20)
 
 # GH - genes (Isolates)----
 GH_TOTAL.ISO = total_genes.guild.940_ISO %>% select(any_of(GH_rule$`microtrait_hmm-name`))
@@ -916,11 +963,16 @@ GH_TOTAL_m   = GH_TOTAL.ISO %>% group_by(guild) %>% summarise(across(where(is.nu
                                                                      list(mean=mean), na.rm=TRUE))
 GH_TOTAL_m   = GH_TOTAL_m %>% mutate(GH_total = rowSums(GH_TOTAL_m[,4:ncol(GH_TOTAL_m)]))
 
+sheet_write(GH_TOTAL_m,
+            ss = "https://docs.google.com/spreadsheets/d/110N6SnbJWrh3bLcS3rwL8wQsntuTUHAeqYqfB2_R7d0/edit?gid=0#gid=0",
+            sheet = "GH_Isolates")
+
 Figure_test_1.ISO = ggplot(data = GH_TOTAL_m, aes(x = genome.size_mean, y = GH_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
   ylab("CAZy") +
-  geom_point() + theme(text = element_text(size=14)) + xlim(0,1.25e7) + ylim(0,30)
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,30)
 
 # Protein - genes (Isolates)----
 PH_TOTAL.ISO = total_genes.guild.940_ISO %>% select(any_of(PR_rule$`microtrait_rule-name`))
@@ -929,11 +981,16 @@ PH_TOTAL_m   = PH_TOTAL.ISO %>% group_by(guild) %>% summarise(across(where(is.nu
                                                                        list(mean=mean), na.rm=TRUE))
 PH_TOTAL_m   = PH_TOTAL_m %>% mutate(PR_total = rowSums(PH_TOTAL_m[,4:ncol(PH_TOTAL_m)]))
 
+sheet_write(PH_TOTAL_m,
+            ss = "https://docs.google.com/spreadsheets/d/1G3xtk7sHCy15e_0n2vLkbGc57fQFYyqCUghLDPQTuy0/edit?gid=0#gid=0",
+            sheet = "Protein_Isolates")
+
 Figure_test_2.ISO = ggplot(data = PH_TOTAL_m, aes(x = genome.size_mean, y = PR_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
   ylab("Protein Enzyme") +
-  geom_point() + theme(text = element_text(size=14)) + xlim(0,1.25e7) + ylim(0,50)
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,50)
 
 # Transport - genes (Isolates)----
 transp_rule    = transp_rule %>% filter(function_gene == c("transporter"))
@@ -944,11 +1001,16 @@ TRANSP_TOTAL_m = TRANSP_TOTAL.i %>% group_by(guild) %>% summarise(across(where(i
                                                                          list(mean=mean), na.rm=TRUE))
 TRANSP_TOTAL_m = TRANSP_TOTAL_m %>% mutate(transp_total = rowSums(TRANSP_TOTAL_m[,4:ncol(TRANSP_TOTAL_m)]))
 
+sheet_write(TRANSP_TOTAL_m,
+            ss = "https://docs.google.com/spreadsheets/d/1pSIRE1LZknqQz5RSn_jZvnid2mZsns4_X6AiK7AHl8A/edit?gid=0#gid=0",
+            sheet = "Transporter_Isolates")
+
 Figure_test_3.ISO = ggplot(data = TRANSP_TOTAL_m, aes(x = genome.size_mean, y = transp_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
   ylab("Total Transporter") +
-  geom_point() + theme(text = element_text(size=14)) + xlim(0,1.25e7) + ylim(0,200)
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,200)
 
 # Transport - Aminoacids (Isolates)----
 transp_rule_ami    = transp_rule %>% filter(class==c("aminoacid","peptide"))
@@ -959,11 +1021,16 @@ AMI_TRANSP_TOTAL.i_m = AMI_TRANSP_TOTAL.i %>% group_by(guild) %>% summarise(acro
                                                                                    list(mean=mean), na.rm=TRUE))
 AMI_TRANSP_TOTAL.i_m = AMI_TRANSP_TOTAL.i_m %>% mutate(AMI_TRANSP_TOTAL = rowSums(AMI_TRANSP_TOTAL.i_m[,4:ncol(AMI_TRANSP_TOTAL.i_m)]))
 
+sheet_write(AMI_TRANSP_TOTAL.i_m,
+            ss = "https://docs.google.com/spreadsheets/d/1_-aWScfsDb-TNSFQ9bzbWVgEjdleCD_woBNRKHGy8o4/edit?gid=0#gid=0",
+            sheet = "Aminoacids_T_Isolates")
+
 Figure_test_4.ISO = ggplot(data = AMI_TRANSP_TOTAL.i_m, aes(x = genome.size_mean, y = AMI_TRANSP_TOTAL)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
   ylab("Aminoacid Transporter") +
-  geom_point() + theme(text = element_text(size=14)) + xlim(0,1.25e7) + ylim(0,20)
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,20)
 
 # Transport - Carbohydrate (Isolates)----
 transp_rule_car    = transp_rule %>% filter(class==c("carbohydrate"))
@@ -974,11 +1041,16 @@ CAR_TRANSP_TOTAL.i_m = CAR_TRANSP_TOTAL.i %>% group_by(guild) %>% summarise(acro
                                                                                    list(mean=mean), na.rm=TRUE))
 CAR_TRANSP_TOTAL.i_m = CAR_TRANSP_TOTAL.i_m %>% mutate(CAR_TRANSP_TOTAL = rowSums(CAR_TRANSP_TOTAL.i_m[,4:ncol(CAR_TRANSP_TOTAL.i_m)]))
 
+sheet_write(CAR_TRANSP_TOTAL.i_m,
+            ss = "https://docs.google.com/spreadsheets/d/14RSIx5VpsXPvxV3Awrj_XRwAc1uYx5tdpjK1vjJGJAo/edit?gid=0#gid=0",
+            sheet = "GH_T_Isolates")
+
 Figure_test_5.ISO = ggplot(data = CAR_TRANSP_TOTAL.i_m, aes(x = genome.size_mean, y = CAR_TRANSP_TOTAL)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
   ylab("Carbohydrate Transporter") +
-  geom_point() + theme(text = element_text(size=14)) + xlim(0,1.25e7) + ylim(0,55)
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,55)
 
 # Osmolytes - genes (Isolates)----
 OSMO_TOTAL.TOTAL.i = total_genes.guild.940_ISO %>% select(any_of(osmo_rule$`microtrait_hmm-name`))
@@ -987,11 +1059,16 @@ OSMO_TOTAL.TOTAL.i_m   = OSMO_TOTAL.TOTAL.i %>% group_by(guild) %>% summarise(ac
                                                                              list(mean=mean), na.rm=TRUE))
 OSMO_TOTAL_m   = OSMO_TOTAL.TOTAL.i_m %>% mutate(OSMO_total = rowSums(OSMO_TOTAL.TOTAL.i_m[,4:ncol(OSMO_TOTAL.TOTAL.i_m)]))
 
+sheet_write(OSMO_TOTAL_m,
+            ss = "https://docs.google.com/spreadsheets/d/1FsE_lt-gHphdH1Ndcce7IODTXyBVwu6uckVY97ipovo/edit?gid=0#gid=0",
+            sheet = "Osmolyte_Isolates")
+
 Figure_test_6.ISO = ggplot(data = OSMO_TOTAL_m, aes(x = genome.size_mean, y = OSMO_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
   ylab("Osmolytes") +
-  geom_point() + theme(text = element_text(size=14)) + xlim(0,1.25e7) + ylim(0,32)
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,32)
 
 # Biofilm - genes (Isolates)----
 BIO_TOTAL.MAG = total_genes.guild.940_ISO %>% select(any_of(biofilm_rule$`microtrait_hmm-name`))
@@ -1000,11 +1077,16 @@ BIO_TOTAL.MAG_m   = BIO_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where
                                                                            list(mean=mean), na.rm=TRUE))
 BIO_TOTAL.MAG_m   = BIO_TOTAL.MAG_m %>% mutate(BIO_total = rowSums(BIO_TOTAL.MAG_m[,4:ncol(BIO_TOTAL.MAG_m)]))
 
+sheet_write(BIO_TOTAL.MAG_m,
+            ss = "https://docs.google.com/spreadsheets/d/1m5BCkSa5CoWY7sLeJl0K16Ef1P8lPuli7HG6KpSxZPE/edit?gid=0#gid=0",
+            sheet = "Biofilm_Isolates")
+
 Figure_test_7.ISO = ggplot(data = BIO_TOTAL.MAG_m, aes(x = genome.size_mean, y = BIO_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
   ylab("Biofilm") +
-  geom_point() + theme(text = element_text(size=14)) + xlim(0,1.25e7) + ylim(0,16)
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,16)
 
 # High Temperature - genes (Isolates)----
 TEMP_TOTAL.MAG = total_genes.guild.940_ISO %>% select(any_of(high.T_rule$`microtrait_hmm-name`))
@@ -1013,11 +1095,16 @@ TEMP_TOTAL.MAG_m   = TEMP_TOTAL.MAG %>% group_by(guild) %>% summarise(across(whe
                                                                            list(mean=mean), na.rm=TRUE))
 TEMP_TOTAL.MAG_m   = TEMP_TOTAL.MAG_m %>% mutate(TEMP_total = rowSums(TEMP_TOTAL.MAG_m[,4:ncol(TEMP_TOTAL.MAG_m)]))
 
+sheet_write(TEMP_TOTAL.MAG_m,
+            ss = "https://docs.google.com/spreadsheets/d/1GXAwzFiMHrZAkIxYqDxGbj0VHzB8SHWxF8mnGqU3jGo/edit?gid=0#gid=0",
+            sheet = "TEMP_Isolates")
+
 Figure_test_8.ISO = ggplot(data = TEMP_TOTAL.MAG_m, aes(x = genome.size_mean, y = TEMP_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
   ylab("Heat Resistance") +
-  geom_point() + theme(text = element_text(size=14)) + xlim(0,1.25e7) + ylim(0,15)
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,15)
 
 # pH - genes (Isolates)----
 pH_TOTAL.MAG = total_genes.guild.940_ISO %>% select(any_of(pH_rule$`microtrait_hmm-name`))
@@ -1026,9 +1113,100 @@ pH_TOTAL.MAG_m   = pH_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where(i
                                                                              list(mean=mean), na.rm=TRUE))
 pH_TOTAL.MAG_m   = pH_TOTAL.MAG_m %>% mutate(PH_total = rowSums(pH_TOTAL.MAG_m[,4:ncol(pH_TOTAL.MAG_m)]))
 
+sheet_write(pH_TOTAL.MAG_m,
+            ss = "https://docs.google.com/spreadsheets/d/1p58fzYUw9I-jA4FkWQz6u8-qtNVi7GMVVcGCtYPdxHk/edit?gid=0#gid=0",
+            sheet = "PH_Isolates")
+
 Figure_test_9.ISO = ggplot(data = pH_TOTAL.MAG_m, aes(x = genome.size_mean, y = PH_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
   ylab("pH Resistance") +
-  geom_point() + theme(text = element_text(size=14)) + xlim(0,1.25e7) + ylim(0,20)
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,20)
+
+# Cross correlations----
+
+# Data Preparation - MAGs
+temp    = drive_ls("https://drive.google.com/drive/u/0/folders/1OlIc_JaS5a9s5jz7m1hTduTtYV7wAcG3")
+a       = as.data.frame(temp$name)
+Aminoacids_T_MAG = read_sheet(temp$id[1])
+Aminoacids_T_MAG = Aminoacids_T_MAG %>% select(guild,genome.size_mean,AMI_TRANSP_TOTAL)
+PH_MAG           = read_sheet(temp$id[2])
+PH_MAG           = PH_MAG %>% select(guild,genome.size_mean,PH_total)
+TEMP_MAG         = read_sheet(temp$id[3])
+TEMP_MAG         = TEMP_MAG %>% select(guild,genome.size_mean,TEMP_total)
+Biofilm_MAG      = read_sheet(temp$id[4])
+Biofilm_MAG      = Biofilm_MAG %>% select(guild,genome.size_mean,BIO_total)
+Osmolyte_MAG     = read_sheet(temp$id[5])
+Osmolyte_MAG     = Osmolyte_MAG %>% select(guild,genome.size_mean,OSMO_total)
+GH_T_MAG         = read_sheet(temp$id[6])
+GH_T_MAG         = GH_T_MAG %>% select(guild,genome.size_mean,CAR_TRANSP_TOTAL)
+Transporter_MAG  = read_sheet(temp$id[7])
+Transporter_MAG  = Transporter_MAG %>% select(guild,genome.size_mean,transp_total)
+Protein_MAG      = read_sheet(temp$id[8])
+Protein_MAG      = Protein_MAG %>% select(guild,genome.size_mean,PR_total)
+GH_MAG           = read_sheet(temp$id[9])
+GH_MAG           = GH_MAG %>% select(guild,genome.size_mean,GH_total)
+MAG_gen_trait    = as.data.frame(cbind(Aminoacids_T_MAG,PH_MAG$PH_total,
+                                       TEMP_MAG$TEMP_total,Biofilm_MAG$BIO_total,
+                                       Osmolyte_MAG$OSMO_total,GH_T_MAG$CAR_TRANSP_TOTAL,
+                                       Transporter_MAG$transp_total,Protein_MAG$PR_total,
+                                       GH_MAG$GH_total))
+colnames(MAG_gen_trait) = c("guild","genome.size","amino.transport","pH","temp",
+                            "biofilm","osmolyte","GH.trasnport","tranport.total",
+                            "Protein","CAZy")
+rm(temp,a,Aminoacids_T_MAG,PH_MAG,TEMP_MAG,Biofilm_MAG,Osmolyte_MAG,GH_T_MAG,
+   Transporter_MAG,Protein_MAG,GH_MAG)
+
+sheet_write(MAG_gen_trait,
+            ss = "https://docs.google.com/spreadsheets/d/1Y6yMpQygXJof8EdDAE967ufLbNxmJcBqSZzUgMBnpYY/edit?gid=0#gid=0",
+            sheet = "MAG_gen_trait")
+
+# Data Preparation - Isolates
+temp    = drive_ls("https://drive.google.com/drive/u/0/folders/1C9gqH5mSadOGdZv05jKPu8tELph2isd4")
+a       = as.data.frame(temp$name)
+PH_Isolates       = read_sheet(temp$id[1])
+PH_Isolates       = PH_Isolates %>% select(guild,genome.size_mean,PH_total)
+TEMP_Isolates     = read_sheet(temp$id[2])
+TEMP_Isolates     = TEMP_Isolates %>% select(guild,genome.size_mean,TEMP_total)
+Biofilm_Isolates  = read_sheet(temp$id[3])
+Biofilm_Isolates  = Biofilm_Isolates %>% select(guild,genome.size_mean,BIO_total)
+Osmolyte_Isolates = read_sheet(temp$id[4])
+Osmolyte_Isolates = Osmolyte_Isolates %>% select(guild,genome.size_mean,OSMO_total)
+GH_T_Isolates     = read_sheet(temp$id[5])
+GH_T_Isolates     = GH_T_Isolates %>% select(guild,genome.size_mean,CAR_TRANSP_TOTAL)
+Aminoacids_T_Isolates = read_sheet(temp$id[6])
+Aminoacids_T_Isolates = Aminoacids_T_Isolates %>% select(guild,genome.size_mean,AMI_TRANSP_TOTAL)
+Transporter_Isolates  = read_sheet(temp$id[7])
+Transporter_Isolates  = Transporter_Isolates %>% select(guild,genome.size_mean,transp_total)
+Protein_Isolates      = read_sheet(temp$id[8])
+Protein_Isolates      = Protein_Isolates %>% select(guild,genome.size_mean,PR_total)
+GH_Isolates           = read_sheet(temp$id[9])
+GH_Isolates           = GH_Isolates %>% select(guild,genome.size_mean,GH_total)
+Isolates_gen_trait    = as.data.frame(cbind(Aminoacids_T_Isolates,PH_Isolates$PH_total,
+                                            TEMP_Isolates$TEMP_total,Biofilm_Isolates$BIO_total,
+                                            Osmolyte_Isolates$OSMO_total,GH_T_Isolates$CAR_TRANSP_TOTAL,
+                                            Transporter_Isolates$transp_total,Protein_Isolates$PR_total,
+                                            GH_Isolates$GH_total))
+colnames(Isolates_gen_trait) = c("guild","genome.size","amino.transport","pH","temp",
+                            "biofilm","osmolyte","GH.trasnport","tranport.total",
+                            "Protein","CAZy")
+rm(temp,a,Aminoacids_T_Isolates,PH_Isolates,TEMP_Isolates,Biofilm_Isolates,
+   Osmolyte_Isolates,GH_T_Isolates,Transporter_Isolates,Protein_Isolates,
+   GH_Isolates)
+
+sheet_write(Isolates_gen_trait,
+            ss = "https://docs.google.com/spreadsheets/d/1xT3vB2K2tupkeHZwUlVzh4ZYWhmUpOmMQtESNH2Mst0/edit?gid=0#gid=0",
+            sheet = "Isolates_gen_trait")
+# Call data
+
+MAG_gen_trait       = read_sheet("https://docs.google.com/spreadsheets/d/1Y6yMpQygXJof8EdDAE967ufLbNxmJcBqSZzUgMBnpYY/edit?gid=0#gid=0")
+Isolates_gen_trait  = read_sheet("https://docs.google.com/spreadsheets/d/1xT3vB2K2tupkeHZwUlVzh4ZYWhmUpOmMQtESNH2Mst0/edit?gid=0#gid=0")
+
+# Plotting cross-correlations
+
+Figure_5 = ggpairs(MAG_gen_trait, columns = 2:11, title="correlogram with ggpairs()") + 
+  theme_classic()
+Figure_6 = ggpairs(Isolates_gen_trait, columns = 2:11, title="correlogram with ggpairs()") + 
+  theme_classic()
 
