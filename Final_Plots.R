@@ -1,5 +1,5 @@
 # Plotting examples 
-
+# Full Analysis----
 # Substrate degradation traits----
 
 Figure_2 = ggarrange(Figure_test_1, Figure_test_2,Figure_test_1.ISO,Figure_test_2.ISO, 
@@ -48,3 +48,38 @@ png("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figure
 print(Figure_6)
 dev.off()
 
+# Loma only----
+
+Figure_7 = ggarrange(Figure_test_1, Figure_test_2,Figure_test_1.ISO,Figure_test_2.ISO, 
+                     labels = c("A","B","C","D"),
+                     ncol = 2, nrow = 2) + theme(panel.background = element_blank())
+Figure_7
+png("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figures/Figure_7.png",
+    width=3500*1.35,height=1969*1.35,res=300)
+print(Figure_7)
+dev.off()
+
+# Monomer Uptake----
+
+Figure_8 = ggarrange(Figure_test_3, Figure_test_4,Figure_test_5,Figure_test_3.ISO,
+                     Figure_test_4.ISO,Figure_test_5.ISO,
+                     labels = c("A","B*","C*","D","E","F"),
+                     ncol = 3, nrow = 2) + theme(panel.background = element_blank())
+Figure_8
+png("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figures/Figure_8.png",
+    width=3500*1.35,height=1969*1.35,res=300)
+print(Figure_8)
+dev.off()
+
+# Stress Tolerance----
+
+Figure_9 = ggarrange(Figure_test_6,Figure_test_7,Figure_test_8,Figure_test_9,
+                     Figure_test_6.ISO,Figure_test_7.ISO,Figure_test_8.ISO,
+                     Figure_test_9.ISO,
+                     labels = c("A","B","C","D","E","F**","G**","H"),
+                     ncol = 4, nrow = 2) + theme(panel.background = element_blank())
+Figure_9
+png("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figures/Figure_9.png",
+    width=3500*1.35,height=1969*1.35,res=300)
+print(Figure_9)
+dev.off()

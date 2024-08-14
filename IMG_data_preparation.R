@@ -535,7 +535,7 @@ adonis = FG_test(MAG_number[10],90,3)        # 90 FG
 adonis = FG_test(MAG_number[10],123,33)      # 123 FG
 adonis = FG_test(MAG_number[10],93,333)      # 93 FG
 adonis = FG_test(MAG_number[10],115,27)      # 115 FG
-adonis = FG_test(MAG_number[10],126,2707)    # 82 FG
+adonis = FG_test(MAG_number[10],126,2707)    # 126 FG
 adonis = FG_test(MAG_number[10],96,27071990) # 96 FG
 adonis_2000 = c(107,119,90,117,99,101,90,123,93,115,126,96)
 
@@ -590,7 +590,7 @@ Figure_S1 = ggplot(data,aes(V1,V2)) +
   geom_smooth(method='lm') + 
   stat_cor(label.x = 30, label.y = 130, size = 4) +
   stat_regline_equation(label.x = 30, label.y = 150, size = 4) + 
-  xlab("# of MAGs") + ylab("# of Functional Groups") + 
+  xlab("# of MAGs") + ylab("# of Functional Groups") + theme_classic() + 
   theme(text = element_text(size=20))
 
 png("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figures/Figure_S1.png",
@@ -817,12 +817,12 @@ sheet_write(AMI_TRANSP_TOTAL_m.1,
             ss = "https://docs.google.com/spreadsheets/d/1roWnESdGSQ3DiCGBogrfLBFzjwrLrPUHYEYqVNpNEsI/edit?gid=0#gid=0",
             sheet = "Aminoacids_T_MAG")
 
-Figure_test_4 = ggplot(data = AMI_TRANSP_TOTAL_m.1, aes(x = genome.size_mean, y = log(AMI_TRANSP_TOTAL+1))) +
+Figure_test_4 = ggplot(data = AMI_TRANSP_TOTAL_m.1, aes(x = genome.size_mean, y = (AMI_TRANSP_TOTAL))) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
   ylab("Aminoacid Transporter") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,5)
+  xlim(0,1.25e7) + ylim(0,20)
 
 # Transport - Carbohydrate (MAG)----
 transp_rule_car    = transp_rule %>% filter(class==c("carbohydrate"))
@@ -845,12 +845,12 @@ sheet_write(CAR_TRANSP_TOTAL_m.1,
             ss = "https://docs.google.com/spreadsheets/d/1c08rBTbHN6G8mVN8ybqMWvsJQgZzQ8Z1B72I_AlF06M/edit?gid=0#gid=0",
             sheet = "GH_T_MAG")
 
-Figure_test_5 = ggplot(data = CAR_TRANSP_TOTAL_m.1, aes(x = genome.size_mean, y = log(CAR_TRANSP_TOTAL+1))) +
+Figure_test_5 = ggplot(data = CAR_TRANSP_TOTAL_m.1, aes(x = genome.size_mean, y = (CAR_TRANSP_TOTAL))) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
   ylab("Carbohydrate Transport") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,5)
+  xlim(0,1.25e7) + ylim(0,55)
 
 # Osmolytes - genes (MAG)----
 OSMO_TOTAL.MAG = total_genes.guild.940_MAG %>% select(any_of(osmo_rule$`microtrait_hmm-name`))
@@ -1210,3 +1210,614 @@ Figure_5 = ggpairs(MAG_gen_trait, columns = 2:11, title="correlogram with ggpair
 Figure_6 = ggpairs(Isolates_gen_trait, columns = 2:11, title="correlogram with ggpairs()") + 
   theme_classic()
 
+# LOMA GENES ANALYSIS----
+
+global_LOMA                  = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_LOMA.csv",dec=".")
+
+# Curve for functional groups (1. Random selection of matrix size;
+# 2. Distance matrix and pairwise adonis; 3. Store N° of MAGs and N° of functional groups;
+# 4. Plot and fit the curve)
+
+MAG_number = c(100,200,500,600,750,800,900,1000,1500,2000,3500,4000,5000,
+               6000,7000,8000,9000,10000)
+
+FG_test = function(i,k,seed) {
+  set.seed(seed)
+  rand_df                = global_LOMA[sample(nrow(global_LOMA), size=i), ]
+  distance.total         = parDist(x = as.matrix(rand_df[3:length(rand_df)]),
+                                   method = "fJaccard",
+                                   threads = 10) # Adapt the number of threads
+  cluster.total          = hclust(distance.total, method="ward.D2")
+  v                      = cutree(cluster.total,k=k)
+  genome2guild           = data.frame(guild = factor(v))
+  rownames(genome2guild) = names(v)
+  adonis_1               = pairwiseAdonis::pairwise.adonis(distance.total,genome2guild$guild,
+                                                           perm = 999,p.adjust.m='BH')
+  return(as.data.frame(adonis_1))
+}
+
+# i = 100 ----
+adonis = FG_test(MAG_number[1],7,1)        # 7 FG
+adonis = FG_test(MAG_number[1],8,11)       # 8 FG
+adonis = FG_test(MAG_number[1],10,111)     # 10 FG
+adonis = FG_test(MAG_number[1],12,2)       # 12 FG
+adonis = FG_test(MAG_number[1],10,22)      # 10 FG
+adonis = FG_test(MAG_number[1],11,222)     # 11 FG
+adonis = FG_test(MAG_number[1],10,3)       # 10 FG
+adonis = FG_test(MAG_number[1],12,33)      # 12 FG
+adonis = FG_test(MAG_number[1],15,333)     # 15 FG
+adonis = FG_test(MAG_number[1],11,27)      # 11 FG
+adonis = FG_test(MAG_number[1],7,2707)     # 7 FG
+adonis = FG_test(MAG_number[1],8,27071990) # 8 FG
+adonis_100 = c(7,8,10,12,10,11,10,12,15,11,7,8)
+
+# i = 1000 ----
+adonis = FG_test(MAG_number[8],63,1)        # 63 FG
+adonis = FG_test(MAG_number[8],52,11)       # 52 FG
+adonis = FG_test(MAG_number[8],59,111)      # 59 FG
+adonis = FG_test(MAG_number[8],69,2)        # 69 FG
+adonis = FG_test(MAG_number[8],59,22)       # 59 FG
+adonis = FG_test(MAG_number[8],55,222)      # 55 FG
+adonis = FG_test(MAG_number[8],60,3)        # 60 FG
+adonis = FG_test(MAG_number[8],59,33)       # 59 FG
+adonis = FG_test(MAG_number[8],45,333)      # 45 FG
+adonis = FG_test(MAG_number[8],62,27)       # 62 FG
+adonis = FG_test(MAG_number[8],44,2707)     # 44 FG
+adonis = FG_test(MAG_number[8],70,27071990) # 70 FG
+adonis_1000 = c(63,52,59,69,59,55,60,59,45,62,44,70)
+
+# i = 2000 ----
+adonis = FG_test(MAG_number[10],101,1)       # 101 FG
+adonis = FG_test(MAG_number[10],123,11)      # 123 FG 
+adonis = FG_test(MAG_number[10],83,111)      # 83 FG
+adonis = FG_test(MAG_number[10],107,2)       # 107 FG
+adonis = FG_test(MAG_number[10],90,22)       # 90 FG
+adonis = FG_test(MAG_number[10],120,222)     # 120 FG
+adonis = FG_test(MAG_number[10],96,3)        # 96 FG
+adonis = FG_test(MAG_number[10],131,33)      # 131 FG
+adonis = FG_test(MAG_number[10],118,333)     # 118 FG
+adonis = FG_test(MAG_number[10],112,27)      # 112 FG
+adonis = FG_test(MAG_number[10],138,2707)    # 138 FG
+adonis = FG_test(MAG_number[10],82,27071990) # 82 FG
+adonis_2000 = c(101,123,83,107,90,120,96,131,118,112,138,82)
+
+# i = 500 ----
+adonis = FG_test(MAG_number[3],37,1)        # 37 FG
+adonis = FG_test(MAG_number[3],24,11)       # 24 FG
+adonis = FG_test(MAG_number[3],34,111)      # 34 FG
+adonis = FG_test(MAG_number[3],28,2)        # 28 FG
+adonis = FG_test(MAG_number[3],36,22)       # 36 FG
+adonis = FG_test(MAG_number[3],28,222)      # 28 FG
+adonis = FG_test(MAG_number[3],33,3)        # 33 FG
+adonis = FG_test(MAG_number[3],43,33)       # 43 FG
+adonis = FG_test(MAG_number[3],25,333)      # 28 FG
+adonis = FG_test(MAG_number[3],34,27)       # 34 FG
+adonis = FG_test(MAG_number[3],37,2707)     # 37 FG
+adonis = FG_test(MAG_number[3],43,27071990) # 43 FG
+adonis_500 = c(37,24,34,28,36,28,33,43,28,34,37,43)
+
+# i = 5000 ----
+adonis = FG_test(MAG_number[13],207,27071990) # 207 FG
+adonis = FG_test(MAG_number[13],172,33)       # 172 FG
+adonis = FG_test(MAG_number[13],190,333)      # 190 FG
+adonis = FG_test(MAG_number[13],223,22)       # 223 FG
+adonis = FG_test(MAG_number[13],212,27)       # 212 FG
+adonis = FG_test(MAG_number[13],229,11)       # 229 FG
+adonis = FG_test(MAG_number[13],222,2)        # 222 FG
+adonis = FG_test(MAG_number[13],228,1)        # 228 FG
+adonis = FG_test(MAG_number[13],231,222)      # 231 FG
+adonis = FG_test(MAG_number[13],245,3)        # 245 FG
+adonis = FG_test(MAG_number[13],259,2707)     # 259 FG
+adonis = FG_test(MAG_number[13],276,111)      # 276 FG
+adonis_5000 = c(207,172,190,223,212,229,222,228,231,245,259,276)
+
+# Extrapolating the number of functional groups for the whole datasets ----
+
+plot_file = as.data.frame(cbind(adonis_100,adonis_500,adonis_1000,adonis_2000,
+                                adonis_5000)) %>% 
+  summarise_each(funs( mean( .,na.rm = TRUE)))
+rm(adonis_100,adonis_500,adonis_1000,adonis_2000,
+   adonis_5000)
+MAG_number.1 = as.data.frame(c(100,500,1000,2000,5000))
+colnames(MAG_number.1) = "mag"
+plot_file = as.data.frame(t(plot_file))
+
+data = as.data.frame(cbind(MAG_number.1$mag,plot_file$V1))
+
+model = lm(plot_file$V1 ~ MAG_number.1$mag)
+
+Figure_S2 = ggplot(data,aes(V1,V2)) +
+  geom_point() +
+  geom_smooth(method='lm') + 
+  stat_cor(label.x = 30, label.y = 130, size = 4) +
+  stat_regline_equation(label.x = 30, label.y = 150, size = 4) + 
+  xlab("# of MAGs") + ylab("# of Functional Groups") + theme_classic() + 
+  theme(text = element_text(size=20))
+
+png("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figures/Figure_S2.png",
+    width=3500,height=1969,res=300)
+print(Figure_S2)
+dev.off()
+
+# Final functional groups for the total dataset----
+FG = 13 + 0.043*32515 # Number of Functional groups for whole dataset
+
+# Distance matrix
+distance.total  = parDist(x = as.matrix(global_LOMA[,3:183]),
+                          method = "fJaccard",
+                          threads = 1) # Adapt the number of threads
+cluster.total   = hclust(distance.total, method="ward.D2")
+v                      = cutree(cluster.total,k=round(FG))
+genome2guild           = data.frame(guild = factor(v))
+rownames(genome2guild) = names(v)
+global_dataset.1       = as.data.frame(cbind(genome2guild,global_LOMA))
+write.csv(global_dataset.1, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/LOMA_datasets_guild.csv")
+
+# Genome size analysis----
+
+# Call data again
+# IMG-MAG
+hmm_img     = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/IMG_global_dataset.csv",dec=".")
+hmm_img     = as.data.frame(hmm_img) %>% select(3,26,70:1790)
+colnames(hmm_img)[1]  = "id"
+colnames(hmm_img)[2]  = "genome.size"
+
+# Loma-MAG
+hmm_loma    = read_sheet("https://docs.google.com/spreadsheets/d/1ixRY5OwvfrPk5MIc1LdZPHCKj5YYSqkBSA-OOo9pnoo/edit?gid=601691898#gid=601691898")
+gene_loma   = read_sheet("https://docs.google.com/spreadsheets/d/1j_GH0_JJANgAVytYBc6jPXaQXbiYUkh4SCfJswLJk7Y/edit?gid=349813226#gid=349813226")
+hmm_loma    = gene_loma %>% full_join(hmm_loma)
+hmm_loma[3] = NULL
+colnames(hmm_loma)[2]  = "genome.size"
+
+# Wildfire-MAG
+hmm_fire    = read_sheet("https://docs.google.com/spreadsheets/d/1hudmGyDbKOVfpNNZ1mRTRK0edNPm9henzCvpZA0HJNc/edit?gid=1400821528#gid=1400821528")
+fire_stat   = read_sheet("https://docs.google.com/spreadsheets/d/1Ck_WNZbSZHJ5aVSSH7rdq9uNUYRqyQ5b-0RC7MtvdVk/edit?gid=963628746#gid=963628746")
+fire_stat   = fire_stat[-c(440,546), ]
+hmm_fire    = fire_stat %>% full_join(hmm_fire)
+hmm_fire[3] = NULL
+colnames(hmm_fire)[2]  = "genome.size"
+
+# IMG-Isolates
+isolates      = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/isolates_GOLD/isolates_rds/hmm_isolates.csv",dec=".")
+df_1          = read_sheet("https://docs.google.com/spreadsheets/d/1QFSw5U0tf_G6LYYUmkCIkVAnCKaPehnIbYDvu0x4Bzc/edit?gid=1504418445#gid=1504418445")
+df_1          = subset(df_1, select = -c(23))
+df_2          = read_sheet("https://docs.google.com/spreadsheets/d/12sKqTlsMWOSDus66dfz3ao6M9IBK_iPnpfGPMCnCt1E/edit?gid=2065174436#gid=2065174436")
+df_2          = subset(df_2, select = -c(14,16,18))
+iso.metadata  = as.data.frame(rbind(df_1,df_2))
+iso.metadata  = filter(iso.metadata, High.Quality %in% c("Yes"))
+test          = as.data.frame(isolates[3:2300])
+sums          = as.data.frame(rowSums(test, na.rm = FALSE, dims = 1))
+temp          = cbind(sums,isolates$id,1:nrow(isolates))
+isolates      = isolates[isolates$id %in% iso.metadata$taxon_oid, ]
+iso.metadata  = iso.metadata[iso.metadata$taxon_oid %in% isolates$id, ]
+colnames(iso.metadata)[1]  = "id"
+isolates      = iso.metadata %>% full_join(isolates)
+isolates      = as.data.frame(isolates) %>% select(1,23,26:2323)
+colnames(isolates)[2]  = "genome.size"
+
+# Erase temporary files
+rm(gene_loma,fire_stat,df_1,df_2,iso.metadata,test,sums,temp)
+
+# Bind the big matrix
+hmm_img     = mutate(hmm_img, across(everything(), as.factor))
+hmm_loma    = mutate(hmm_loma, across(everything(), as.factor))
+hmm_fire    = mutate(hmm_fire, across(everything(), as.factor))
+isolates    = mutate(isolates, across(everything(), as.factor))
+total_genes = bind_rows(hmm_img,hmm_loma,hmm_fire,isolates)
+total_genes[is.na(total_genes)] = 0
+
+# Guild number
+total_genes.guild     = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/LOMA_datasets_guild.csv",dec=".")
+total.guild           = as.data.frame(total_genes.guild) %>% select(4,2)
+total.g.size          = as.data.frame(total_genes) %>% select(1,2)
+
+# Total guilds for the 940 selected genes
+total_genes.guild     = left_join(total.g.size,total_genes.guild, by=c('id'))
+total_genes.guild.186 = as.data.frame(total_genes.guild) %>% select(1,2,4,6:186)
+write.csv(total_genes.guild.186, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/total_genes.guild.LOMA.csv")
+
+# Total guilds for the complete MAG-genes matrix
+total_genes           = left_join(total.guild, total_genes, by=c('id'))
+write.csv(total_genes, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/total_genes.LOMA.csv")
+
+# 186 MAG-Gene matrix----
+# Call Trait Keys 
+GH_rule = read_sheet("https://docs.google.com/spreadsheets/d/1U6qWJJHossiK3kIwV2XYNKgsXkVrUc42QHiigMhX8Wg/edit?gid=1910000517#gid=1910000517")
+GH_rule = as.data.frame(rbind("id","guild","genome.size",GH_rule))
+PR_rule = read_sheet("https://docs.google.com/spreadsheets/d/1y8kqtT9mBdf-34wDUO9LN11kN0Ugz7vk9G2ZlZSc31Y/edit?gid=1394473486#gid=1394473486")
+PR_rule = as.data.frame(rbind("id","guild","genome.size",PR_rule))
+transp_rule = read_sheet("https://docs.google.com/spreadsheets/d/1NJGOHKHM8IpKEZNAs69R_XlftkZ_GrhzOhQvTZfPz_w/edit?gid=1971062019#gid=1971062019")
+osmo_rule   = read_sheet("https://docs.google.com/spreadsheets/d/1WQ27I2Hd9jtCOv3z3cZnSB_A3xTt9bP5tZlOjiU4wVg/edit?gid=379499472#gid=379499472")
+osmo_rule   = as.data.frame(rbind("id","guild","genome.size",osmo_rule))
+biofilm_rule = read_sheet("https://docs.google.com/spreadsheets/d/1-FR1s9-txuPZWg8uJ21wCn8S0hYP3JDAZpF3Qmx93QU/edit?gid=1459756284#gid=1459756284")
+biofilm_rule = as.data.frame(rbind("id","guild","genome.size",biofilm_rule))  
+high.T_rule  = read_sheet("https://docs.google.com/spreadsheets/d/1-PeZ-F2RnXVFMa0Hkmg8Q-zlp38bCf4lxC-gpI9jEu4/edit?gid=123098806#gid=123098806")
+high.T_rule  = as.data.frame(rbind("id","guild","genome.size",high.T_rule))
+pH_rule      = read_sheet("https://docs.google.com/spreadsheets/d/1kANfYGvbb8tDiYEkJ_Whb9kocfhv8oDWpbNITMdZFQg/edit?gid=1661588961#gid=1661588961")
+pH_rule      = as.data.frame(rbind("id","guild","genome.size",pH_rule)) 
+
+# Genome-size for MAGs----
+key_MAGs = bind_rows(hmm_img,hmm_loma,hmm_fire)
+key_MAGs = as.data.frame(key_MAGs$id)
+colnames(key_MAGs) = "key"
+total_genes.guild.186_MAG = total_genes.guild.186[total_genes.guild.186$id %in% key_MAGs$key, ]
+write.csv(total_genes.guild.186, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/total_genes.guild.186_MAG.csv")
+
+total_genes.guild.186_MAG = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/total_genes.guild.186_MAG.csv",dec=".")
+
+# Genome-size for Isolates----
+key_isolates = as.data.frame(isolates$id)
+colnames(key_isolates) = "key"
+total_genes.guild.186_ISO = total_genes.guild.186[total_genes.guild.186$id %in% key_isolates$key, ]
+write.csv(total_genes.guild.186_ISO, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/total_genes.guild.186_ISO.csv")
+
+total_genes.guild.186_ISO = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/total_genes.guild.186_ISO.csv",dec=".")
+
+# LINEAR REGRESSIONS----
+
+# GH - genes (MAG)----
+GH_TOTAL.MAG = total_genes.guild.186_MAG %>% select(any_of(GH_rule$`microtrait_hmm-name`))
+GH_TOTAL.MAG$genome.size = as.numeric(as.character(GH_TOTAL.MAG$genome.size))
+GH_TOTAL_m   = GH_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                     list(mean=mean), na.rm=TRUE))
+GH_TOTAL_m   = GH_TOTAL_m %>% mutate(GH_total = rowSums(GH_TOTAL_m[,3:ncol(GH_TOTAL_m)]))
+
+sheet_write(GH_TOTAL_m,
+            ss = "https://docs.google.com/spreadsheets/d/1jUgB0CcVwmFekcEL5K2Ebr-jHAI-hm7fqiXi6vBmXec/edit?gid=0#gid=0",
+            sheet = "GH_MAG")
+
+Figure_test_1 = ggplot(data = GH_TOTAL_m, aes(x = genome.size_mean, y = (GH_total))) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("CAZy") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,20)
+
+# Protein - genes (MAG)----
+PR_TOTAL.MAG = total_genes.guild.186_MAG %>% select(any_of(PR_rule$`microtrait_rule-name`))
+PR_TOTAL.MAG$genome.size = as.numeric(as.character(PR_TOTAL.MAG$genome.size))
+PR_TOTAL_m   = PR_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                     list(mean=mean), na.rm=TRUE))
+PR_TOTAL_m   = PR_TOTAL_m %>% mutate(PR_total = rowSums(PR_TOTAL_m[,3:ncol(PR_TOTAL_m)]))
+
+sheet_write(PR_TOTAL_m,
+            ss = "https://docs.google.com/spreadsheets/d/1PEHIyhkOi-hxLbeMDbtD_12Qq2hVmFUyNLF4GASYVRQ/edit?gid=0#gid=0",
+            sheet = "Protein_MAG")
+
+Figure_test_2 = ggplot(data = PR_TOTAL_m, aes(x = genome.size_mean, y = PR_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("Protein Enzymes") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,20)
+
+# Transport - genes (MAG)----
+transp_rule  = transp_rule %>% filter(function_gene == c("transporter"))
+transp_rule  = as.data.frame(rbind("id","guild","genome.size",transp_rule))
+TRANSP_TOTAL = total_genes.guild.186_MAG %>% select(any_of(transp_rule$`microtrait_hmm-name`))
+TRANSP_TOTAL$genome.size = as.numeric(as.character(TRANSP_TOTAL$genome.size))
+TRANSP_TOTAL_m   = TRANSP_TOTAL %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                         list(mean=mean), na.rm=TRUE))
+TRANSP_TOTAL_m   = TRANSP_TOTAL_m %>% mutate(transp_total = rowSums(TRANSP_TOTAL_m[,3:ncol(TRANSP_TOTAL_m)]))
+
+sheet_write(TRANSP_TOTAL_m,
+            ss = "https://docs.google.com/spreadsheets/d/1frAIOBIQewDGxpUFJpdcP_5pAcyYfK8idKr2eHk3-ns/edit?gid=0#gid=0",
+            sheet = "Transporter_MAG")
+
+Figure_test_3 = ggplot(data = TRANSP_TOTAL_m, aes(x = genome.size_mean, y = transp_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("Total Transporter") +
+  geom_point() + theme_classic()+ theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,30)
+
+# Transport - Aminoacids (MAG)----
+transp_rule        = transp_rule %>% filter(function_gene==c("transporter"))
+transp_rule_ami    = transp_rule %>% filter(class==c("aminoacid","peptide"))
+transp_rule_ami    = as.data.frame(rbind("id","guild","genome.size",transp_rule_ami))
+AMI_TRANSP_TOTAL   = total_genes.guild.186_MAG %>% select(any_of(transp_rule_ami$`microtrait_hmm-name`))
+AMI_TRANSP_TOTAL$genome.size = as.numeric(as.character(AMI_TRANSP_TOTAL$genome.size))
+AMI_TRANSP_TOTAL_m = AMI_TRANSP_TOTAL %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                               list(mean=mean), na.rm=TRUE))
+AMI_TRANSP_TOTAL_m = AMI_TRANSP_TOTAL_m %>% mutate(AMI_TRANSP_TOTAL = rowSums(AMI_TRANSP_TOTAL_m[,3:ncol(AMI_TRANSP_TOTAL_m)]))
+
+sheet_write(AMI_TRANSP_TOTAL_m,
+            ss = "https://docs.google.com/spreadsheets/d/1IKW-R9_T9H81P9BdBXsO1tymK1CYmI_vj7CDptw4LCc/edit?gid=0#gid=0",
+            sheet = "AMI_TRANSP_TOTAL_m")
+
+Figure_test_4 = ggplot(data = AMI_TRANSP_TOTAL_m, aes(x = genome.size_mean, y = (AMI_TRANSP_TOTAL))) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("Aminoacid Transporter") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,5)
+
+# Transport - Carbohydrate (MAG)----
+transp_rule_car    = transp_rule %>% filter(class==c("carbohydrate"))
+transp_rule_car    = as.data.frame(rbind("id","guild","genome.size",transp_rule_car))
+CAR_TRANSP_TOTAL   = total_genes.guild.186_MAG %>% select(any_of(transp_rule_car$`microtrait_hmm-name`))
+CAR_TRANSP_TOTAL$genome.size = as.numeric(as.character(CAR_TRANSP_TOTAL$genome.size))
+CAR_TRANSP_TOTAL_m = CAR_TRANSP_TOTAL %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                               list(mean=mean), na.rm=TRUE))
+CAR_TRANSP_TOTAL_m = CAR_TRANSP_TOTAL_m %>% mutate(CAR_TRANSP_TOTAL = rowSums(CAR_TRANSP_TOTAL_m[,3:ncol(CAR_TRANSP_TOTAL_m)]))
+
+ggplot(data = CAR_TRANSP_TOTAL_m, aes(x = genome.size_mean, y = CAR_TRANSP_TOTAL)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("Carbohydrate Transport") +
+  geom_point() + theme(text = element_text(size=14)) 
+
+sheet_write(CAR_TRANSP_TOTAL_m,
+            ss = "https://docs.google.com/spreadsheets/d/1YwP4g8R3mi4TkTJI6p8DUm8QgwB4dVbX3i_AL1wNB5w/edit?gid=0#gid=0",
+            sheet = "GH_T_MAG")
+
+Figure_test_5 = ggplot(data = CAR_TRANSP_TOTAL_m, aes(x = genome.size_mean, y = (CAR_TRANSP_TOTAL))) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("Carbohydrate Transport") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,15)
+
+# Osmolytes - genes (MAG)----
+OSMO_TOTAL.MAG = total_genes.guild.186_MAG %>% select(any_of(osmo_rule$`microtrait_hmm-name`))
+OSMO_TOTAL.MAG$genome.size = as.numeric(as.character(OSMO_TOTAL.MAG$genome.size))
+OSMO_TOTAL.MAG_m   = OSMO_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                             list(mean=mean), na.rm=TRUE))
+OSMO_TOTAL.MAG_m   = OSMO_TOTAL.MAG_m %>% mutate(OSMO_total = rowSums(OSMO_TOTAL.MAG_m[,3:ncol(OSMO_TOTAL.MAG_m)]))
+
+ggplot(data = OSMO_TOTAL.MAG_m, aes(x = genome.size_mean, y = OSMO_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Mean genome size per FG") + 
+  ylab("Mean total osmolytes costs per FG") +
+  geom_point() + theme(text = element_text(size=20))
+
+sheet_write(OSMO_TOTAL.MAG_m,
+            ss = "https://docs.google.com/spreadsheets/d/16P4PkdWsxXiL1KUXQ7SPfV0-IOxkncvgmVfL1APTgJE/edit?gid=0#gid=0",
+            sheet = "Osmolyte_MAG")
+
+Figure_test_6 = ggplot(data = OSMO_TOTAL.MAG_m, aes(x = genome.size_mean, y = OSMO_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("Osmolytes") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,15)
+
+# Biofilm - genes (MAG)----
+BIO_TOTAL.MAG = total_genes.guild.186_MAG %>% select(any_of(biofilm_rule$`microtrait_hmm-name`))
+BIO_TOTAL.MAG$genome.size = as.numeric(as.character(BIO_TOTAL.MAG$genome.size))
+BIO_TOTAL.MAG_m   = BIO_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                           list(mean=mean), na.rm=TRUE))
+BIO_TOTAL.MAG_m   = BIO_TOTAL.MAG_m %>% mutate(BIO_total = rowSums(BIO_TOTAL.MAG_m[,3:ncol(BIO_TOTAL.MAG_m)]))
+
+ggplot(data = BIO_TOTAL.MAG_m, aes(x = genome.size_mean, y = BIO_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Mean genome size per FG") + 
+  ylab("Mean total osmolytes costs per FG") +
+  geom_point() + theme(text = element_text(size=20))
+
+sheet_write(BIO_TOTAL.MAG_m,
+            ss = "https://docs.google.com/spreadsheets/d/1OtixkEN_UAPIU7kNJqJjEkvOePwk1e0cNo7tidm9dMY/edit?gid=0#gid=0",
+            sheet = "Biofilm_MAG")
+
+Figure_test_7 = ggplot(data = BIO_TOTAL.MAG_m, aes(x = genome.size_mean, y = BIO_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("Biofilm") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,10)
+
+# High Temp - genes (MAG)----
+TEMP.MAG = total_genes.guild.186_MAG %>% select(any_of(high.T_rule$`microtrait_hmm-name`))
+TEMP.MAG$genome.size = as.numeric(as.character(TEMP.MAG$genome.size))
+TEMP.MAG_m   = TEMP.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                 list(mean=mean), na.rm=TRUE))
+TEMP.MAG_m   = TEMP.MAG_m %>% mutate(TEMP_total = rowSums(TEMP.MAG_m[,3:ncol(TEMP.MAG_m)]))
+
+ggplot(data = TEMP.MAG_m, aes(x = genome.size_mean, y = TEMP_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Mean genome size per FG") + 
+  ylab("Mean total osmolytes costs per FG") +
+  geom_point() + theme(text = element_text(size=20))
+
+sheet_write(TEMP.MAG_m,
+            ss = "https://docs.google.com/spreadsheets/d/1spmhor9psOs_OXbMWbque6hldXX-zSIaLIKJE77b84Q/edit?gid=0#gid=0",
+            sheet = "TEMP_MAG")
+
+Figure_test_8 = ggplot(data = TEMP.MAG_m, aes(x = genome.size_mean, y = TEMP_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("Heat Resistance") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,5)
+
+# pH - genes (MAG)----
+PH.MAG = total_genes.guild.186_MAG %>% select(any_of(pH_rule$`microtrait_hmm-name`))
+PH.MAG$genome.size = as.numeric(as.character(PH.MAG$genome.size))
+PH.MAG_m   = PH.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                             list(mean=mean), na.rm=TRUE))
+PH.MAG_m   = PH.MAG_m %>% mutate(PH_total = rowSums(PH.MAG_m[,3:ncol(PH.MAG_m)]))
+
+ggplot(data = PH.MAG_m, aes(x = genome.size_mean, y = PH_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Mean genome size per FG") + 
+  ylab("Mean total osmolytes costs per FG") +
+  geom_point() + theme(text = element_text(size=20))
+
+sheet_write(PH.MAG_m,
+            ss = "https://docs.google.com/spreadsheets/d/16mtVRN2sLusJC2_YU-To51oSmB_2EX_XxUwSkBn7YRI/edit?gid=0#gid=0",
+            sheet = "PH_MAG")
+
+Figure_test_9 = ggplot(data = PH.MAG_m, aes(x = genome.size_mean, y = PH_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("pH Resistance") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,10)
+
+# GH - genes (Isolates)----
+GH_TOTAL.ISO = total_genes.guild.186_ISO %>% select(any_of(GH_rule$`microtrait_hmm-name`))
+GH_TOTAL.ISO$genome.size = as.numeric(as.character(GH_TOTAL.ISO$genome.size))
+GH_TOTAL_m   = GH_TOTAL.ISO %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                     list(mean=mean), na.rm=TRUE))
+GH_TOTAL_m   = GH_TOTAL_m %>% mutate(GH_total = rowSums(GH_TOTAL_m[,4:ncol(GH_TOTAL_m)]))
+
+sheet_write(GH_TOTAL_m,
+            ss = "https://docs.google.com/spreadsheets/d/1vxaR5T4dreJO5q_vVCCesBnBQvpcuD4kVYXyTqpcbXg/edit?gid=0#gid=0",
+            sheet = "GH_Isolates")
+
+Figure_test_1.ISO = ggplot(data = GH_TOTAL_m, aes(x = genome.size_mean, y = GH_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
+  ylab("CAZy") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,20)
+
+# Protein - genes (Isolates)----
+PH_TOTAL.ISO = total_genes.guild.186_ISO %>% select(any_of(PR_rule$`microtrait_rule-name`))
+PH_TOTAL.ISO$genome.size = as.numeric(as.character(PH_TOTAL.ISO$genome.size))
+PH_TOTAL_m   = PH_TOTAL.ISO %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                     list(mean=mean), na.rm=TRUE))
+PH_TOTAL_m   = PH_TOTAL_m %>% mutate(PR_total = rowSums(PH_TOTAL_m[,4:ncol(PH_TOTAL_m)]))
+
+sheet_write(PH_TOTAL_m,
+            ss = "https://docs.google.com/spreadsheets/d/1wugrm2Jj77S3Q8jao0o_ILntnMGDsJdlfdZpvRYMr28/edit?gid=0#gid=0",
+            sheet = "Protein_Isolates")
+
+Figure_test_2.ISO = ggplot(data = PH_TOTAL_m, aes(x = genome.size_mean, y = PR_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
+  ylab("Protein Enzyme") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,20)
+
+# Transport - genes (Isolates)----
+transp_rule    = transp_rule %>% filter(function_gene == c("transporter"))
+transp_rule    = as.data.frame(rbind("id","guild","genome.size",transp_rule))
+TRANSP_TOTAL.i = total_genes.guild.186_ISO %>% select(any_of(transp_rule$`microtrait_hmm-name`))
+TRANSP_TOTAL.i$genome.size = as.numeric(as.character(TRANSP_TOTAL.i$genome.size))
+TRANSP_TOTAL_m = TRANSP_TOTAL.i %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                         list(mean=mean), na.rm=TRUE))
+TRANSP_TOTAL_m = TRANSP_TOTAL_m %>% mutate(transp_total = rowSums(TRANSP_TOTAL_m[,4:ncol(TRANSP_TOTAL_m)]))
+
+sheet_write(TRANSP_TOTAL_m,
+            ss = "https://docs.google.com/spreadsheets/d/1ov3RjzE9NoiFGsT4B01atfJWvwYuZAqtXR3fOF8zl0Y/edit?gid=0#gid=0",
+            sheet = "Transporter_Isolates")
+
+Figure_test_3.ISO = ggplot(data = TRANSP_TOTAL_m, aes(x = genome.size_mean, y = transp_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
+  ylab("Total Transporter") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,30)
+
+# Transport - Aminoacids (Isolates)----
+transp_rule_ami    = transp_rule %>% filter(class==c("aminoacid","peptide"))
+transp_rule_ami    = as.data.frame(rbind("id","guild","genome.size",transp_rule_ami))
+AMI_TRANSP_TOTAL.i = total_genes.guild.186_ISO %>% select(any_of(transp_rule_ami$`microtrait_hmm-name`))
+AMI_TRANSP_TOTAL.i$genome.size = as.numeric(as.character(AMI_TRANSP_TOTAL.i$genome.size))
+AMI_TRANSP_TOTAL.i_m = AMI_TRANSP_TOTAL.i %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                                   list(mean=mean), na.rm=TRUE))
+AMI_TRANSP_TOTAL.i_m = AMI_TRANSP_TOTAL.i_m %>% mutate(AMI_TRANSP_TOTAL = rowSums(AMI_TRANSP_TOTAL.i_m[,4:ncol(AMI_TRANSP_TOTAL.i_m)]))
+
+sheet_write(AMI_TRANSP_TOTAL.i_m,
+            ss = "https://docs.google.com/spreadsheets/d/14n8ydCBAwO_CtGuCjP0hMBcfZ_3qI8Wth7A2azK9xy0/edit?gid=0#gid=0",
+            sheet = "Aminoacids_T_Isolates")
+
+Figure_test_4.ISO = ggplot(data = AMI_TRANSP_TOTAL.i_m, aes(x = genome.size_mean, y = AMI_TRANSP_TOTAL)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
+  ylab("Aminoacid Transporter") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,5)
+
+# Transport - Carbohydrate (Isolates)----
+transp_rule_car    = transp_rule %>% filter(class==c("carbohydrate"))
+transp_rule_car    = as.data.frame(rbind("id","guild","genome.size",transp_rule_car))
+CAR_TRANSP_TOTAL.i = total_genes.guild.186_ISO %>% select(any_of(transp_rule_car$`microtrait_hmm-name`))
+CAR_TRANSP_TOTAL.i$genome.size = as.numeric(as.character(CAR_TRANSP_TOTAL.i$genome.size))
+CAR_TRANSP_TOTAL.i_m = CAR_TRANSP_TOTAL.i %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                                   list(mean=mean), na.rm=TRUE))
+CAR_TRANSP_TOTAL.i_m = CAR_TRANSP_TOTAL.i_m %>% mutate(CAR_TRANSP_TOTAL = rowSums(CAR_TRANSP_TOTAL.i_m[,4:ncol(CAR_TRANSP_TOTAL.i_m)]))
+
+sheet_write(CAR_TRANSP_TOTAL.i_m,
+            ss = "https://docs.google.com/spreadsheets/d/1ZKHklNdpi9SZjOizTMHsL2ScZqNIL1cFEnhS74e43C0/edit?gid=0#gid=0",
+            sheet = "GH_T_Isolates")
+
+Figure_test_5.ISO = ggplot(data = CAR_TRANSP_TOTAL.i_m, aes(x = genome.size_mean, y = CAR_TRANSP_TOTAL)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
+  ylab("Carbohydrate Transporter") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,14)
+
+# Osmolytes - genes (Isolates)----
+OSMO_TOTAL.TOTAL.i = total_genes.guild.186_ISO %>% select(any_of(osmo_rule$`microtrait_hmm-name`))
+OSMO_TOTAL.TOTAL.i$genome.size = as.numeric(as.character(OSMO_TOTAL.TOTAL.i$genome.size))
+OSMO_TOTAL.TOTAL.i_m   = OSMO_TOTAL.TOTAL.i %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                                     list(mean=mean), na.rm=TRUE))
+OSMO_TOTAL_m   = OSMO_TOTAL.TOTAL.i_m %>% mutate(OSMO_total = rowSums(OSMO_TOTAL.TOTAL.i_m[,4:ncol(OSMO_TOTAL.TOTAL.i_m)]))
+
+sheet_write(OSMO_TOTAL_m,
+            ss = "https://docs.google.com/spreadsheets/d/1PpQdrLCFbzkanDn_R-PTmZAxTGQFbo3nk_77Tcxy0Yo/edit?gid=0#gid=0",
+            sheet = "Osmolyte_Isolates")
+
+Figure_test_6.ISO = ggplot(data = OSMO_TOTAL_m, aes(x = genome.size_mean, y = OSMO_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
+  ylab("Osmolytes") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,15)
+
+# Biofilm - genes (Isolates)----
+BIO_TOTAL.MAG = total_genes.guild.186_ISO %>% select(any_of(biofilm_rule$`microtrait_hmm-name`))
+BIO_TOTAL.MAG$genome.size = as.numeric(as.character(BIO_TOTAL.MAG$genome.size))
+BIO_TOTAL.MAG_m   = BIO_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                           list(mean=mean), na.rm=TRUE))
+BIO_TOTAL.MAG_m   = BIO_TOTAL.MAG_m %>% mutate(BIO_total = rowSums(BIO_TOTAL.MAG_m[,4:ncol(BIO_TOTAL.MAG_m)]))
+
+sheet_write(BIO_TOTAL.MAG_m,
+            ss = "https://docs.google.com/spreadsheets/d/1fZD2srLcGZX6axd05_hlRZyL23izL4U7PIxeoL0HuuE/edit?gid=0#gid=0",
+            sheet = "Biofilm_Isolates")
+
+Figure_test_7.ISO = ggplot(data = BIO_TOTAL.MAG_m, aes(x = genome.size_mean, y = BIO_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
+  ylab("Biofilm") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,10)
+
+# High Temperature - genes (Isolates)----
+TEMP_TOTAL.MAG = total_genes.guild.186_ISO %>% select(any_of(high.T_rule$`microtrait_hmm-name`))
+TEMP_TOTAL.MAG$genome.size = as.numeric(as.character(TEMP_TOTAL.MAG$genome.size))
+TEMP_TOTAL.MAG_m   = TEMP_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                             list(mean=mean), na.rm=TRUE))
+TEMP_TOTAL.MAG_m   = TEMP_TOTAL.MAG_m %>% mutate(TEMP_total = rowSums(TEMP_TOTAL.MAG_m[,4:ncol(TEMP_TOTAL.MAG_m)]))
+
+sheet_write(TEMP_TOTAL.MAG_m,
+            ss = "https://docs.google.com/spreadsheets/d/1aBiAnokl323Lw8dj6k_B_uV4BIWNJvwVhoLuQeVRBU4/edit?gid=0#gid=0",
+            sheet = "TEMP_Isolates")
+
+Figure_test_8.ISO = ggplot(data = TEMP_TOTAL.MAG_m, aes(x = genome.size_mean, y = TEMP_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
+  ylab("Heat Resistance") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,5)
+
+# pH - genes (Isolates)----
+pH_TOTAL.MAG = total_genes.guild.186_ISO %>% select(any_of(pH_rule$`microtrait_hmm-name`))
+pH_TOTAL.MAG$genome.size = as.numeric(as.character(pH_TOTAL.MAG$genome.size))
+pH_TOTAL.MAG_m   = pH_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                         list(mean=mean), na.rm=TRUE))
+pH_TOTAL.MAG_m   = pH_TOTAL.MAG_m %>% mutate(PH_total = rowSums(pH_TOTAL.MAG_m[,4:ncol(pH_TOTAL.MAG_m)]))
+
+sheet_write(pH_TOTAL.MAG_m,
+            ss = "https://docs.google.com/spreadsheets/d/1PPcpcweUZkPBwH8LpxBS7ZEuEkjOy3MTA4KI8QBfFkg/edit?gid=0#gid=0",
+            sheet = "PH_Isolates")
+
+Figure_test_9.ISO = ggplot(data = pH_TOTAL.MAG_m, aes(x = genome.size_mean, y = PH_total)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
+  ylab("pH Resistance") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,10)
