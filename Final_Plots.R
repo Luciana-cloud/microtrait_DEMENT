@@ -84,11 +84,18 @@ png("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figure
 print(Figure_9)
 dev.off()
 
-# Minimum Generation Time----
+# Minimum Generation Time + Optimal Growth Temperature----
 
-Figure_10 = Figure_test_10
+Figure_10 = ggarrange(Figure_test_10a, Figure_test_10b,Figure_test_11, 
+                      labels = c("A","B","C"),
+                      ncol = 3, nrow = 1) + theme(panel.background = element_blank())
+Figure_10
 png("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figures/Figure_10.png",
     width=3500*1.35,height=1969*1.35,res=300)
 print(Figure_10)
 dev.off()
+
+
+
+
 

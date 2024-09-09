@@ -1826,17 +1826,45 @@ Figure_test_9.ISO = ggplot(data = pH_TOTAL.MAG_m, aes(x = genome.size_mean, y = 
 
 total.granularity.3 = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/total.granularity.3_datasets.csv",dec=".") 
 total.granularity.3 = na.omit(total.granularity.3)
-total.granularity.m = total.granularity.3 %>% select(c("guild","genome.size","mgt"))
-total.granularity.m = total.granularity.m %>% group_by(guild) %>% summarise(across(where(is.numeric), 
-                                                                                   list(mean=mean), na.rm=TRUE))
+total.granularity.m = total.granularity.3 %>% select(c("guild","genome.size","mgt","ogt"))
 
-Figure_test_10 = ggplot(data = total.granularity.m, aes(x = genome.size_mean, y = mgt_mean)) +
+# Minimum generation time >= 5
+total.granularity.m.1   = total.granularity.m %>% filter(mgt >= 5)
+total.granularity.m.1.1 = total.granularity.m.1 %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                                     list(mean=mean), na.rm=TRUE))
+Figure_test_10a = ggplot(data = total.granularity.m.1.1, aes(x = genome.size_mean, y = mgt_mean)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
   ylab("Minimum generation time (hrs)") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,65)
+  xlim(0,1.5e7) + ylim(0,80)
+Figure_test_10a
 
-Figure_test_10
+# Minimum generation time < 5
+total.granularity.m.2   = total.granularity.m %>% filter(mgt < 5)
+total.granularity.m.2.1 = total.granularity.m.2 %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                             list(mean=mean), na.rm=TRUE))
+
+Figure_test_10b = ggplot(data = total.granularity.m.2.1, aes(x = genome.size_mean, y = mgt_mean)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
+  ylab("Minimum generation time (hrs)") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.5e7) + ylim(0,10)
+Figure_test_10b
+
+# Optimal Growth Temperature
+
+total.granularity.m.3.1 = total.granularity.m %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                                         list(mean=mean), na.rm=TRUE))
+
+Figure_test_11 = ggplot(data = total.granularity.m.3.1, aes(x = genome.size_mean, y = ogt_mean)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
+  ylab("Optimal Growth Temperature") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,80)
+Figure_test_11
+
 
 
