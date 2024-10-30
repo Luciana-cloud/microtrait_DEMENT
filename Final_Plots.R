@@ -95,7 +95,16 @@ png("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figure
 print(Figure_10)
 dev.off()
 
+# CUE plots----
 
-
-
+Figure_11 = ggarrange(Figure_test_1.CUE, Figure_test_1.phylum,Figure_test_1.Class,
+                      Figure_test_1.Order,Figure_test_1.Family,Figure_test_1.Genus, 
+                     labels = c("A","B","C","D","E",
+                                "F"),
+                     ncol = 3, nrow = 2) + theme(panel.background = element_blank())
+Figure_11
+png("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figures/Figure_11.png",
+    width=3500*1.35,height=1969*1.35,res=300)
+print(Figure_11)
+dev.off()
 
