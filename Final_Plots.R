@@ -43,6 +43,11 @@ png("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figure
 print(Figure_5)
 dev.off()
 
+png("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figures/Figure_5.a.png",
+    width=3500*1.35,height=1969*1.35,res=300)
+print(Figure_5.a)
+dev.off()
+
 png("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figures/Figure_6.png",
     width=3500*1.35,height=1969*1.35,res=300)
 print(Figure_6)

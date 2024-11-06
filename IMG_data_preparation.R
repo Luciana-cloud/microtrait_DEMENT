@@ -1124,44 +1124,6 @@ Figure_test_9.ISO = ggplot(data = pH_TOTAL.MAG_m, aes(x = genome.size_mean, y = 
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
   xlim(0,1.25e7) + ylim(0,20)
 
-# Cross correlations----
-
-# Data Preparation - MAGs
-temp    = drive_ls("https://drive.google.com/drive/u/0/folders/1OlIc_JaS5a9s5jz7m1hTduTtYV7wAcG3")
-a       = as.data.frame(temp$name)
-Aminoacids_T_MAG = read_sheet(temp$id[1])
-Aminoacids_T_MAG = Aminoacids_T_MAG %>% select(guild,genome.size_mean,AMI_TRANSP_TOTAL)
-PH_MAG           = read_sheet(temp$id[2])
-PH_MAG           = PH_MAG %>% select(guild,genome.size_mean,PH_total)
-TEMP_MAG         = read_sheet(temp$id[3])
-TEMP_MAG         = TEMP_MAG %>% select(guild,genome.size_mean,TEMP_total)
-Biofilm_MAG      = read_sheet(temp$id[4])
-Biofilm_MAG      = Biofilm_MAG %>% select(guild,genome.size_mean,BIO_total)
-Osmolyte_MAG     = read_sheet(temp$id[5])
-Osmolyte_MAG     = Osmolyte_MAG %>% select(guild,genome.size_mean,OSMO_total)
-GH_T_MAG         = read_sheet(temp$id[6])
-GH_T_MAG         = GH_T_MAG %>% select(guild,genome.size_mean,CAR_TRANSP_TOTAL)
-Transporter_MAG  = read_sheet(temp$id[7])
-Transporter_MAG  = Transporter_MAG %>% select(guild,genome.size_mean,transp_total)
-Protein_MAG      = read_sheet(temp$id[8])
-Protein_MAG      = Protein_MAG %>% select(guild,genome.size_mean,PR_total)
-GH_MAG           = read_sheet(temp$id[9])
-GH_MAG           = GH_MAG %>% select(guild,genome.size_mean,GH_total)
-MAG_gen_trait    = as.data.frame(cbind(Aminoacids_T_MAG,PH_MAG$PH_total,
-                                       TEMP_MAG$TEMP_total,Biofilm_MAG$BIO_total,
-                                       Osmolyte_MAG$OSMO_total,GH_T_MAG$CAR_TRANSP_TOTAL,
-                                       Transporter_MAG$transp_total,Protein_MAG$PR_total,
-                                       GH_MAG$GH_total))
-colnames(MAG_gen_trait) = c("guild","genome.size","amino.transport","pH","temp",
-                            "biofilm","osmolyte","GH.trasnport","tranport.total",
-                            "Protein","CAZy")
-rm(temp,a,Aminoacids_T_MAG,PH_MAG,TEMP_MAG,Biofilm_MAG,Osmolyte_MAG,GH_T_MAG,
-   Transporter_MAG,Protein_MAG,GH_MAG)
-
-sheet_write(MAG_gen_trait,
-            ss = "https://docs.google.com/spreadsheets/d/1Y6yMpQygXJof8EdDAE967ufLbNxmJcBqSZzUgMBnpYY/edit?gid=0#gid=0",
-            sheet = "MAG_gen_trait")
-
 # Data Preparation - Isolates
 temp    = drive_ls("https://drive.google.com/drive/u/0/folders/1C9gqH5mSadOGdZv05jKPu8tELph2isd4")
 a       = as.data.frame(temp$name)
@@ -1198,17 +1160,6 @@ rm(temp,a,Aminoacids_T_Isolates,PH_Isolates,TEMP_Isolates,Biofilm_Isolates,
 sheet_write(Isolates_gen_trait,
             ss = "https://docs.google.com/spreadsheets/d/1xT3vB2K2tupkeHZwUlVzh4ZYWhmUpOmMQtESNH2Mst0/edit?gid=0#gid=0",
             sheet = "Isolates_gen_trait")
-# Call data
-
-MAG_gen_trait       = read_sheet("https://docs.google.com/spreadsheets/d/1Y6yMpQygXJof8EdDAE967ufLbNxmJcBqSZzUgMBnpYY/edit?gid=0#gid=0")
-Isolates_gen_trait  = read_sheet("https://docs.google.com/spreadsheets/d/1xT3vB2K2tupkeHZwUlVzh4ZYWhmUpOmMQtESNH2Mst0/edit?gid=0#gid=0")
-
-# Plotting cross-correlations
-
-Figure_5 = ggpairs(MAG_gen_trait, columns = 2:11, title="correlogram with ggpairs()") + 
-  theme_classic()
-Figure_6 = ggpairs(Isolates_gen_trait, columns = 2:11, title="correlogram with ggpairs()") + 
-  theme_classic()
 
 # LOMA GENES ANALYSIS----
 
@@ -1822,30 +1773,35 @@ Figure_test_9.ISO = ggplot(data = pH_TOTAL.MAG_m, aes(x = genome.size_mean, y = 
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
   xlim(0,1.25e7) + ylim(0,10)
 
-# Approximation for Y strategy----
+# Approximation for Y strategy (for MAG)----
 
 total.granularity.3 = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/total.granularity.3_datasets.csv",dec=".") 
-total.granularity.3 = na.omit(total.granularity.3)
-total.granularity.m = total.granularity.3 %>% select(c("guild","genome.size","mgt","ogt"))
+MAG_id              = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/total_genes.guild.940_MAG.csv",dec=".")
+MAG_id              = as.data.frame(MAG_id$id)
+colnames(MAG_id)    = "id"
+Y_MAG               = merge(total.granularity.3,MAG_id,by = "id")
+Y_MAG               = Y_MAG %>% select(c("guild","genome.size","mgt","ogt"))
+Y_MAG.A             = Y_MAG %>% select(c("guild","genome.size","mgt"))
 
 # Minimum generation time >= 5
-total.granularity.m.1   = total.granularity.m %>% filter(mgt >= 5)
-total.granularity.m.1.1 = total.granularity.m.1 %>% group_by(guild) %>% summarise(across(where(is.numeric), 
-                                                                                     list(mean=mean), na.rm=TRUE))
-Figure_test_10a = ggplot(data = total.granularity.m.1.1, aes(x = genome.size_mean, y = mgt_mean)) +
+Y_MAG.A     = Y_MAG.A %>% filter(mgt >= 5)
+Y_MAG.A.1   = Y_MAG.A %>% group_by(guild) %>% summarise(across(where(is.numeric),list(mean=mean), na.rm=TRUE))
+
+Figure_test_10a = ggplot(data = Y_MAG.A.1, aes(x = genome.size_mean, y = mgt_mean)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
   ylab("Minimum generation time (hrs)") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.5e7) + ylim(0,80)
+  xlim(0,1.5e7) + ylim(0,120)
 Figure_test_10a
 
 # Minimum generation time < 5
-total.granularity.m.2   = total.granularity.m %>% filter(mgt < 5)
-total.granularity.m.2.1 = total.granularity.m.2 %>% group_by(guild) %>% summarise(across(where(is.numeric), 
-                                                                             list(mean=mean), na.rm=TRUE))
+Y_MAG.B   = Y_MAG %>% select(c("guild","genome.size","mgt"))
+Y_MAG.B   = Y_MAG.B %>% filter(mgt < 5)
+Y_MAG.B.1 = Y_MAG.B %>% group_by(guild) %>% summarise(across(where(is.numeric),
+                                                             list(mean=mean), na.rm=TRUE))
 
-Figure_test_10b = ggplot(data = total.granularity.m.2.1, aes(x = genome.size_mean, y = mgt_mean)) +
+Figure_test_10b = ggplot(data = Y_MAG.B.1, aes(x = genome.size_mean, y = mgt_mean)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
   ylab("Minimum generation time (hrs)") +
@@ -1855,10 +1811,12 @@ Figure_test_10b
 
 # Optimal Growth Temperature
 
-total.granularity.m.3.1 = total.granularity.m %>% group_by(guild) %>% summarise(across(where(is.numeric), 
-                                                                                         list(mean=mean), na.rm=TRUE))
+Y_MAG.C     = Y_MAG %>% select(c("guild","genome.size","ogt"))
+Y_MAG.C     = na.omit(Y_MAG.C)
+Y_MAG.C.1   = Y_MAG.C %>% group_by(guild) %>% summarise(across(where(is.numeric),
+                                                             list(mean=mean), na.rm=TRUE)) 
 
-Figure_test_11 = ggplot(data = total.granularity.m.3.1, aes(x = genome.size_mean, y = ogt_mean)) +
+Figure_test_11 = ggplot(data = Y_MAG.C.1, aes(x = genome.size_mean, y = ogt_mean)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
   ylab("Optimal Growth Temperature") +
@@ -1866,5 +1824,89 @@ Figure_test_11 = ggplot(data = total.granularity.m.3.1, aes(x = genome.size_mean
   xlim(0,1.25e7) + ylim(0,80)
 Figure_test_11
 
+# Cross correlations----
+
+# Data Preparation - MAGs
+temp    = drive_ls("https://drive.google.com/drive/u/0/folders/1OlIc_JaS5a9s5jz7m1hTduTtYV7wAcG3")
+a       = as.data.frame(temp$name)
+Aminoacids_T_MAG = read_sheet(temp$id[1])
+Aminoacids_T_MAG = Aminoacids_T_MAG %>% select(guild,genome.size_mean,AMI_TRANSP_TOTAL)
+PH_MAG           = read_sheet(temp$id[2])
+PH_MAG           = PH_MAG %>% select(guild,genome.size_mean,PH_total)
+TEMP_MAG         = read_sheet(temp$id[3])
+TEMP_MAG         = TEMP_MAG %>% select(guild,genome.size_mean,TEMP_total)
+Biofilm_MAG      = read_sheet(temp$id[4])
+Biofilm_MAG      = Biofilm_MAG %>% select(guild,genome.size_mean,BIO_total)
+Osmolyte_MAG     = read_sheet(temp$id[5])
+Osmolyte_MAG     = Osmolyte_MAG %>% select(guild,genome.size_mean,OSMO_total)
+GH_T_MAG         = read_sheet(temp$id[6])
+GH_T_MAG         = GH_T_MAG %>% select(guild,genome.size_mean,CAR_TRANSP_TOTAL)
+Transporter_MAG  = read_sheet(temp$id[7])
+Transporter_MAG  = Transporter_MAG %>% select(guild,genome.size_mean,transp_total)
+Protein_MAG      = read_sheet(temp$id[8])
+Protein_MAG      = Protein_MAG %>% select(guild,genome.size_mean,PR_total)
+GH_MAG           = read_sheet(temp$id[9])
+GH_MAG           = GH_MAG %>% select(guild,genome.size_mean,GH_total)
+MAG_gen_trait    = as.data.frame(cbind(Aminoacids_T_MAG,PH_MAG$PH_total,
+                                       TEMP_MAG$TEMP_total,Biofilm_MAG$BIO_total,
+                                       Osmolyte_MAG$OSMO_total,GH_T_MAG$CAR_TRANSP_TOTAL,
+                                       Transporter_MAG$transp_total,Protein_MAG$PR_total,
+                                       GH_MAG$GH_total))
+colnames(MAG_gen_trait) = c("guild","genome.size","amino.transport","pH","temp",
+                            "biofilm","osmolyte","GH.trasnport","tranport.total",
+                            "Protein","CAZy")
+rm(temp,a,Aminoacids_T_MAG,PH_MAG,TEMP_MAG,Biofilm_MAG,Osmolyte_MAG,GH_T_MAG,
+   Transporter_MAG,Protein_MAG,GH_MAG)
+
+# Call data
+
+MAG_gen_trait       = read_sheet("https://docs.google.com/spreadsheets/d/1Y6yMpQygXJof8EdDAE967ufLbNxmJcBqSZzUgMBnpYY/edit?gid=0#gid=0")
+colnames(Y_MAG.B.1) = c("guild","genome.size","mgr")
+colnames(Y_MAG.A.1) = c("guild","genome.size","mgr")
+colnames(Y_MAG.C.1) = c("guild","genome.size","ogt")
+MAG_gen_trait.1     = merge(MAG_gen_trait,Y_MAG.C.1,by = c("guild","genome.size"))
+MAG_gen_trait.2     = merge(MAG_gen_trait.1,Y_MAG.B.1,by = c("guild","genome.size"))
+MAG_gen_trait.3     = merge(MAG_gen_trait.1,Y_MAG.A.1,by = c("guild","genome.size"))
+
+sheet_write(MAG_gen_trait.2,
+            ss = "https://docs.google.com/spreadsheets/d/1Gtb4oLsNibF-yPwA9f1y78axGuKCO70Y1cZKNw0KRtk/edit?gid=0#gid=0",
+            sheet = "MAG_gen_trait")
+sheet_write(MAG_gen_trait.3,
+            ss = "https://docs.google.com/spreadsheets/d/1Y6yMpQygXJof8EdDAE967ufLbNxmJcBqSZzUgMBnpYY/edit?gid=0#gid=0",
+            sheet = "MAG_gen_trait.5")
+
+# Plotting cross-correlations
+
+Figure_5   = ggpairs(MAG_gen_trait.2, columns = 2:13, title="correlogram with ggpairs()") + 
+  theme_classic()
+Figure_5
+Figure_5.a = ggpairs(MAG_gen_trait.3, columns = 2:13, title="correlogram with ggpairs()") + 
+  theme_classic()
+Figure_5.a
+
+# CUE ----
+
+Isolates_gen_trait  = read_sheet("https://docs.google.com/spreadsheets/d/1xT3vB2K2tupkeHZwUlVzh4ZYWhmUpOmMQtESNH2Mst0/edit?gid=0#gid=0")
+isolates     = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Data/dement_isolates_CUE.csv",dec=".")
+isolatest    = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/total.granularity.3_datasets.csv",dec=".")
+isolates.1   = subset(isolates, isolates$CUE !='NaN')
+total_genes.guild.940_ISO = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/total_genes.guild.940_ISO.csv",dec=".")
+
+# Merge
+
+isolates.2   = isolates.1 %>% left_join(total_genes.guild.940_ISO, by='id')
+isolates.2.m = isolates.2 %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                   list(mean=mean), na.rm=TRUE))
+isolates.2.m = isolates.2.m %>% select(c("guild","CUE_mean","genome.size_mean"))
+colnames(isolates.2.m) = c("guild","CUE","genome.size")
+ISO_gen_trait.1        = merge(Isolates_gen_trait,isolates.2.m,by = c("guild","genome.size"))
+
+sheet_write(ISO_gen_trait.1,
+            ss = "https://docs.google.com/spreadsheets/d/1xT3vB2K2tupkeHZwUlVzh4ZYWhmUpOmMQtESNH2Mst0/edit?gid=0#gid=0v",
+            sheet = "Isolates_gen_trait")
+
+Figure_6   = ggpairs(ISO_gen_trait.1, columns = 2:12, title="correlogram with ggpairs()") + 
+  theme_classic()
+Figure_6
 
 
