@@ -102,14 +102,26 @@ dev.off()
 
 # CUE plots----
 
-Figure_11 = ggarrange(Figure_test_1.CUE, Figure_test_1.phylum,Figure_test_1.Class,
+Figure_11 = ggarrange(Figure_test_1.phylum,Figure_test_1.Class,
                       Figure_test_1.Order,Figure_test_1.Family,Figure_test_1.Genus, 
-                     labels = c("A","B","C","D","E",
-                                "F"),
+                     labels = c("A","B","C","D","E"),
                      ncol = 3, nrow = 2) + theme(panel.background = element_blank())
 Figure_11
 png("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figures/Figure_11.png",
     width=3500*1.35,height=1969*1.35,res=300)
 print(Figure_11)
 dev.off()
+
+#
+
+Figure_12 = ggarrange(Figure_test_10b, Figure_test_11,Figure_test_1.CUE, 
+                      labels = c("A","B","C"),
+                      ncol = 3, nrow = 1) + theme(panel.background = element_blank())
+Figure_12
+png("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figures/Figure_12.png",
+    width=3500*1.35,height=1969*1.35,res=300)
+print(Figure_12)
+dev.off()
+
+
 

@@ -1804,9 +1804,9 @@ Y_MAG.B.1 = Y_MAG.B %>% group_by(guild) %>% summarise(across(where(is.numeric),
 Figure_test_10b = ggplot(data = Y_MAG.B.1, aes(x = genome.size_mean, y = mgt_mean)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
-  ylab("Minimum generation time (hrs)") +
+  ylab("Maximum growth rate (hrs)") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.5e7) + ylim(0,10)
+  xlim(0,1.5e7) + ylim(0,8)
 Figure_test_10b
 
 # Optimal Growth Temperature
@@ -1908,5 +1908,93 @@ sheet_write(ISO_gen_trait.1,
 Figure_6   = ggpairs(ISO_gen_trait.1, columns = 2:12, title="correlogram with ggpairs()") + 
   theme_classic()
 Figure_6
+
+Figure_test_1.CUE = ggplot(data = isolates.2.m, aes(x = genome.size, y = CUE)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
+  ylab("CUE") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,1.5) 
+Figure_test_1.CUE
+
+# CUE for different taxonomic levels----
+
+# Metadata
+
+meta_iso   = readr::read_tsv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/isolates_GOLD/soils_unpublished.tsv")
+meta_iso   = as.data.frame(cbind(meta_iso$`IMG Genome ID`,meta_iso$Phylum,
+                                 meta_iso$Class,meta_iso$Order,meta_iso$Family,
+                                 meta_iso$Genus))
+meta_iso.1 = readr::read_tsv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/isolates_GOLD/soils.tsv")
+meta_iso.1 = as.data.frame(cbind(meta_iso.1$`IMG Genome ID`,meta_iso.1$Phylum,
+                                 meta_iso.1$Class,meta_iso.1$Order,meta_iso.1$Family,
+                                 meta_iso.1$Genus))
+
+# final meta
+final_meta   = as.data.frame(rbind(meta_iso,meta_iso.1))
+colnames(final_meta) = c("id","Phylum","Class","Order","Family","Genus")
+
+merged_df    = merge(isolates.1,final_meta,by = "id")
+
+# Phylum
+
+phylum = merged_df %>% group_by(Phylum) %>% summarise(across(where(is.numeric), 
+                                                             list(mean=mean), na.rm=TRUE))
+Figure_test_1.phylum = ggplot(data = phylum, aes(x = genome_length_mean, y = CUE_mean)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
+  ylab("CUE") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,1.5) + labs(title = "Phylum")
+Figure_test_1.phylum
+
+# Class
+
+Class = merged_df %>% group_by(Class) %>% summarise(across(where(is.numeric), 
+                                                           list(mean=mean), na.rm=TRUE))
+Figure_test_1.Class = ggplot(data = Class, aes(x = genome_length_mean, y = CUE_mean)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
+  ylab("CUE") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,1.5) + labs(title = "Class")
+Figure_test_1.Class
+
+# Order
+
+Order = merged_df %>% group_by(Order) %>% summarise(across(where(is.numeric), 
+                                                           list(mean=mean), na.rm=TRUE))
+Figure_test_1.Order = ggplot(data = Order, aes(x = genome_length_mean, y = CUE_mean)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
+  ylab("CUE") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,1.5) + labs(title = "Order")
+Figure_test_1.Order
+
+# Family
+
+Family = merged_df %>% group_by(Family) %>% summarise(across(where(is.numeric), 
+                                                             list(mean=mean), na.rm=TRUE))
+Figure_test_1.Family = ggplot(data = Family, aes(x = genome_length_mean, y = CUE_mean)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
+  ylab("CUE") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,1.5) + labs(title = "Family")
+Figure_test_1.Family
+
+# Genus
+
+Genus = merged_df %>% group_by(Genus) %>% summarise(across(where(is.numeric), 
+                                                           list(mean=mean), na.rm=TRUE))
+Figure_test_1.Genus = ggplot(data = Genus, aes(x = genome_length_mean, y = CUE_mean)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
+  ylab("CUE") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7) + ylim(0,1.5) + labs(title = "Genus")
+Figure_test_1.Genus
+
 
 
