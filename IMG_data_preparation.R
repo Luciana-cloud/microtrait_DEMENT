@@ -51,10 +51,6 @@ data_combined   = data_combined[!(is.na(data_combined$aaeB)),]
 data_combined   = apply(data_combined,2,as.character)
 write.csv(data_combined, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/IMG_global_dataset.csv")
 data_combined.1 = as.data.frame(data_combined) %>% select(2,44,69:1789)
-sheet_write(data_combined.1,
-            ss = "https://docs.google.com/spreadsheets/d/1Da-yl4fXD7jdFiDe_2jNfmLUl2RgR1GXACd5h-Bte1Y/edit?gid=0#gid=0",
-            sheet = "IMG_gene_dataset") ***
-
 data_combined_IMG.ID  = data_combined %>% group_by(IMG.Genome.ID) %>% count()
 data_combined_IMG.ID  = data_combined_IMG.ID %>% filter(n > 20)
 
@@ -733,13 +729,37 @@ sheet_write(GH_TOTAL_m.1,
             ss = "https://docs.google.com/spreadsheets/d/1BvCCY4WmRk9Gaz01XGvhUgBpd6ZE8gHLzQSZsNv_J-4/edit?gid=0#gid=0",
             sheet = "GH_MAG")
 
-Figure_test_1 = ggplot(data = GH_TOTAL_m.1, aes(x = genome.size_mean, y = (GH_total))) +
+GH_TOTAL_m.1     = read_sheet("https://docs.google.com/spreadsheets/d/1BvCCY4WmRk9Gaz01XGvhUgBpd6ZE8gHLzQSZsNv_J-4/edit?gid=0#gid=0")
+MAG_gen_trait.2  = read_sheet("https://docs.google.com/spreadsheets/d/1Gtb4oLsNibF-yPwA9f1y78axGuKCO70Y1cZKNw0KRtk/edit?gid=0#gid=0")
+MAG_gen_trait.3  = read_sheet("https://docs.google.com/spreadsheets/d/1Y6yMpQygXJof8EdDAE967ufLbNxmJcBqSZzUgMBnpYY/edit?gid=0#gid=0")
+
+colnames(MAG_gen_trait.2) = c("Guild", "Genome-Size", "Amino-transporter", "pH-Tol",
+                              "Temp-Tol", "Biofilm", "Osmolyte","GH-transporter",
+                              "Total-transporter","Protein-enzyme","CAZy","OGT",
+                              "MGT")
+colnames(MAG_gen_trait.3) = c("Guild", "Genome-Size", "Amino-transporter", "pH-Tol",
+                              "Temp-Tol", "Biofilm", "Osmolyte","GH-transporter",
+                              "Total-transporter","Protein-enzyme","CAZy","OGT",
+                              "MGT")
+Total = as.data.frame(rbind(MAG_gen_trait.2,MAG_gen_trait.3))
+Total = Total %>% mutate(speed = case_when(MGT <= 5 ~ "fast",
+                                           MGT  > 5 ~ "slow"))
+
+Figure_test_1 = ggplot(data = GH_TOTAL_m.1, aes(x = genome.size_mean/1e6, y = (GH_total))) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
   ylab("CAZy") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,30)
-  
+  xlim(0,1.25e7/1e6) + ylim(0,30)
+Figure_test_1
+
+Figure_test_1.new = ggplot(data = Total, aes(x = `Genome-Size`/1e6, y = (CAZy),color = speed)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("CAZy") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.0e7/1e6) + ylim(0,30) + theme(legend.position="none")
+Figure_test_1.new
 
 # Protein - genes (MAG)----
 PR_TOTAL.MAG = total_genes.guild.940_MAG %>% select(any_of(PR_rule$`microtrait_rule-name`))
@@ -760,12 +780,23 @@ sheet_write(PR_TOTAL_m.1,
             ss = "https://docs.google.com/spreadsheets/d/18x3e2MPXYvhWrQ5HoGj_MmAXJfhHko-bP7TfDp9vCQM/edit?gid=0#gid=0",
             sheet = "Protein_MAG")
 
-Figure_test_2 = ggplot(data = PR_TOTAL_m.1, aes(x = genome.size_mean, y = PR_total)) +
+PR_TOTAL_m.1     = read_sheet("https://docs.google.com/spreadsheets/d/18x3e2MPXYvhWrQ5HoGj_MmAXJfhHko-bP7TfDp9vCQM/edit?gid=0#gid=0")
+
+Figure_test_2 = ggplot(data = PR_TOTAL_m.1, aes(x = genome.size_mean/1e6, y = PR_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
   ylab("Protein Enzymes") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,50)
+  xlim(0,1.25e7/1e6) + ylim(0,50)
+Figure_test_2
+
+Figure_test_2.new = ggplot(data = Total, aes(x = `Genome-Size`/1e6, y = (`Protein-enzyme`),color = speed)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("Protein Enzymes") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.0e7/1e6) + ylim(0,50) + theme(legend.position="none")
+Figure_test_2.new
 
 # Transport - genes (MAG)----
 transp_rule  = transp_rule %>% filter(function_gene == c("transporter"))
@@ -788,12 +819,23 @@ sheet_write(TRANSP_TOTAL_m.1,
             ss = "https://docs.google.com/spreadsheets/d/1SHPSWR5bB-31cVpd98uaJ0225PYDiPEXh1jeCeez-Dw/edit?gid=0#gid=0",
             sheet = "Transporter_MAG")
 
-Figure_test_3 = ggplot(data = TRANSP_TOTAL_m.1, aes(x = genome.size_mean, y = transp_total)) +
+TRANSP_TOTAL_m.1     = read_sheet("https://docs.google.com/spreadsheets/d/1SHPSWR5bB-31cVpd98uaJ0225PYDiPEXh1jeCeez-Dw/edit?gid=0#gid=0")
+
+Figure_test_3 = ggplot(data = TRANSP_TOTAL_m.1, aes(x = genome.size_mean/1e6, y = transp_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
   ylab("Total Transporter") +
   geom_point() + theme_classic()+ theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,200)
+  xlim(0,1.25e7/1e6) + ylim(0,200)
+Figure_test_3
+
+Figure_test_3.new = ggplot(data = Total, aes(x = `Genome-Size`/1e6, y = (`Total-transporter`),color = speed)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("Total Transporter") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.0e7/1e6) + ylim(0,200) + theme(legend.position="none")
+Figure_test_3.new
 
 # Transport - Aminoacids (MAG)----
 transp_rule        = transp_rule %>% filter(function_gene==c("transporter"))
@@ -817,12 +859,23 @@ sheet_write(AMI_TRANSP_TOTAL_m.1,
             ss = "https://docs.google.com/spreadsheets/d/1roWnESdGSQ3DiCGBogrfLBFzjwrLrPUHYEYqVNpNEsI/edit?gid=0#gid=0",
             sheet = "Aminoacids_T_MAG")
 
-Figure_test_4 = ggplot(data = AMI_TRANSP_TOTAL_m.1, aes(x = genome.size_mean, y = (AMI_TRANSP_TOTAL))) +
+AMI_TRANSP_TOTAL_m.1     = read_sheet("https://docs.google.com/spreadsheets/d/1roWnESdGSQ3DiCGBogrfLBFzjwrLrPUHYEYqVNpNEsI/edit?gid=0#gid=0")
+
+Figure_test_4 = ggplot(data = AMI_TRANSP_TOTAL_m.1, aes(x = genome.size_mean/1e6, y = (AMI_TRANSP_TOTAL))) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
   ylab("Aminoacid Transporter") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,20)
+  xlim(0,1.25e7/1e6) + ylim(0,20)
+Figure_test_4
+
+Figure_test_4.new = ggplot(data = Total, aes(x = `Genome-Size`/1e6, y = (`Amino-transporter`),color = speed)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("Aminoacid Transporter") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.0e7/1e6) + ylim(0,20) + theme(legend.position="none")
+Figure_test_4.new
 
 # Transport - Carbohydrate (MAG)----
 transp_rule_car    = transp_rule %>% filter(class==c("carbohydrate"))
@@ -845,12 +898,23 @@ sheet_write(CAR_TRANSP_TOTAL_m.1,
             ss = "https://docs.google.com/spreadsheets/d/1c08rBTbHN6G8mVN8ybqMWvsJQgZzQ8Z1B72I_AlF06M/edit?gid=0#gid=0",
             sheet = "GH_T_MAG")
 
-Figure_test_5 = ggplot(data = CAR_TRANSP_TOTAL_m.1, aes(x = genome.size_mean, y = (CAR_TRANSP_TOTAL))) +
+CAR_TRANSP_TOTAL_m.1     = read_sheet("https://docs.google.com/spreadsheets/d/1c08rBTbHN6G8mVN8ybqMWvsJQgZzQ8Z1B72I_AlF06M/edit?gid=0#gid=0")
+
+Figure_test_5 = ggplot(data = CAR_TRANSP_TOTAL_m.1, aes(x = genome.size_mean/1e6, y = (CAR_TRANSP_TOTAL))) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
   ylab("Carbohydrate Transport") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,55)
+  xlim(0,1.25e7/1e6) + ylim(0,55)
+Figure_test_5
+
+Figure_test_5.new = ggplot(data = Total, aes(x = `Genome-Size`/1e6, y = (`GH-transporter`),color = speed)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("Carbohydrate Transporter") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.0e7/1e6) + ylim(0,55) + theme(legend.position="none")
+Figure_test_5.new
 
 # Osmolytes - genes (MAG)----
 OSMO_TOTAL.MAG = total_genes.guild.940_MAG %>% select(any_of(osmo_rule$`microtrait_hmm-name`))
@@ -871,12 +935,23 @@ sheet_write(OSMO_TOTAL.MAG_m.1,
             ss = "https://docs.google.com/spreadsheets/d/1dzeG2XKS0fhznOMWXEa521XzC4YO5IUGfc4ShiUJ5yM/edit?gid=0#gid=0",
             sheet = "Osmolyte_MAG")
 
-Figure_test_6 = ggplot(data = OSMO_TOTAL.MAG_m.1, aes(x = genome.size_mean, y = OSMO_total)) +
+OSMO_TOTAL.MAG_m.1     = read_sheet("https://docs.google.com/spreadsheets/d/1dzeG2XKS0fhznOMWXEa521XzC4YO5IUGfc4ShiUJ5yM/edit?gid=0#gid=0")
+
+Figure_test_6 = ggplot(data = OSMO_TOTAL.MAG_m.1, aes(x = genome.size_mean/1e6, y = OSMO_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
   ylab("Osmolytes") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,32)
+  xlim(0,1.25e7/1e6) + ylim(0,32)
+Figure_test_6
+
+Figure_test_6.new = ggplot(data = Total, aes(x = `Genome-Size`/1e6, y = (Osmolyte),color = speed)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("Osmolytes") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.0e7/1e6) + ylim(0,32) + theme(legend.position="none")
+Figure_test_6.new
 
 # Biofilm - genes (MAG)----
 BIO_TOTAL.MAG = total_genes.guild.940_MAG %>% select(any_of(biofilm_rule$`microtrait_hmm-name`))
@@ -897,12 +972,23 @@ sheet_write(BIO_TOTAL.MAG_m.1,
             ss = "https://docs.google.com/spreadsheets/d/1k32wnkrBHdG31a79sFvxVboZ-DwhWe28n9qk7H9lnOI/edit?gid=0#gid=0",
             sheet = "Biofilm_MAG")
 
-Figure_test_7 = ggplot(data = BIO_TOTAL.MAG_m.1, aes(x = genome.size_mean, y = BIO_total)) +
+BIO_TOTAL.MAG_m.1     = read_sheet("https://docs.google.com/spreadsheets/d/1k32wnkrBHdG31a79sFvxVboZ-DwhWe28n9qk7H9lnOI/edit?gid=0#gid=0")
+
+Figure_test_7 = ggplot(data = BIO_TOTAL.MAG_m.1, aes(x = genome.size_mean/1e6, y = BIO_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
   ylab("Biofilm") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,16)
+  xlim(0,1.25e7/1e6) + ylim(0,16)
+Figure_test_7
+
+Figure_test_7.new = ggplot(data = Total, aes(x = `Genome-Size`/1e6, y = (Biofilm),color = speed)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("Biofilm") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.0e7/1e6) + ylim(0,16) + theme(legend.position="none")
+Figure_test_7.new
 
 # High Temp - genes (MAG)----
 TEMP.MAG = total_genes.guild.940_MAG %>% select(any_of(high.T_rule$`microtrait_hmm-name`))
@@ -923,12 +1009,23 @@ sheet_write(TEMP.MAG_m.1,
             ss = "https://docs.google.com/spreadsheets/d/1WYvJIxHLaksDbD0thH3DWOVViQ7gC8KU9OEb9cVqp50/edit?gid=0#gid=0",
             sheet = "TEMP_MAG")
 
-Figure_test_8 = ggplot(data = TEMP.MAG_m.1, aes(x = genome.size_mean, y = TEMP_total)) +
+TEMP.MAG_m.1     = read_sheet("https://docs.google.com/spreadsheets/d/1WYvJIxHLaksDbD0thH3DWOVViQ7gC8KU9OEb9cVqp50/edit?gid=0#gid=0")
+
+Figure_test_8 = ggplot(data = TEMP.MAG_m.1, aes(x = genome.size_mean/1e6, y = TEMP_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
   ylab("Heat Resistance") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,15)
+  xlim(0,1.25e7/1e6) + ylim(0,15)
+Figure_test_8
+
+Figure_test_8.new = ggplot(data = Total, aes(x = `Genome-Size`/1e6, y = (`Temp-Tol`),color = speed)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("Heat Resistance") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.0e7/1e6) + ylim(0,15) + theme(legend.position="none")
+Figure_test_8.new
 
 # pH - genes (MAG)----
 PH.MAG = total_genes.guild.940_MAG %>% select(any_of(pH_rule$`microtrait_hmm-name`))
@@ -949,12 +1046,23 @@ sheet_write(PH.MAG_m.1,
             ss = "https://docs.google.com/spreadsheets/d/1za5oqXIRLFYkg6eV-BhL6MVlftTkDv78jQCZoYOnYBQ/edit?gid=0#gid=0",
             sheet = "PH_MAG")
 
-Figure_test_9 = ggplot(data = PH.MAG_m.1, aes(x = genome.size_mean, y = PH_total)) +
+PH.MAG_m.1     = read_sheet("https://docs.google.com/spreadsheets/d/1za5oqXIRLFYkg6eV-BhL6MVlftTkDv78jQCZoYOnYBQ/edit?gid=0#gid=0")
+
+Figure_test_9 = ggplot(data = PH.MAG_m.1, aes(x = genome.size_mean/1e6, y = PH_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
   ylab("pH Resistance") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,20)
+  xlim(0,1.25e7/1e6) + ylim(0,20)
+Figure_test_9
+
+Figure_test_9.new = ggplot(data = Total, aes(x = `Genome-Size`/1e6, y = (`pH-Tol`),color = speed)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("pH Resistance") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.0e7/1e6) + ylim(0,20) + theme(legend.position="none")
+Figure_test_9.new
 
 # GH - genes (Isolates)----
 GH_TOTAL.ISO = total_genes.guild.940_ISO %>% select(any_of(GH_rule$`microtrait_hmm-name`))
@@ -967,12 +1075,27 @@ sheet_write(GH_TOTAL_m,
             ss = "https://docs.google.com/spreadsheets/d/110N6SnbJWrh3bLcS3rwL8wQsntuTUHAeqYqfB2_R7d0/edit?gid=0#gid=0",
             sheet = "GH_Isolates")
 
-Figure_test_1.ISO = ggplot(data = GH_TOTAL_m, aes(x = genome.size_mean, y = GH_total)) +
+ISO_gen_trait.1  = read_sheet("https://docs.google.com/spreadsheets/d/1xT3vB2K2tupkeHZwUlVzh4ZYWhmUpOmMQtESNH2Mst0/edit?gid=0#gid=0",
+                              sheet = "ISO_gen_trait.1")
+GH_TOTAL_m       = read_sheet("https://docs.google.com/spreadsheets/d/110N6SnbJWrh3bLcS3rwL8wQsntuTUHAeqYqfB2_R7d0/edit?gid=0#gid=0")
+Total.iso        = ISO_gen_trait.1 %>% mutate(speed = case_when(MGT <= 5 ~ "fast",
+                                           MGT  > 5 ~ "slow"))
+
+Figure_test_1.ISO = ggplot(data = GH_TOTAL_m, aes(x = genome.size_mean/1e6, y = GH_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
   ylab("CAZy") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,30)
+  xlim(0,1.25e7/1e6) + ylim(0,30)
+Figure_test_1.ISO
+
+Figure_test_1.ISO.new = ggplot(data = Total.iso, aes(x = genome.size/1e6, y = (CAZy),color = speed)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("CAZy") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.0e7/1e6) + ylim(0,30) + theme(legend.position="none")
+Figure_test_1.ISO.new
 
 # Protein - genes (Isolates)----
 PH_TOTAL.ISO = total_genes.guild.940_ISO %>% select(any_of(PR_rule$`microtrait_rule-name`))
@@ -985,12 +1108,23 @@ sheet_write(PH_TOTAL_m,
             ss = "https://docs.google.com/spreadsheets/d/1G3xtk7sHCy15e_0n2vLkbGc57fQFYyqCUghLDPQTuy0/edit?gid=0#gid=0",
             sheet = "Protein_Isolates")
 
-Figure_test_2.ISO = ggplot(data = PH_TOTAL_m, aes(x = genome.size_mean, y = PR_total)) +
+PH_TOTAL_m       = read_sheet("https://docs.google.com/spreadsheets/d/1G3xtk7sHCy15e_0n2vLkbGc57fQFYyqCUghLDPQTuy0/edit?gid=0#gid=0")
+
+Figure_test_2.ISO = ggplot(data = PH_TOTAL_m, aes(x = genome.size_mean/1e6, y = PR_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
   ylab("Protein Enzyme") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,50)
+  xlim(0,1.25e7/1e6) + ylim(0,50)
+Figure_test_2.ISO
+
+Figure_test_2.ISO.new = ggplot(data = Total.iso, aes(x = genome.size/1e6, y = (Protein),color = speed)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("Protein Enzyme") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.0e7/1e6) + ylim(0,50) + theme(legend.position="none")
+Figure_test_2.ISO.new
 
 # Transport - genes (Isolates)----
 transp_rule    = transp_rule %>% filter(function_gene == c("transporter"))
@@ -1005,12 +1139,23 @@ sheet_write(TRANSP_TOTAL_m,
             ss = "https://docs.google.com/spreadsheets/d/1pSIRE1LZknqQz5RSn_jZvnid2mZsns4_X6AiK7AHl8A/edit?gid=0#gid=0",
             sheet = "Transporter_Isolates")
 
-Figure_test_3.ISO = ggplot(data = TRANSP_TOTAL_m, aes(x = genome.size_mean, y = transp_total)) +
+TRANSP_TOTAL_m       = read_sheet("https://docs.google.com/spreadsheets/d/1pSIRE1LZknqQz5RSn_jZvnid2mZsns4_X6AiK7AHl8A/edit?gid=0#gid=0")
+
+Figure_test_3.ISO = ggplot(data = TRANSP_TOTAL_m, aes(x = genome.size_mean/1e6, y = transp_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
   ylab("Total Transporter") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,200)
+  xlim(0,1.25e7/1e6) + ylim(0,200)
+Figure_test_3.ISO
+
+Figure_test_3.ISO.new = ggplot(data = Total.iso, aes(x = genome.size/1e6, y = (tranport.total),color = speed)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("Total Transporter") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.0e7/1e6) + ylim(0,200) + theme(legend.position="none")
+Figure_test_3.ISO.new
 
 # Transport - Aminoacids (Isolates)----
 transp_rule_ami    = transp_rule %>% filter(class==c("aminoacid","peptide"))
@@ -1025,12 +1170,23 @@ sheet_write(AMI_TRANSP_TOTAL.i_m,
             ss = "https://docs.google.com/spreadsheets/d/1_-aWScfsDb-TNSFQ9bzbWVgEjdleCD_woBNRKHGy8o4/edit?gid=0#gid=0",
             sheet = "Aminoacids_T_Isolates")
 
-Figure_test_4.ISO = ggplot(data = AMI_TRANSP_TOTAL.i_m, aes(x = genome.size_mean, y = AMI_TRANSP_TOTAL)) +
+AMI_TRANSP_TOTAL.i_m       = read_sheet("https://docs.google.com/spreadsheets/d/1_-aWScfsDb-TNSFQ9bzbWVgEjdleCD_woBNRKHGy8o4/edit?gid=0#gid=0")
+
+Figure_test_4.ISO = ggplot(data = AMI_TRANSP_TOTAL.i_m, aes(x = genome.size_mean/1e6, y = AMI_TRANSP_TOTAL)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
   ylab("Aminoacid Transporter") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,20)
+  xlim(0,1.25e7/1e6) + ylim(0,20)
+Figure_test_4.ISO
+
+Figure_test_4.ISO.new = ggplot(data = Total.iso, aes(x = genome.size/1e6, y = (amino.transport),color = speed)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("Aminoacid Transporter") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.0e7/1e6) + ylim(0,20) + theme(legend.position="none")
+Figure_test_4.ISO.new
 
 # Transport - Carbohydrate (Isolates)----
 transp_rule_car    = transp_rule %>% filter(class==c("carbohydrate"))
@@ -1045,12 +1201,23 @@ sheet_write(CAR_TRANSP_TOTAL.i_m,
             ss = "https://docs.google.com/spreadsheets/d/14RSIx5VpsXPvxV3Awrj_XRwAc1uYx5tdpjK1vjJGJAo/edit?gid=0#gid=0",
             sheet = "GH_T_Isolates")
 
-Figure_test_5.ISO = ggplot(data = CAR_TRANSP_TOTAL.i_m, aes(x = genome.size_mean, y = CAR_TRANSP_TOTAL)) +
+CAR_TRANSP_TOTAL.i_m       = read_sheet("https://docs.google.com/spreadsheets/d/14RSIx5VpsXPvxV3Awrj_XRwAc1uYx5tdpjK1vjJGJAo/edit?gid=0#gid=0")
+
+Figure_test_5.ISO = ggplot(data = CAR_TRANSP_TOTAL.i_m, aes(x = genome.size_mean/1e6, y = CAR_TRANSP_TOTAL)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
   ylab("Carbohydrate Transporter") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,55)
+  xlim(0,1.25e7/1e6) + ylim(0,55)
+Figure_test_5.ISO
+
+Figure_test_5.ISO.new = ggplot(data = Total.iso, aes(x = genome.size/1e6, y = (GH.trasnport),color = speed)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("Carbohydrate Transporter") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.0e7/1e6) + ylim(0,55) + theme(legend.position="none")
+Figure_test_5.ISO.new
 
 # Osmolytes - genes (Isolates)----
 OSMO_TOTAL.TOTAL.i = total_genes.guild.940_ISO %>% select(any_of(osmo_rule$`microtrait_hmm-name`))
@@ -1063,12 +1230,23 @@ sheet_write(OSMO_TOTAL_m,
             ss = "https://docs.google.com/spreadsheets/d/1FsE_lt-gHphdH1Ndcce7IODTXyBVwu6uckVY97ipovo/edit?gid=0#gid=0",
             sheet = "Osmolyte_Isolates")
 
-Figure_test_6.ISO = ggplot(data = OSMO_TOTAL_m, aes(x = genome.size_mean, y = OSMO_total)) +
+OSMO_TOTAL_m       = read_sheet("https://docs.google.com/spreadsheets/d/1FsE_lt-gHphdH1Ndcce7IODTXyBVwu6uckVY97ipovo/edit?gid=0#gid=0")
+
+Figure_test_6.ISO = ggplot(data = OSMO_TOTAL_m, aes(x = genome.size_mean/1e6, y = OSMO_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
   ylab("Osmolytes") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,32)
+  xlim(0,1.25e7/1e6) + ylim(0,32)
+Figure_test_6.ISO
+
+Figure_test_6.ISO.new = ggplot(data = Total.iso, aes(x = genome.size/1e6, y = (osmolyte),color = speed)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("Osmolytes") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.0e7/1e6) + ylim(0,32) + theme(legend.position="none")
+Figure_test_6.ISO.new
 
 # Biofilm - genes (Isolates)----
 BIO_TOTAL.MAG = total_genes.guild.940_ISO %>% select(any_of(biofilm_rule$`microtrait_hmm-name`))
@@ -1081,12 +1259,23 @@ sheet_write(BIO_TOTAL.MAG_m,
             ss = "https://docs.google.com/spreadsheets/d/1m5BCkSa5CoWY7sLeJl0K16Ef1P8lPuli7HG6KpSxZPE/edit?gid=0#gid=0",
             sheet = "Biofilm_Isolates")
 
-Figure_test_7.ISO = ggplot(data = BIO_TOTAL.MAG_m, aes(x = genome.size_mean, y = BIO_total)) +
+BIO_TOTAL.MAG_m       = read_sheet("https://docs.google.com/spreadsheets/d/1m5BCkSa5CoWY7sLeJl0K16Ef1P8lPuli7HG6KpSxZPE/edit?gid=0#gid=0")
+
+Figure_test_7.ISO = ggplot(data = BIO_TOTAL.MAG_m, aes(x = genome.size_mean/1e6, y = BIO_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
   ylab("Biofilm") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,16)
+  xlim(0,1.25e7/1e6) + ylim(0,16)
+Figure_test_7.ISO
+
+Figure_test_7.ISO.new = ggplot(data = Total.iso, aes(x = genome.size/1e6, y = (biofilm),color = speed)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("Biofilm") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.0e7/1e6) + ylim(0,32) + theme(legend.position="none")
+Figure_test_7.ISO.new
 
 # High Temperature - genes (Isolates)----
 TEMP_TOTAL.MAG = total_genes.guild.940_ISO %>% select(any_of(high.T_rule$`microtrait_hmm-name`))
@@ -1099,12 +1288,23 @@ sheet_write(TEMP_TOTAL.MAG_m,
             ss = "https://docs.google.com/spreadsheets/d/1GXAwzFiMHrZAkIxYqDxGbj0VHzB8SHWxF8mnGqU3jGo/edit?gid=0#gid=0",
             sheet = "TEMP_Isolates")
 
-Figure_test_8.ISO = ggplot(data = TEMP_TOTAL.MAG_m, aes(x = genome.size_mean, y = TEMP_total)) +
+TEMP_TOTAL.MAG_m       = read_sheet("https://docs.google.com/spreadsheets/d/1GXAwzFiMHrZAkIxYqDxGbj0VHzB8SHWxF8mnGqU3jGo/edit?gid=0#gid=0")
+
+Figure_test_8.ISO = ggplot(data = TEMP_TOTAL.MAG_m, aes(x = genome.size_mean/1e6, y = TEMP_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
   ylab("Heat Resistance") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,15)
+  xlim(0,1.25e7/1e6) + ylim(0,15)
+Figure_test_8.ISO
+
+Figure_test_8.ISO.new = ggplot(data = Total.iso, aes(x = genome.size/1e6, y = (temp),color = speed)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("Heat Resistance") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.0e7/1e6) + ylim(0,32) + theme(legend.position="none")
+Figure_test_8.ISO.new
 
 # pH - genes (Isolates)----
 pH_TOTAL.MAG = total_genes.guild.940_ISO %>% select(any_of(pH_rule$`microtrait_hmm-name`))
@@ -1117,12 +1317,23 @@ sheet_write(pH_TOTAL.MAG_m,
             ss = "https://docs.google.com/spreadsheets/d/1p58fzYUw9I-jA4FkWQz6u8-qtNVi7GMVVcGCtYPdxHk/edit?gid=0#gid=0",
             sheet = "PH_Isolates")
 
-Figure_test_9.ISO = ggplot(data = pH_TOTAL.MAG_m, aes(x = genome.size_mean, y = PH_total)) +
+pH_TOTAL.MAG_m       = read_sheet("https://docs.google.com/spreadsheets/d/1p58fzYUw9I-jA4FkWQz6u8-qtNVi7GMVVcGCtYPdxHk/edit?gid=0#gid=0")
+
+Figure_test_9.ISO = ggplot(data = pH_TOTAL.MAG_m, aes(x = genome.size_mean/1e6, y = PH_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
   ylab("pH Resistance") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,20)
+  xlim(0,1.25e7/1e6) + ylim(0,20)
+Figure_test_9.ISO
+
+Figure_test_9.ISO.new = ggplot(data = Total.iso, aes(x = genome.size/1e6, y = (pH),color = speed)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("pH Resistance") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.0e7/1e6) + ylim(0,20) + theme(legend.position="none")
+Figure_test_9.ISO.new
 
 # Data Preparation - Isolates
 temp    = drive_ls("https://drive.google.com/drive/u/0/folders/1C9gqH5mSadOGdZv05jKPu8tELph2isd4")
@@ -1417,12 +1628,37 @@ sheet_write(GH_TOTAL_m,
             ss = "https://docs.google.com/spreadsheets/d/1jUgB0CcVwmFekcEL5K2Ebr-jHAI-hm7fqiXi6vBmXec/edit?gid=0#gid=0",
             sheet = "GH_MAG")
 
-Figure_test_1 = ggplot(data = GH_TOTAL_m, aes(x = genome.size_mean, y = (GH_total))) +
+GH_TOTAL_m       = read_sheet("https://docs.google.com/spreadsheets/d/1jUgB0CcVwmFekcEL5K2Ebr-jHAI-hm7fqiXi6vBmXec/edit?gid=0#gid=0")
+MAG_gen_trait.2  = read_sheet("https://docs.google.com/spreadsheets/d/1Gtb4oLsNibF-yPwA9f1y78axGuKCO70Y1cZKNw0KRtk/edit?gid=0#gid=0")
+MAG_gen_trait.3  = read_sheet("https://docs.google.com/spreadsheets/d/1Y6yMpQygXJof8EdDAE967ufLbNxmJcBqSZzUgMBnpYY/edit?gid=0#gid=0")
+
+colnames(MAG_gen_trait.2) = c("Guild", "Genome-Size", "Amino-transporter", "pH-Tol",
+                              "Temp-Tol", "Biofilm", "Osmolyte","GH-transporter",
+                              "Total-transporter","Protein-enzyme","CAZy","OGT",
+                              "MGT")
+colnames(MAG_gen_trait.3) = c("Guild", "Genome-Size", "Amino-transporter", "pH-Tol",
+                              "Temp-Tol", "Biofilm", "Osmolyte","GH-transporter",
+                              "Total-transporter","Protein-enzyme","CAZy","OGT",
+                              "MGT")
+Total = as.data.frame(rbind(MAG_gen_trait.2,MAG_gen_trait.3))
+Total = Total %>% mutate(speed = case_when(MGT <= 5 ~ "fast",
+                                           MGT  > 5 ~ "slow")) 
+
+Figure_test_1 = ggplot(data = GH_TOTAL_m, aes(x = genome.size_mean/1e6, y = (GH_total))) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
   ylab("CAZy") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,20)
+  xlim(0,1.25e7/1e6) + ylim(0,20)
+Figure_test_1
+
+Figure_test_1.new = ggplot(data = Total, aes(x = `Genome-Size`/1e6, y = (CAZy),color = speed)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("CAZy") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.0e7/1e6) + ylim(0,30) + theme(legend.position="none")
+Figure_test_1.new
 
 # Protein - genes (MAG)----
 PR_TOTAL.MAG = total_genes.guild.186_MAG %>% select(any_of(PR_rule$`microtrait_rule-name`))
@@ -1435,12 +1671,23 @@ sheet_write(PR_TOTAL_m,
             ss = "https://docs.google.com/spreadsheets/d/1PEHIyhkOi-hxLbeMDbtD_12Qq2hVmFUyNLF4GASYVRQ/edit?gid=0#gid=0",
             sheet = "Protein_MAG")
 
-Figure_test_2 = ggplot(data = PR_TOTAL_m, aes(x = genome.size_mean, y = PR_total)) +
+PR_TOTAL_m    = read_sheet("https://docs.google.com/spreadsheets/d/1PEHIyhkOi-hxLbeMDbtD_12Qq2hVmFUyNLF4GASYVRQ/edit?gid=0#gid=0")
+  
+Figure_test_2 = ggplot(data = PR_TOTAL_m, aes(x = genome.size_mean/1e6, y = PR_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
   ylab("Protein Enzymes") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,20)
+  xlim(0,1.25e7/1e6) + ylim(0,20)
+Figure_test_2
+
+Figure_test_2.new = ggplot(data = Total, aes(x = `Genome-Size`/1e6, y = (`Protein-enzyme`),color = speed)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("CAZy") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.0e7/1e6) + ylim(0,50) + theme(legend.position="none")
+Figure_test_2.new
 
 # Transport - genes (MAG)----
 transp_rule  = transp_rule %>% filter(function_gene == c("transporter"))
@@ -1455,12 +1702,23 @@ sheet_write(TRANSP_TOTAL_m,
             ss = "https://docs.google.com/spreadsheets/d/1frAIOBIQewDGxpUFJpdcP_5pAcyYfK8idKr2eHk3-ns/edit?gid=0#gid=0",
             sheet = "Transporter_MAG")
 
-Figure_test_3 = ggplot(data = TRANSP_TOTAL_m, aes(x = genome.size_mean, y = transp_total)) +
+TRANSP_TOTAL_m    = read_sheet("https://docs.google.com/spreadsheets/d/1frAIOBIQewDGxpUFJpdcP_5pAcyYfK8idKr2eHk3-ns/edit?gid=0#gid=0")
+
+Figure_test_3 = ggplot(data = TRANSP_TOTAL_m, aes(x = genome.size_mean/1e6, y = transp_total)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
   ylab("Total Transporter") +
   geom_point() + theme_classic()+ theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,30)
+  xlim(0,1.25e7/1e6) + ylim(0,30)
+Figure_test_3
+
+Figure_test_3.new = ggplot(data = Total, aes(x = `Genome-Size`/1e6, y = (`Total-transporter`),color = speed)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("") + 
+  ylab("CAZy") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.0e7/1e6) + ylim(0,100) + theme(legend.position="none")
+Figure_test_3.new
 
 # Transport - Aminoacids (MAG)----
 transp_rule        = transp_rule %>% filter(function_gene==c("transporter"))
@@ -1783,30 +2041,30 @@ Y_MAG               = merge(total.granularity.3,MAG_id,by = "id")
 Y_MAG               = Y_MAG %>% select(c("guild","genome.size","mgt","ogt"))
 Y_MAG.A             = Y_MAG %>% select(c("guild","genome.size","mgt"))
 
-# Minimum generation time >= 5
-Y_MAG.A     = Y_MAG.A %>% filter(mgt >= 5)
+# Minimum generation time > 5
+Y_MAG.A     = Y_MAG.A %>% filter(mgt > 5)
 Y_MAG.A.1   = Y_MAG.A %>% group_by(guild) %>% summarise(across(where(is.numeric),list(mean=mean), na.rm=TRUE))
 
-Figure_test_10a = ggplot(data = Y_MAG.A.1, aes(x = genome.size_mean, y = mgt_mean)) +
+Figure_test_10a = ggplot(data = Y_MAG.A.1, aes(x = genome.size_mean/1e6, y = mgt_mean)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
   ylab("Minimum generation time (hrs)") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.5e7) + ylim(0,120)
+  xlim(0,1.5e7/1e6) + ylim(0,120)
 Figure_test_10a
 
-# Minimum generation time < 5
+# Minimum generation time <= 5
 Y_MAG.B   = Y_MAG %>% select(c("guild","genome.size","mgt"))
-Y_MAG.B   = Y_MAG.B %>% filter(mgt < 5)
+Y_MAG.B   = Y_MAG.B %>% filter(mgt <= 5)
 Y_MAG.B.1 = Y_MAG.B %>% group_by(guild) %>% summarise(across(where(is.numeric),
                                                              list(mean=mean), na.rm=TRUE))
 
-Figure_test_10b = ggplot(data = Y_MAG.B.1, aes(x = genome.size_mean, y = mgt_mean)) +
+Figure_test_10b = ggplot(data = Y_MAG.B.1, aes(x = genome.size_mean/1e6, y = mgt_mean)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
   ylab("Maximum growth rate (hrs)") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.5e7) + ylim(0,8)
+  xlim(0,1.5e7/1e6) + ylim(0,8)
 Figure_test_10b
 
 # Optimal Growth Temperature
@@ -1816,12 +2074,12 @@ Y_MAG.C     = na.omit(Y_MAG.C)
 Y_MAG.C.1   = Y_MAG.C %>% group_by(guild) %>% summarise(across(where(is.numeric),
                                                              list(mean=mean), na.rm=TRUE)) 
 
-Figure_test_11 = ggplot(data = Y_MAG.C.1, aes(x = genome.size_mean, y = ogt_mean)) +
+Figure_test_11 = ggplot(data = Y_MAG.C.1, aes(x = genome.size_mean/1e6, y = ogt_mean)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
-  ylab("Optimal Growth Temperature") +
+  ylab("Optimal Growth Temperature (°C)") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,80)
+  xlim(0,1.25e7/1e6) + ylim(0,80)
 Figure_test_11
 
 # Cross correlations----
@@ -1877,11 +2135,58 @@ sheet_write(MAG_gen_trait.3,
 
 # Plotting cross-correlations
 
-Figure_5   = ggpairs(MAG_gen_trait.2, columns = 2:13, title="correlogram with ggpairs()") + 
-  theme_classic()
+MAG_gen_trait.2  = read_sheet("https://docs.google.com/spreadsheets/d/1Gtb4oLsNibF-yPwA9f1y78axGuKCO70Y1cZKNw0KRtk/edit?gid=0#gid=0")
+MAG_gen_trait.3  = read_sheet("https://docs.google.com/spreadsheets/d/1Y6yMpQygXJof8EdDAE967ufLbNxmJcBqSZzUgMBnpYY/edit?gid=0#gid=0")
+
+colnames(MAG_gen_trait.2) = c("Guild", "Genome Size", "Amino-transporter", "pH-Tol",
+                               "Temp-Tol", "Biofilm", "Osmolyte","GH-transporter",
+                               "Total-transporter","Protein-enzyme","CAZy","OGT",
+                               "MGT")
+colnames(MAG_gen_trait.3) = c("Guild", "Genome Size", "Amino-transporter", "pH-Tol",
+                              "Temp-Tol", "Biofilm", "Osmolyte","GH-transporter",
+                              "Total-transporter","Protein-enzyme","CAZy","OGT",
+                              "MGT")
+
+# Reordering columns
+
+col_order = c("Guild", "Genome Size","OGT","MGT","Amino-transporter","GH-transporter",
+              "Total-transporter","Protein-enzyme","CAZy","pH-Tol","Temp-Tol", 
+              "Biofilm", "Osmolyte")
+
+MAG_gen_trait.2 = MAG_gen_trait.2[, col_order]
+MAG_gen_trait.3 = MAG_gen_trait.3[, col_order]
+
+# Function for merging colors and correlation plot
+my_fn <- function(data, mapping, method="p", use="pairwise", ...){
+  
+  # grab data
+  x <- eval_data_col(data, mapping$x)
+  y <- eval_data_col(data, mapping$y)
+  
+  # calculate correlation
+  corr <- cor(x, y, method=method, use=use)
+  
+  # calculate colour based on correlation value
+  # Here I have set a correlation of minus one to blue, 
+  # zero to white, and one to red 
+  # Change this to suit: possibly extend to add as an argument of `my_fn`
+  colFn <- colorRampPalette(c("blue", "white", "red"), interpolate ='spline')
+  fill <- colFn(100)[findInterval(corr, seq(-1, 1, length=100))]
+  
+  ggally_cor(data = data, mapping = mapping, ...) + 
+    theme_void() +
+    theme(panel.background = element_rect(fill=fill))
+}
+
+# Actual figure
+Figure_5 = ggpairs(MAG_gen_trait.2[,3:13], 
+              upper = list(continuous = my_fn),
+              lower = list(continuous = "smooth"))  
 Figure_5
-Figure_5.a = ggpairs(MAG_gen_trait.3, columns = 2:13, title="correlogram with ggpairs()") + 
-  theme_classic()
+
+Figure_5.a = ggpairs(MAG_gen_trait.3[,3:13], 
+                     upper = list(continuous = my_fn),
+                     lower = list(continuous = "smooth")) 
 Figure_5.a
 
 # CUE ----
@@ -1897,25 +2202,45 @@ total_genes.guild.940_ISO = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait
 isolates.2   = isolates.1 %>% left_join(total_genes.guild.940_ISO, by='id')
 isolates.2.m = isolates.2 %>% group_by(guild) %>% summarise(across(where(is.numeric), 
                                                                    list(mean=mean), na.rm=TRUE))
-isolates.2.m = isolates.2.m %>% select(c("guild","CUE_mean","genome.size_mean"))
-colnames(isolates.2.m) = c("guild","CUE","genome.size")
+isolates.2.m = isolates.2.m %>% select(c("guild","CUE_mean","genome.size_mean",
+                                         "mingentime_mean","optimumT_mean"))
+colnames(isolates.2.m) = c("guild","yield","genome.size","MGT","OGT")
 ISO_gen_trait.1        = merge(Isolates_gen_trait,isolates.2.m,by = c("guild","genome.size"))
 
 sheet_write(ISO_gen_trait.1,
             ss = "https://docs.google.com/spreadsheets/d/1xT3vB2K2tupkeHZwUlVzh4ZYWhmUpOmMQtESNH2Mst0/edit?gid=0#gid=0v",
-            sheet = "Isolates_gen_trait")
+            sheet = "ISO_gen_trait.1")
 
-Figure_6   = ggpairs(ISO_gen_trait.1, columns = 2:12, title="correlogram with ggpairs()") + 
-  theme_classic()
+# Plotting cross correlations
+
+ISO_gen_trait.1  = read_sheet("https://docs.google.com/spreadsheets/d/1xT3vB2K2tupkeHZwUlVzh4ZYWhmUpOmMQtESNH2Mst0/edit?gid=0#gid=0",
+                              sheet = "ISO_gen_trait.1")
+
+colnames(ISO_gen_trait.1) = c("Guild","Genome Size","Amino-transporter","pH-Tol",
+                              "Temp-Tol", "Biofilm", "Osmolyte","GH-transporter",
+                              "Total-transporter","Protein-enzyme","CAZy","Yield","MGT","OGT")
+# Reordering columns
+
+col_order = c("Guild", "Genome Size","Yield","OGT","MGT","Amino-transporter","GH-transporter",
+              "Total-transporter","Protein-enzyme","CAZy","pH-Tol","Temp-Tol", 
+              "Biofilm", "Osmolyte")
+ISO_gen_trait.1   = ISO_gen_trait.1[, col_order]
+
+# Minimum generation time <= 5
+ISO_gen_trait.1.f = ISO_gen_trait.1 %>% filter(MGT <= 5)
+
+Figure_6 = ggpairs(ISO_gen_trait.1.f[,3:14], 
+                   upper = list(continuous = my_fn),
+                   lower = list(continuous = "smooth"))  
 Figure_6
 
-Figure_test_1.CUE = ggplot(data = isolates.2.m, aes(x = genome.size, y = CUE)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
-  ylab("CUE") +
-  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,1.5) 
-Figure_test_1.CUE
+# Minimum generation time > 5
+ISO_gen_trait.1.s = ISO_gen_trait.1 %>% filter(MGT > 5)
+
+Figure_6.a = ggpairs(ISO_gen_trait.1.s[,3:14], 
+                   upper = list(continuous = my_fn),
+                   lower = list(continuous = "smooth"))  
+Figure_6.a
 
 # CUE for different taxonomic levels----
 
@@ -1940,61 +2265,119 @@ merged_df    = merge(isolates.1,final_meta,by = "id")
 
 phylum = merged_df %>% group_by(Phylum) %>% summarise(across(where(is.numeric), 
                                                              list(mean=mean), na.rm=TRUE))
-Figure_test_1.phylum = ggplot(data = phylum, aes(x = genome_length_mean, y = CUE_mean)) +
+phylum = phylum %>% mutate(speed = case_when(mingentime_mean <= 5 ~ "fast",
+                                             mingentime_mean  > 5 ~ "slow"))
+
+Figure_test_1.phylum = ggplot(data = phylum, aes(x = genome_length_mean/1e6, y = CUE_mean)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
-  ylab("CUE") +
+  ylab("Yield") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,1.5) + labs(title = "Phylum")
+  xlim(0,1.25e7/1e6) + ylim(0,1.5) + labs(title = "Phylum")
 Figure_test_1.phylum
+
+Figure_test_1.phylum.new = ggplot(data = phylum, aes(x = genome_length_mean/1e6, y = CUE_mean,
+                                                     color = speed)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
+  ylab("Yield") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7/1e6) + ylim(0,1.5) + labs(title = "Phylum") + theme(legend.position="none")
+Figure_test_1.phylum.new
 
 # Class
 
 Class = merged_df %>% group_by(Class) %>% summarise(across(where(is.numeric), 
                                                            list(mean=mean), na.rm=TRUE))
-Figure_test_1.Class = ggplot(data = Class, aes(x = genome_length_mean, y = CUE_mean)) +
+Class = Class %>% mutate(speed = case_when(mingentime_mean <= 5 ~ "fast",
+                                             mingentime_mean  > 5 ~ "slow"))
+Figure_test_1.Class = ggplot(data = Class, aes(x = genome_length_mean/1e6, y = CUE_mean)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
-  ylab("CUE") +
+  ylab("Yield") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,1.5) + labs(title = "Class")
+  xlim(0,1.25e7/1e6) + ylim(0,1.5) + labs(title = "Class")
 Figure_test_1.Class
+
+Figure_test_1.Class.new = ggplot(data = Class, aes(x = genome_length_mean/1e6, y = CUE_mean,
+                                                     color = speed)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
+  ylab("Yield") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7/1e6) + ylim(0,1.5) + labs(title = "Class") + theme(legend.position="none")
+Figure_test_1.Class.new
 
 # Order
 
 Order = merged_df %>% group_by(Order) %>% summarise(across(where(is.numeric), 
                                                            list(mean=mean), na.rm=TRUE))
-Figure_test_1.Order = ggplot(data = Order, aes(x = genome_length_mean, y = CUE_mean)) +
+Order = Order %>% mutate(speed = case_when(mingentime_mean <= 5 ~ "fast",
+                                           mingentime_mean  > 5 ~ "slow"))
+
+Figure_test_1.Order = ggplot(data = Order, aes(x = genome_length_mean/1e6, y = CUE_mean)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
-  ylab("CUE") +
+  ylab("Yield") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,1.5) + labs(title = "Order")
+  xlim(0,1.25e7/1e6) + ylim(0,1.5) + labs(title = "Order")
 Figure_test_1.Order
+
+Figure_test_1.Order.new = ggplot(data = Order, aes(x = genome_length_mean/1e6, y = CUE_mean,
+                                                   color = speed)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
+  ylab("Yield") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7/1e6) + ylim(0,1.5) + labs(title = "Order") + theme(legend.position="none")
+Figure_test_1.Order.new
 
 # Family
 
 Family = merged_df %>% group_by(Family) %>% summarise(across(where(is.numeric), 
                                                              list(mean=mean), na.rm=TRUE))
-Figure_test_1.Family = ggplot(data = Family, aes(x = genome_length_mean, y = CUE_mean)) +
+Family = Family %>% mutate(speed = case_when(mingentime_mean <= 5 ~ "fast",
+                                           mingentime_mean  > 5 ~ "slow"))
+
+Figure_test_1.Family = ggplot(data = Family, aes(x = genome_length_mean/1e6, y = CUE_mean)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
-  ylab("CUE") +
+  ylab("Yield") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,1.5) + labs(title = "Family")
+  xlim(0,1.25e7/1e6) + ylim(0,1.5) + labs(title = "Family")
 Figure_test_1.Family
+
+Figure_test_1.Family.new = ggplot(data = Family, aes(x = genome_length_mean/1e6, y = CUE_mean,
+                                                   color = speed)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
+  ylab("Yield") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7/1e6) + ylim(0,1.5) + labs(title = "Family") + theme(legend.position="none")
+Figure_test_1.Family.new
 
 # Genus
 
 Genus = merged_df %>% group_by(Genus) %>% summarise(across(where(is.numeric), 
                                                            list(mean=mean), na.rm=TRUE))
-Figure_test_1.Genus = ggplot(data = Genus, aes(x = genome_length_mean, y = CUE_mean)) +
+Genus = Genus %>% mutate(speed = case_when(mingentime_mean <= 5 ~ "fast",
+                                             mingentime_mean  > 5 ~ "slow"))
+
+Figure_test_1.Genus = ggplot(data = Genus, aes(x = genome_length_mean/1e6, y = CUE_mean)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
-  ylab("CUE") +
+  ylab("Yield") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7) + ylim(0,1.5) + labs(title = "Genus")
+  xlim(0,1.25e7/1e6) + ylim(0,1.5) + labs(title = "Genus")
 Figure_test_1.Genus
 
+Figure_test_1.Genus.new = ggplot(data = Genus, aes(x = genome_length_mean/1e6, y = CUE_mean,
+                                                     color = speed)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Genome Size") + 
+  ylab("Yield") +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
+  xlim(0,1.25e7/1e6) + ylim(0,1.5) + labs(title = "Genus") + theme(legend.position="none")
+Figure_test_1.Genus.new
 
 
