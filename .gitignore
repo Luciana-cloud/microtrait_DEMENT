@@ -6,5 +6,6 @@
 *.xlsx
 *.pdf
 *.txt
+*.svg
 FBA_results/
 FG_parallel/
