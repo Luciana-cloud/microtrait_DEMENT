@@ -20,6 +20,11 @@ png("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figure
 print(Figure_2.new)
 dev.off()
 
+pdf("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figures/Figure_2_overleaf.pdf",
+    width=4.81*2.75,height=2.21*2.75)
+print(Figure_2.new)
+dev.off()
+
 # Monomer Uptake----
 
 Figure_3 = ggarrange(Figure_test_3, Figure_test_4,Figure_test_5,Figure_test_3.ISO,
@@ -42,6 +47,11 @@ png("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figure
 print(Figure_3.new)
 dev.off()
 
+pdf("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figures/Figure_3_overleaf.pdf",
+    width=4.81*2.75,height=2.21*2.75)
+print(Figure_3.new)
+dev.off()
+
 # Stress Tolerance----
 
 Figure_4 = ggarrange(Figure_test_6,Figure_test_7,Figure_test_8,Figure_test_9,
@@ -61,8 +71,14 @@ Figure_4.new = ggarrange(Figure_test_6.new,Figure_test_7.new,Figure_test_8.new,F
                      labels = c("A","B","C","D","E","F","G","H"),
                      ncol = 4, nrow = 2) + theme(panel.background = element_blank())
 Figure_4.new
+
 png("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figures/Figure_4.new.png",
     width=3500*1.5,height=1969*1.5,res=300)
+print(Figure_4.new)
+dev.off()
+
+pdf("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figures/Figure_4_overleaf.pdf",
+    width=4.81*3,height=2.21*3)
 print(Figure_4.new)
 dev.off()
 
@@ -144,6 +160,11 @@ png("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figure
 print(Figure_10.new)
 dev.off()
 
+pdf("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figures/Figure_10_overleaf.pdf",
+    width=4.81*2.75,height=2.21*2.75)
+print(Figure_10.new)
+dev.off()
+
 # Optimal Growth Temperature----
 
 Figure_10 = ggarrange(Figure_test_10a, Figure_test_10b,Figure_test_11, 
@@ -161,6 +182,11 @@ Figure_11.new = ggarrange(Figure_test_11.new, Figure_test_12.ISO.new,
 Figure_11.new
 png("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figures/Figure_11.new.png",
     width=3500*1.35,height=1969*1.35,res=300)
+print(Figure_11.new)
+dev.off()
+
+pdf("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figures/Figure_11_overleaf.pdf",
+    width=4.81*2.75,height=2.21*2.75)
 print(Figure_11.new)
 dev.off()
 
@@ -183,6 +209,11 @@ Figure_12.new = ggarrange(Figure_test_1.phylum.new,Figure_test_1.Class.new,
 Figure_12.new
 png("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figures/Figure_12.new.png",
     width=3500*1.5,height=1969*1.5,res=300)
+print(Figure_12.new)
+dev.off()
+
+pdf("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figures/Figure_12.new.pdf",
+    width=4.81*2.75,height=2.21*2.75)
 print(Figure_12.new)
 dev.off()
 
