@@ -894,7 +894,7 @@ Figure_test_7.ISO.new = ggplot(data = Total.iso, aes(x = genome.size/1e6, y = (b
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Mbp") + 
   ylab("Biofilm (genes)") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7/1e6) + ylim(0,32) + theme(legend.position="none")
+  xlim(0,1.25e7/1e6) + ylim(0,16) + theme(legend.position="none")
 Figure_test_7.ISO.new
 
 # Figure 5G - Heat Resistance ----
@@ -904,7 +904,7 @@ Figure_test_8.ISO.new = ggplot(data = Total.iso, aes(x = genome.size/1e6, y = (t
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Mbp") + 
   ylab("Heat Resistance (genes)") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7/1e6) + ylim(0,32) + theme(legend.position="none")
+  xlim(0,1.25e7/1e6) + ylim(0,15) + theme(legend.position="none")
 Figure_test_8.ISO.new
 
 # Figure 5H - pH Resistance ----
@@ -971,6 +971,22 @@ col_order = c("Guild", "Genome Size","OGT","MGT","Amino-transporter","GH-transpo
 
 MAG_gen_trait.2 = MAG_gen_trait.2[, col_order]
 MAG_gen_trait.3 = MAG_gen_trait.3[, col_order]
+
+# Correlation tables----
+
+# Fast-growing bacteria
+
+cor_1 = as.data.frame(cor(MAG_gen_trait.2[,3:13]))
+sheet_write(cor_1,
+            ss = "https://docs.google.com/spreadsheets/d/1HD65sQRx-TTwWKxAodzZdl6f_DwJMqDh4hCfjMGWsV0/edit?gid=0#gid=0",
+            sheet = "cor_1")
+
+# Slow-growing bacteria
+
+cor_2 = as.data.frame(cor(MAG_gen_trait.3[,3:13]))
+sheet_write(cor_2,
+            ss = "https://docs.google.com/spreadsheets/d/1ButitA5kIT-A5NtImGeFI5nbCX9yXGSGO-q2imemHIE/edit?gid=0#gid=0",
+            sheet = "cor_2")
 
 # Function for merging colors and correlation plot
 my_fn <- function(data, mapping, method="p", use="pairwise", ...){
@@ -1065,6 +1081,22 @@ Figure_6.a = ggpairs(ISO_gen_trait.1.s[,3:14],
                      upper = list(continuous = my_fn),
                      lower = list(continuous = "smooth"))  
 Figure_6.a
+
+# Correlation tables----
+
+# Fast-growing bacteria
+
+cor_1 = as.data.frame(cor(ISO_gen_trait.1.f[,3:14]))
+sheet_write(cor_1,
+            ss = "https://docs.google.com/spreadsheets/d/1K6vMCS_Fya3aiL7PmAU4BsT3r6fDNTU0MCG88KPVnQY/edit?gid=0#gid=0",
+            sheet = "cor_1")
+
+# Slow-growing bacteria
+
+cor_2 = as.data.frame(cor(ISO_gen_trait.1.s[,3:14]))
+sheet_write(cor_2,
+            ss = "https://docs.google.com/spreadsheets/d/1vsHB_9Ywhgrhn5mUJSVbwqf5Z2r35_cjEcx7jnuRgMs/edit?gid=0#gid=0",
+            sheet = "cor_2")
 
 # CUE for different taxonomic levels ----
 
