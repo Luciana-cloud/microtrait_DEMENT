@@ -228,5 +228,22 @@ png("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figure
 print(Figure_12)
 dev.off()
 
+# Summary statistics ----
+
+Figure_S5 = ggarrange(Figure_S5.A,Figure_S5.B,
+                         labels = c("A","B"),
+                         ncol = 2, nrow = 1) + theme(panel.background = element_blank())
+Figure_S5
+
+png("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figures/Figure_S5.png",
+    width=3500*0.5,height=1969*0.5,res=300)
+print(Figure_S5)
+dev.off()
+
+pdf("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figures/Figure_S5_overleaf.pdf",
+    width=4.81*1.5,height=2.21*1.5)
+print(Figure_S5)
+dev.off()
+
 
 

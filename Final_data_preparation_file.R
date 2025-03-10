@@ -27,6 +27,7 @@ library(googlesheets4)
 library(readxl)
 library(ggpmisc)
 library(GGally)
+library(reshape2)
 
 # Calling data ----
 
@@ -222,6 +223,7 @@ for(i in names(list)){
 hmm_fire    = read_sheet("https://docs.google.com/spreadsheets/d/1hudmGyDbKOVfpNNZ1mRTRK0edNPm9henzCvpZA0HJNc/edit?gid=1400821528#gid=1400821528")
 mag_abun    = read_sheet("https://docs.google.com/spreadsheets/d/1F6dv4zx0vK83IzfEU02VC9_GJYVERmIV84uwhBV4RL4/edit?gid=1006296082#gid=1006296082") 
 mag_abun    = mag_abun[-c(440,546), ]
+fire_meta   = read_excel("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/MAG_Dataset_BurnSeverity_ARNelson.xlsx")
 
 # Dataframes from each treatment
 Low_shallow   = hmm_fire %>% mutate(Rel.Abund = mag_abun$Avg_low_shallow)
@@ -297,6 +299,9 @@ Fire_predictors_gene = unique(Fire_predictors_gene$x)
 # Call data (MAGs)
 total_genes            = as.data.frame(unique(c(IMG_predictors_gene,Loma_predictors_gene,Fire_predictors_gene)))
 colnames(total_genes)  = c("gene")
+sheet_write(total_genes,
+            ss = "https://docs.google.com/spreadsheets/d/1CWjMQzZbpFDGyi1EsjcUTJ-mD8tt00cELXwpZwyMGUE/edit?gid=0#gid=0",
+            sheet = "selected_genes")
 colnames(hmm_img.filter)[2]   = "id"
 total_gene_names       = c("id",total_genes$gene)
 hmm_fire.global        = hmm_fire %>% select(tidyselect::any_of(total_gene_names))
@@ -803,7 +808,7 @@ Figure_test_9.new
 Figure_test_10a.new = ggplot(data = Total, aes(x = `Genome-Size`/1e6, y = (MGT),color = speed)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Mbp") + 
-  ylab("Maximum growth rate (hrs)") +
+  ylab("Minimum generation time (hrs)") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
   xlim(0,1.25e7/1e6) + ylim(0,40) + theme(legend.position="none")
 Figure_test_10a.new
@@ -917,12 +922,12 @@ Figure_test_9.ISO.new = ggplot(data = Total.iso, aes(x = genome.size/1e6, y = (p
   xlim(0,1.25e7/1e6) + ylim(0,20) + theme(legend.position="none")
 Figure_test_9.ISO.new
 
-# Figure 6B - Maximum growth rate ----
+# Figure 6B - Minimum generation time ----
 
 Figure_test_10.ISO.new = ggplot(data = Total.iso, aes(x = genome.size/1e6, y = (MGT),color = speed)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Mbp") + 
-  ylab("Maximum growth rate (hrs)") +
+  ylab("Minimum generation time (hrs)") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
   xlim(0,1.25e7/1e6) + ylim(0,20) + theme(legend.position="none")
 Figure_test_10.ISO.new
@@ -1237,10 +1242,64 @@ Figure_test_1.Genus.new = ggplot(data = Genus, aes(x = genome_length_mean/1e6, y
   xlim(0,1.25e7/1e6) + ylim(0,1.5) + labs(title = "Genus") + theme(legend.position="none")
 Figure_test_1.Genus.new
 
+# Summary statistics from the MAGs and isolates ----
 
+total_genes.guild     = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/global_datasets_guild.csv",dec=".")
+total_genes.guild     = total_genes.guild %>% select(id,guild)
+total_genes.guild.940_ISO = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/total_genes.guild.940_ISO.csv",dec=".")
+total_genes.guild.940_ISO = total_genes.guild.940_ISO %>% select(id,guild)
 
+# MAGs
+meta_img.nr  = read_sheet("https://docs.google.com/spreadsheets/d/1pjlOXDIDhWv8bujJ4P9BdYC-sSA_kueDAi9T8FLgpm8/edit?gid=67047753#gid=67047753")
+meta_img.nr  = meta_img.nr %>% select(Bin.ID, Bin.Completeness, Bin.Contamination)
+colnames(meta_img.nr) = c("id","completeness","contamination")
 
+loma_stat    = read_sheet("https://docs.google.com/spreadsheets/d/1uwpo3aUPodFvRzg_hPHH_mPNVq-gKUJOAEOakohL7ng/edit?gid=1062499715#gid=1062499715") 
+loma_stat    = loma_stat %>% select(id,completeness,contamination)
+  
+fire_meta    = read_excel("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/MAG_Dataset_BurnSeverity_ARNelson.xlsx")
+fire_meta    = fire_meta %>% select("MAG Id #",Completeness,Contamination)
+colnames(fire_meta) = c("id","completeness","contamination")
 
+MAGs_combined    = as.data.frame(rbind(meta_img.nr,loma_stat,fire_meta))
+MAGs_combined    = merge(MAGs_combined,total_genes.guild,by = "id")
+
+# Adding Loma guilds
+total.genes.loma = total_genes.guild[636:1168,]
+loma_stat1       = cbind(loma_stat,total.genes.loma)
+loma_stat1       = loma_stat1[,c(1:3,5)]
+MAGs_combined    = as.data.frame(rbind(MAGs_combined,loma_stat1))
+high_quality     = MAGs_combined %>% filter(completeness > 90 & contamination < 5)
+(nrow(high_quality)+100)*100/(27214)# 22.85221
+
+write.csv(MAGs_combined, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/Data_Publication/MAGs_FG_table.csv")
+
+MAGs_combined.FG = MAGs_combined %>% group_by(guild) %>% summarise(completeness = mean(completeness),
+                                                                   contamination = mean(contamination))
+MAGs_combined    = MAGs_combined %>% mutate(cat = rep("MAG", nrow(MAGs_combined)))
+MAGs_combined    = MAGs_combined %>% select(id,completeness,contamination,cat)
+MAGs_combined.FG = MAGs_combined.FG %>% mutate(cat = rep("Funtional Group", nrow(MAGs_combined.FG)))
+colnames(MAGs_combined.FG) = c("id","completeness","contamination","cat")
+total_data       = as.data.frame(rbind(MAGs_combined,MAGs_combined.FG))
+
+Figure_S5.A      = ggplot(data = total_data, aes(x=cat, y=completeness)) + 
+  geom_boxplot() + theme_light() + theme(legend.position = "none") + 
+  labs(x = "", y = "Completeness (%)") + ylim(0,100)
+Figure_S5.A  
+
+Figure_S5.B      = ggplot(data = total_data, aes(x=cat, y=contamination)) + 
+  geom_boxplot() + theme_light() + theme(legend.position = "none") + 
+  labs(x = "", y = "Contamination (%)")
+Figure_S5.B  
+
+# Isolates
+meta_iso   = readr::read_tsv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/isolates_GOLD/soils_unpublished.tsv")
+meta_iso   = meta_iso %>% select(taxon_oid,"High Quality")
+meta_iso.1 = readr::read_tsv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/isolates_GOLD/soils.tsv")
+meta_iso.1 = meta_iso.1 %>% select(taxon_oid,"High Quality")
+final_meta = as.data.frame(rbind(meta_iso,meta_iso.1))
+colnames(final_meta) = c("id","quality")
+Iso_combined  = merge(final_meta,total_genes.guild.940_ISO,by = "id")
 
 
 
