@@ -1012,7 +1012,7 @@ my_fn <- function(data, mapping, method="p", use="pairwise", ...){
   
   ggally_cor(data = data, mapping = mapping, ...) + 
     theme_void() +
-    theme(panel.background = element_rect(fill=fill))
+    theme(panel.background = element_rect(fill=fill)) 
 }
 
 # Figure 1 - Cross correlation MAGs ----
