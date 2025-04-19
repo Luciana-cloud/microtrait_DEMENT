@@ -6,5 +6,5 @@ This repository is related to the manuscript "Y-A+S is the new Y-A-S: Updating m
 
 ## Roadmap for the files
 
-- Final_data_preparation_file.R
-- Final_Plots.P
+- Final_data_preparation_file.R: Data preparation
+- Final_Plots.R: Final plots for main manuscript and supplementary information
