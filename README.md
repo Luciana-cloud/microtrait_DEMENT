@@ -7,5 +7,4 @@ This repository is related to the manuscript "Y-A+S is the new Y-A-S: Updating m
 ## Roadmap for the files
 
 - Final_data_preparation_file.R
-- Final_data_preparation_SI.R
 - Final_Plots.P

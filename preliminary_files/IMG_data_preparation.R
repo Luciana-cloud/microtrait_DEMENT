@@ -2033,10 +2033,10 @@ Figure_test_9.ISO = ggplot(data = pH_TOTAL.MAG_m, aes(x = genome.size_mean, y = 
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
   xlim(0,1.25e7) + ylim(0,10)
 
-# Approximation for Y strategy (for MAG)----
+# Approximation for Y strategy (for MAG)
 
-total.granularity.3 = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/total.granularity.3_datasets.csv",dec=".") 
-MAG_id              = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/total_genes.guild.940_MAG.csv",dec=".")
+total.granularity.3 = read.csv("Input_Data/IMG_JGI_MAGs/total.granularity.3_datasets.csv",dec=".") 
+MAG_id              = read.csv("Intermediate_Results/total_genes.guild.940_MAG.csv",dec=".")
 MAG_id              = as.data.frame(MAG_id$id)
 colnames(MAG_id)    = "id"
 Y_MAG               = merge(total.granularity.3,MAG_id,by = "id")

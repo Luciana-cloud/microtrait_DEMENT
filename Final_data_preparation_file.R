@@ -22,18 +22,22 @@ library(car)
 library(collinear)
 library(glmnet)
 library(parallelDist)
-library(googledrive)
-library(googlesheets4)
+#library(googledrive)
+#library(googlesheets4)
 library(readxl)
 library(ggpmisc)
 library(GGally)
 library(reshape2)
 
-# Calling data ----
+# Set directory----
 
-hmm_img       = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/IMG_MAG_results/hmm_MAG_IMG.csv",dec=".")
-coverage_img  = read_sheet("https://docs.google.com/spreadsheets/d/1KkgbeRIVynmgl_tulWIJ4U4zvNCzVbA-trdRSYVPZCA/edit?gid=709301844#gid=709301844")
-meta_img.nr   = read_sheet("https://docs.google.com/spreadsheets/d/1pjlOXDIDhWv8bujJ4P9BdYC-sSA_kueDAi9T8FLgpm8/edit?gid=67047753#gid=67047753")
+setwd("C:/Users/lucia/OneDrive - Wageningen University & Research/UCI_projects/project_1_Microtrait_DEMENT/Manuscript/Dataset")
+
+# Calling data IMG-JGI----
+
+hmm_img       = read.csv("Input_Data/IMG_JGI_MAGs/hmm_MAG_IMG.csv",dec=".")
+coverage_img  = read.csv("Input_Data/IMG_JGI_MAGs/bin_coverage-IMG_MAGs.csv",dec=".")
+meta_img.nr   = read.csv("Input_Data/IMG_JGI_MAGs/IMG_bindata_withmeta_norestricted.csv",dec=".")
 
 # Change column name to match
 colnames(hmm_img)[2]      = "bin_id"
@@ -44,7 +48,7 @@ colnames(coverage_img)[1] = "bin_id"
 data_combined = meta_img.nr %>% left_join(hmm_img, by='bin_id') 
 data_combined = data_combined %>% left_join(coverage_img, by='bin_id')
 data_combined = data_combined %>% filter(Domain == "Bacteria")
-write.csv(data_combined, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/IMG_MAG_results/IMG_global_datasets.csv")
+#write.csv(data_combined, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/IMG_MAG_results/IMG_global_datasets.csv")
 
 # Data preparation ----
 
@@ -52,7 +56,7 @@ write.csv(data_combined, file = "C:/luciana_datos/UCI/Project_2 (microtrait-deme
 data_combined   = data_combined[!(is.na(data_combined$avg_coverage)),]
 data_combined   = data_combined[!(is.na(data_combined$aaeB)),]
 data_combined   = apply(data_combined,2,as.character)
-write.csv(data_combined, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/IMG_global_dataset.csv")
+write.csv(data_combined, file = "Intermediate_Results/Intermediate_results/IMG_global_dataset.csv")
 data_combined.1 = as.data.frame(data_combined) %>% select(2,44,69:1789)
 data_combined_IMG.ID  = data_combined %>% group_by(IMG.Genome.ID) %>% count()
 data_combined_IMG.ID  = data_combined_IMG.ID %>% filter(n > 20)
@@ -70,7 +74,7 @@ for(i in a){
   project = project %>% mutate(RelAbund = avg_coverage/temp$Total)
   data_project_100 = rbind(data_project_100, project) 
 }
-write.csv(data_project_100, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/IMG_MAG_results/IMG_global_datasets_relative_abundance.csv")
+write.csv(data_project_100, file = "Intermediate_Results/IMG_global_datasets_relative_abundance.csv")
 
 # Reduce NAs
 data_project_20 = data_project_100[!(is.na(data_project_100$RelAbund)),]
@@ -116,7 +120,7 @@ data_list_names = ls(pattern="best.predictors_")
 names(list) <- data_list_names
 
 for(i in names(list)){
-  setwd("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/IMG_MAG_results/best_predictors")
+  setwd("Intermediate_Results/IMG_MAG_predictors")
   write.csv(list[[i]], paste0(i,".csv"))
 }
 
@@ -154,17 +158,16 @@ data_list_names = ls(pattern="best.predictors33_")
 names(list) <- data_list_names
 
 for(i in names(list)){
-  setwd("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/IMG_MAG_results/best_predictors")
+  setwd("Intermediate_Results/IMG_MAG_predictors")
   write.csv(list[[i]], paste0(i,".csv"))
 }
 
 # Selection of genes per project (best predictors of MAG abundances) for LOMA project ----
 
 # Calling data and preprocessing
-hmm_loma    = read_sheet("https://docs.google.com/spreadsheets/d/1pjlOXDIDhWv8bujJ4P9BdYC-sSA_kueDAi9T8FLgpm8/edit?gid=67047753#gid=67047753")
-gene_loma   = read_sheet("https://docs.google.com/spreadsheets/d/1j_GH0_JJANgAVytYBc6jPXaQXbiYUkh4SCfJswLJk7Y/edit?gid=349813226#gid=349813226")
-mag_stat    = read_sheet("https://docs.google.com/spreadsheets/d/1uwpo3aUPodFvRzg_hPHH_mPNVq-gKUJOAEOakohL7ng/edit?gid=1062499715#gid=1062499715") 
-mag_abun    = read_sheet("https://docs.google.com/spreadsheets/d/1IIXeOK2qYqIgU2AFi0Yedx-qkLMisexrLyUFxUuncrg/edit?gid=264725796#gid=264725796") 
+hmm_loma    = read.csv("Input_Data/LOMA_MAGs/hmm_Loma.csv",dec=".")
+mag_stat    = read.csv("Input_Data/LOMA_MAGs/mag_stats.csv",dec=".") 
+mag_abun    = read.csv("Input_Data/LOMA_MAGs/mag_adundance.csv",dec=".") 
 mag_stat    = mag_stat %>% full_join(mag_abun)
 
 # Dataframes from each treatment
@@ -213,17 +216,17 @@ data_list_names = ls(pattern="best.predictors_")
 names(list) <- data_list_names
 
 for(i in names(list)){
-  setwd("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/best_predictors")
+  setwd("Intermediate_Results/LOMA_predictors")
   write.csv(list[[i]], paste0(i,".csv"))
 }
 
 # Selection of genes per project (best predictors of MAG abundances) for FIRE project ----
 
 # Calling data and preprocessing
-hmm_fire    = read_sheet("https://docs.google.com/spreadsheets/d/1hudmGyDbKOVfpNNZ1mRTRK0edNPm9henzCvpZA0HJNc/edit?gid=1400821528#gid=1400821528")
-mag_abun    = read_sheet("https://docs.google.com/spreadsheets/d/1F6dv4zx0vK83IzfEU02VC9_GJYVERmIV84uwhBV4RL4/edit?gid=1006296082#gid=1006296082") 
+hmm_fire    = read.csv("Input_Data/FIRE_MAGs/hmm_Fire.csv",dec=".")
+mag_abun    = read.csv("Input_Data/FIRE_MAGs/mag_adundance_fire.csv",dec=".") 
 mag_abun    = mag_abun[-c(440,546), ]
-fire_meta   = read_excel("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/MAG_Dataset_BurnSeverity_ARNelson.xlsx")
+fire_meta   = read_excel("Input_Data/FIRE_MAGs/MAG_Dataset_BurnSeverity_ARNelson.xlsx")
 
 # Dataframes from each treatment
 Low_shallow   = hmm_fire %>% mutate(Rel.Abund = mag_abun$Avg_low_shallow)
@@ -269,28 +272,28 @@ data_list_names = ls(pattern="best.predictors_")
 names(list) <- data_list_names
 
 for(i in names(list)){
-  setwd("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/best_predictors")
+  setwd("Intermediate_Results/FIRE_predictors")
   write.csv(list[[i]], paste0(i,".csv"))
 }
 
 # Functional group analysis ----
 
 # Call Genes and merge datasets - IMG
-IMG_predictors_files = list.files(path="C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/IMG_MAG_results/best_predictors", pattern=".csv", all.files=FALSE, 
+IMG_predictors_files = list.files(path="Intermediate_Results/IMG_MAG_predictors", pattern=".csv", all.files=FALSE, 
                                   full.names=TRUE)
 IMG_predictors_list = lapply(IMG_predictors_files, read.csv)
 IMG_predictors_gene = do.call(rbind.data.frame, IMG_predictors_list)
 IMG_predictors_gene = unique(IMG_predictors_gene$x)
 
 # Call Genes and merge datasets - Loma
-Loma_predictors_files = list.files(path="C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_Loma/best_predictors", pattern=NULL, all.files=FALSE, 
+Loma_predictors_files = list.files(path="Intermediate_Results/LOMA_predictors", pattern=NULL, all.files=FALSE, 
                                    full.names=TRUE)
 Loma_predictors_list = lapply(Loma_predictors_files, read.csv)
 Loma_predictors_gene = do.call(rbind.data.frame, Loma_predictors_list)
 Loma_predictors_gene = unique(Loma_predictors_gene$x)
 
 # Call Genes and merge datasets - Fire
-Fire_predictors_files = list.files(path="C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/best_predictors", pattern=NULL, all.files=FALSE, 
+Fire_predictors_files = list.files(path="Intermediate_Results/FIRE_predictors", pattern=NULL, all.files=FALSE, 
                                    full.names=TRUE)
 Fire_predictors_list = lapply(Fire_predictors_files, read.csv)
 Fire_predictors_gene = do.call(rbind.data.frame, Fire_predictors_list)
@@ -299,9 +302,7 @@ Fire_predictors_gene = unique(Fire_predictors_gene$x)
 # Call data (MAGs)
 total_genes            = as.data.frame(unique(c(IMG_predictors_gene,Loma_predictors_gene,Fire_predictors_gene)))
 colnames(total_genes)  = c("gene")
-sheet_write(total_genes,
-            ss = "https://docs.google.com/spreadsheets/d/1CWjMQzZbpFDGyi1EsjcUTJ-mD8tt00cELXwpZwyMGUE/edit?gid=0#gid=0",
-            sheet = "selected_genes")
+write.csv(total_genes, file = "Output_Data/Best_predictors/Selected_genes.csv")
 colnames(hmm_img.filter)[2]   = "id"
 total_gene_names       = c("id",total_genes$gene)
 hmm_fire.global        = hmm_fire %>% select(tidyselect::any_of(total_gene_names))
@@ -309,10 +310,10 @@ hmm_loma.global        = hmm_loma %>% select(tidyselect::any_of(total_gene_names
 hmm_img.global         = hmm_img.filter %>% select(tidyselect::any_of(total_gene_names))
 
 # Call data (Isolates)
-isolates        = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/isolates_GOLD/isolates_rds/hmm_isolates.csv",dec=".")
-df_1            = read.delim("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/isolates_GOLD/soils_unpublished.tsv",sep="\t")
+isolates        = read.csv("Input_Data/SOIL_ISOLATES/hmm_isolates.csv",dec=".")
+df_1            = read.delim("Input_Data/SOIL_ISOLATES/metadata_2.tsv",sep="\t")
 df_1            = subset(df_1, select = -c(23))
-df_2            = read.delim("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/isolates_GOLD/soils.tsv",sep="\t")
+df_2            = read.delim("Input_Data/SOIL_ISOLATES/metadata_1.tsv",sep="\t")
 df_2            = subset(df_2, select = -c(14,16,18))
 iso.metadata    = as.data.frame(rbind(df_1,df_2))
 iso.metadata    = filter(iso.metadata, High.Quality %in% c("Yes"))
@@ -326,10 +327,10 @@ hmm_loma.global[setdiff(names(hmm_img.global), names(hmm_loma.global))] = 0
 # Merge data global
 MAG_global = as.data.frame(rbind(hmm_fire.global,hmm_loma.global,hmm_img.global,
                                  isolates.global))
-write.csv(MAG_global, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_global.csv")
+write.csv(MAG_global, file = "Output_Data/Global_dataset_microtrait.csv")
 
 # Call the MAG-Microtrait datasets
-global_dataset              = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAG_global.csv",dec=".")
+global_dataset              = read.csv("Output_Data/Global_dataset_microtrait.csv",dec=".")
 
 # Curve for functional groups (1. Random selection of matrix size;
 # 2. Distance matrix and pairwise adonis; 3. Store N° of MAGs and N° of functional groups;
@@ -512,7 +513,7 @@ Figure_S1 = ggplot(data,aes(V1,V2)) +
   xlab("# of MAGs") + ylab("# of Functional Groups") + theme_classic() + 
   theme(text = element_text(size=20))
 
-png("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Figures/Figure_S1.png",
+png("Output_Data/Figures/Figure_S1.png",
     width=3500,height=1969,res=300)
 print(Figure_S1)
 dev.off()
@@ -521,43 +522,47 @@ dev.off()
 FG = 16.597382 + 0.041440*32515 # Number of Functional groups for whole dataset
 
 # Calling distance matrix
-load("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/FG_parallel/distance.total.RData")
+#load("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/FG_parallel/distance.total.RData")
+set.seed(1)
+distance.total  = parDist(x = as.matrix(global_dataset[,3:938]),
+                          method = "fJaccard",
+                          threads = 1) # Adapt the number of threads
 cluster.total   = hclust(distance.total, method="ward.D2")
 v                      = cutree(cluster.total,k=round(FG))
 genome2guild           = data.frame(guild = factor(v))
 rownames(genome2guild) = names(v)
 global_dataset.1       = as.data.frame(cbind(genome2guild,global_dataset))
-write.csv(global_dataset.1, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/global_datasets_guild.csv")
+write.csv(global_dataset.1, file = "Intermediate_Results/global_datasets_guild.csv")
 
 # Genome size analysis----
 
 # Call data again
 # IMG-MAG
-hmm_img     = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/IMG_global_dataset.csv",dec=".")
+hmm_img     = read.csv("Intermediate_Results/IMG_global_dataset.csv",dec=".")
 hmm_img     = as.data.frame(hmm_img) %>% select(3,26,70:1790)
 colnames(hmm_img)[1]  = "id"
 colnames(hmm_img)[2]  = "genome.size"
 
 # Loma-MAG
-hmm_loma    = read_sheet("https://docs.google.com/spreadsheets/d/1pjlOXDIDhWv8bujJ4P9BdYC-sSA_kueDAi9T8FLgpm8/edit?gid=67047753#gid=67047753")
-gene_loma   = read_sheet("https://docs.google.com/spreadsheets/d/1j_GH0_JJANgAVytYBc6jPXaQXbiYUkh4SCfJswLJk7Y/edit?gid=349813226#gid=349813226")
+hmm_loma    = read.csv("Input_Data/LOMA_MAGs/hmm_Loma.csv",dec=".")
+gene_loma   = read.csv("Input_Data/LOMA_MAGs/litter_mags_metadata.csv",dec=".")
 hmm_loma    = gene_loma %>% full_join(hmm_loma)
 hmm_loma[3] = NULL
 colnames(hmm_loma)[2]  = "genome.size"
 
 # Wildfire-MAG
-hmm_fire    = read_sheet("https://docs.google.com/spreadsheets/d/1hudmGyDbKOVfpNNZ1mRTRK0edNPm9henzCvpZA0HJNc/edit?gid=1400821528#gid=1400821528")
-fire_stat   = read_sheet("https://docs.google.com/spreadsheets/d/1Ck_WNZbSZHJ5aVSSH7rdq9uNUYRqyQ5b-0RC7MtvdVk/edit?gid=963628746#gid=963628746")
+hmm_fire    = read.csv("Input_Data/FIRE_MAGs/hmm_Fire.csv",dec=".")
+fire_stat   = read.csv("Input_Data/FIRE_MAGs/fire_metadata.csv",dec=".")
 fire_stat   = fire_stat[-c(440,546), ]
 hmm_fire    = fire_stat %>% full_join(hmm_fire)
 hmm_fire[3] = NULL
 colnames(hmm_fire)[2]  = "genome.size"
 
 # IMG-Isolates
-isolates      = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/isolates_GOLD/isolates_rds/hmm_isolates.csv",dec=".")
-df_1          = read_sheet("https://docs.google.com/spreadsheets/d/1QFSw5U0tf_G6LYYUmkCIkVAnCKaPehnIbYDvu0x4Bzc/edit?gid=1504418445#gid=1504418445")
+isolates      = read.csv("Input_Data/SOIL_ISOLATES/hmm_isolates.csv",dec=".")
+df_1          = read.delim("Input_Data/SOIL_ISOLATES/metadata_2.tsv",sep="\t")
 df_1          = subset(df_1, select = -c(23))
-df_2          = read_sheet("https://docs.google.com/spreadsheets/d/12sKqTlsMWOSDus66dfz3ao6M9IBK_iPnpfGPMCnCt1E/edit?gid=2065174436#gid=2065174436")
+df_2          = read.delim("Input_Data/SOIL_ISOLATES/metadata_1.tsv",sep="\t")
 df_2          = subset(df_2, select = -c(14,16,18))
 iso.metadata  = as.data.frame(rbind(df_1,df_2))
 iso.metadata  = filter(iso.metadata, High.Quality %in% c("Yes"))
@@ -583,33 +588,33 @@ total_genes = bind_rows(hmm_img,hmm_loma,hmm_fire,isolates)
 total_genes[is.na(total_genes)] = 0
 
 # Guild number
-total_genes.guild     = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/global_datasets_guild.csv",dec=".")
+total_genes.guild     = read.csv("Intermediate_Results/global_datasets_guild.csv",dec=".")
 total.guild           = as.data.frame(total_genes.guild) %>% select(4,2)
 total.g.size          = as.data.frame(total_genes) %>% select(1,2)
 
 # Total guilds for the 940 selected genes
 total_genes.guild     = left_join(total.g.size,total_genes.guild, by=c('id'))
 total_genes.guild.940 = as.data.frame(total_genes.guild) %>% select(1,2,4,6:941)
-write.csv(total_genes.guild.940, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/total_genes.guild.940.csv")
+write.csv(total_genes.guild.940, file = "Intermediate_Results/total_genes.guild.940.csv")
 
 # Total guilds for the complete MAG-genes matrix
 total_genes           = left_join(total.guild, total_genes, by=c('id'))
-write.csv(total_genes, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/total_genes.full.csv")
+write.csv(total_genes, file = "Intermediate_Results/total_genes.full.csv")
 
 # 940 MAG-Gene matrix----
 # Call Trait Keys 
-GH_rule = read_sheet("https://docs.google.com/spreadsheets/d/1U6qWJJHossiK3kIwV2XYNKgsXkVrUc42QHiigMhX8Wg/edit?gid=1910000517#gid=1910000517")
+GH_rule = read_excel("Input_Data/microTrait_Rules/microtrait_GH.xlsx")
 GH_rule = as.data.frame(rbind("id","guild","genome.size",GH_rule))
-PR_rule = read_sheet("https://docs.google.com/spreadsheets/d/1y8kqtT9mBdf-34wDUO9LN11kN0Ugz7vk9G2ZlZSc31Y/edit?gid=1394473486#gid=1394473486")
+PR_rule = read_excel("Input_Data/microTrait_Rules/microtrait_proteins.xlsx")
 PR_rule = as.data.frame(rbind("id","guild","genome.size",PR_rule))
-transp_rule = read_sheet("https://docs.google.com/spreadsheets/d/1NJGOHKHM8IpKEZNAs69R_XlftkZ_GrhzOhQvTZfPz_w/edit?gid=1971062019#gid=1971062019")
-osmo_rule   = read_sheet("https://docs.google.com/spreadsheets/d/1WQ27I2Hd9jtCOv3z3cZnSB_A3xTt9bP5tZlOjiU4wVg/edit?gid=379499472#gid=379499472")
+transp_rule = read_excel("Input_Data/microTrait_Rules/microtrait_transporters.xlsx")
+osmo_rule   = read_excel("Input_Data/microTrait_Rules/microtrait_osmolytes.xlsx")
 osmo_rule   = as.data.frame(rbind("id","guild","genome.size",osmo_rule))
-biofilm_rule = read_sheet("https://docs.google.com/spreadsheets/d/1-FR1s9-txuPZWg8uJ21wCn8S0hYP3JDAZpF3Qmx93QU/edit?gid=1459756284#gid=1459756284")
+biofilm_rule = read_excel("Input_Data/microTrait_Rules/microtrait_biofilm.xlsx")
 biofilm_rule = as.data.frame(rbind("id","guild","genome.size",biofilm_rule))  
-high.T_rule  = read_sheet("https://docs.google.com/spreadsheets/d/1-PeZ-F2RnXVFMa0Hkmg8Q-zlp38bCf4lxC-gpI9jEu4/edit?gid=123098806#gid=123098806")
+high.T_rule  = read_excel("Input_Data/microTrait_Rules/microtrait_high_T.xlsx")
 high.T_rule  = as.data.frame(rbind("id","guild","genome.size",high.T_rule))
-pH_rule      = read_sheet("https://docs.google.com/spreadsheets/d/1kANfYGvbb8tDiYEkJ_Whb9kocfhv8oDWpbNITMdZFQg/edit?gid=1661588961#gid=1661588961")
+pH_rule      = read_excel("Input_Data/microTrait_Rules/microtrait_pH_stress.xlsx")
 pH_rule      = as.data.frame(rbind("id","guild","genome.size",pH_rule)) 
 
 # Genome-size for MAGs----
@@ -617,40 +622,106 @@ key_MAGs = bind_rows(hmm_img,hmm_loma,hmm_fire)
 key_MAGs = as.data.frame(key_MAGs$id)
 colnames(key_MAGs) = "key"
 total_genes.guild.940_MAG = total_genes.guild.940[total_genes.guild.940$id %in% key_MAGs$key, ]
-write.csv(total_genes.guild.940_MAG, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/total_genes.guild.940_MAG.csv")
-
-total_genes.guild.940_MAG = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/total_genes.guild.940_MAG.csv",dec=".")
+write.csv(total_genes.guild.940_MAG, file = "Intermediate_Results/total_genes.guild.940_MAG.csv")
 
 # Genome-size for Isolates----
 key_isolates = as.data.frame(isolates$id)
 colnames(key_isolates) = "key"
 total_genes.guild.940_ISO = total_genes.guild.940[total_genes.guild.940$id %in% key_isolates$key, ]
-write.csv(total_genes.guild.940_ISO, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/total_genes.guild.940_ISO.csv")
+write.csv(total_genes.guild.940_ISO, file = "Intermediate_Results/total_genes.guild.940_ISO.csv")
 
-total_genes.guild.940_ISO = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/total_genes.guild.940_ISO.csv",dec=".")
+# Trait Data Preparation (MAGs) ----
 
-# Trait Data Preparation ----
+total_genes.guild.940_MAG = read.csv("Intermediate_Results/total_genes.guild.940_MAG.csv",dec=".")
 
-temp    = drive_ls("https://drive.google.com/drive/u/0/folders/1OlIc_JaS5a9s5jz7m1hTduTtYV7wAcG3")
-a       = as.data.frame(temp$name)
-Aminoacids_T_MAG = read_sheet(temp$id[1])
-Aminoacids_T_MAG = Aminoacids_T_MAG %>% select(guild,genome.size_mean,AMI_TRANSP_TOTAL)
-PH_MAG           = read_sheet(temp$id[2])
-PH_MAG           = PH_MAG %>% select(guild,genome.size_mean,PH_total)
-TEMP_MAG         = read_sheet(temp$id[3])
-TEMP_MAG         = TEMP_MAG %>% select(guild,genome.size_mean,TEMP_total)
-Biofilm_MAG      = read_sheet(temp$id[4])
-Biofilm_MAG      = Biofilm_MAG %>% select(guild,genome.size_mean,BIO_total)
-Osmolyte_MAG     = read_sheet(temp$id[5])
-Osmolyte_MAG     = Osmolyte_MAG %>% select(guild,genome.size_mean,OSMO_total)
-GH_T_MAG         = read_sheet(temp$id[6])
-GH_T_MAG         = GH_T_MAG %>% select(guild,genome.size_mean,CAR_TRANSP_TOTAL)
-Transporter_MAG  = read_sheet(temp$id[7])
-Transporter_MAG  = Transporter_MAG %>% select(guild,genome.size_mean,transp_total)
-Protein_MAG      = read_sheet(temp$id[8])
-Protein_MAG      = Protein_MAG %>% select(guild,genome.size_mean,PR_total)
-GH_MAG           = read_sheet(temp$id[9])
-GH_MAG           = GH_MAG %>% select(guild,genome.size_mean,GH_total)
+# GH - genes (MAG)
+GH_TOTAL.MAG = total_genes.guild.940_MAG %>% select(any_of(GH_rule$`microtrait_hmm-name`))
+GH_TOTAL.MAG$genome.size = as.numeric(as.character(GH_TOTAL.MAG$genome.size))
+GH_TOTAL_m   = GH_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                     list(mean=mean), na.rm=TRUE))
+GH_TOTAL_m   = GH_TOTAL_m %>% mutate(GH_total = rowSums(GH_TOTAL_m[,3:ncol(GH_TOTAL_m)]))
+GH_TOTAL_m.1 = GH_TOTAL_m[-c(247), ] # Erasing super big Functional Group
+GH_MAG       = GH_TOTAL_m.1 %>% select(guild,genome.size_mean,GH_total)
+
+# Protein - genes (MAG)
+PR_TOTAL.MAG = total_genes.guild.940_MAG %>% select(any_of(PR_rule$`microtrait_hmm-name`))
+PR_TOTAL.MAG$genome.size = as.numeric(as.character(PR_TOTAL.MAG$genome.size))
+PR_TOTAL_m   = PR_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                     list(mean=mean), na.rm=TRUE))
+PR_TOTAL_m   = PR_TOTAL_m %>% mutate(PR_total = rowSums(PR_TOTAL_m[,3:ncol(PR_TOTAL_m)]))
+PR_TOTAL_m.1 = PR_TOTAL_m[-c(247), ] # Erasing super big Functional Group
+Protein_MAG  = PR_TOTAL_m.1 %>% select(guild,genome.size_mean,PR_total)
+
+# Transport - genes (MAG)
+transp_rule  = transp_rule %>% filter(`function` == c("transporter"))
+transp_rule  = as.data.frame(rbind("id","guild","genome.size",transp_rule))
+TRANSP_TOTAL = total_genes.guild.940_MAG %>% select(any_of(transp_rule$`microtrait_hmm-name`))
+TRANSP_TOTAL$genome.size = as.numeric(as.character(TRANSP_TOTAL$genome.size))
+TRANSP_TOTAL_m   = TRANSP_TOTAL %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                         list(mean=mean), na.rm=TRUE))
+TRANSP_TOTAL_m   = TRANSP_TOTAL_m %>% mutate(transp_total = rowSums(TRANSP_TOTAL_m[,3:ncol(TRANSP_TOTAL_m)]))
+TRANSP_TOTAL_m.1 = TRANSP_TOTAL_m[-c(247), ] # Erasing super big Functional Group
+Transporter_MAG  = TRANSP_TOTAL_m.1 %>% select(guild,genome.size_mean,transp_total)
+
+# Transport - Aminoacids (MAG)
+transp_rule        = transp_rule %>% filter(`function`==c("transporter"))
+transp_rule_ami    = transp_rule %>% filter(class==c("aminoacid","peptide"))
+transp_rule_ami    = as.data.frame(rbind("id","guild","genome.size",transp_rule_ami))
+AMI_TRANSP_TOTAL   = total_genes.guild.940_MAG %>% select(any_of(transp_rule_ami$`microtrait_hmm-name`))
+AMI_TRANSP_TOTAL$genome.size = as.numeric(as.character(AMI_TRANSP_TOTAL$genome.size))
+AMI_TRANSP_TOTAL_m = AMI_TRANSP_TOTAL %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                               list(mean=mean), na.rm=TRUE))
+AMI_TRANSP_TOTAL_m = AMI_TRANSP_TOTAL_m %>% mutate(AMI_TRANSP_TOTAL = rowSums(AMI_TRANSP_TOTAL_m[,3:ncol(AMI_TRANSP_TOTAL_m)]))
+AMI_TRANSP_TOTAL_m.1 = AMI_TRANSP_TOTAL_m[-c(247), ] # Erasing super big Functional Group
+Aminoacids_T_MAG   = AMI_TRANSP_TOTAL_m.1 %>% select(guild,genome.size_mean,AMI_TRANSP_TOTAL)
+
+# Transport - Carbohydrate (MAG)
+transp_rule_car    = transp_rule %>% filter(class==c("carbohydrate"))
+transp_rule_car    = as.data.frame(rbind("id","guild","genome.size",transp_rule_car))
+CAR_TRANSP_TOTAL   = total_genes.guild.940_MAG %>% select(any_of(transp_rule_car$`microtrait_hmm-name`))
+CAR_TRANSP_TOTAL$genome.size = as.numeric(as.character(CAR_TRANSP_TOTAL$genome.size))
+CAR_TRANSP_TOTAL_m = CAR_TRANSP_TOTAL %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                               list(mean=mean), na.rm=TRUE))
+CAR_TRANSP_TOTAL_m = CAR_TRANSP_TOTAL_m %>% mutate(CAR_TRANSP_TOTAL = rowSums(CAR_TRANSP_TOTAL_m[,3:ncol(CAR_TRANSP_TOTAL_m)]))
+CAR_TRANSP_TOTAL_m.1 = CAR_TRANSP_TOTAL_m[-c(247), ] # Erasing super big Functional Group
+GH_T_MAG           = CAR_TRANSP_TOTAL_m.1 %>% select(guild,genome.size_mean,CAR_TRANSP_TOTAL)
+
+# Osmolytes - genes (MAG)
+OSMO_TOTAL.MAG = total_genes.guild.940_MAG %>% select(any_of(osmo_rule$`microtrait_hmm-name`))
+OSMO_TOTAL.MAG$genome.size = as.numeric(as.character(OSMO_TOTAL.MAG$genome.size))
+OSMO_TOTAL.MAG_m   = OSMO_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                             list(mean=mean), na.rm=TRUE))
+OSMO_TOTAL.MAG_m   = OSMO_TOTAL.MAG_m %>% mutate(OSMO_total = rowSums(OSMO_TOTAL.MAG_m[,3:ncol(OSMO_TOTAL.MAG_m)]))
+OSMO_TOTAL.MAG_m.1 = OSMO_TOTAL.MAG_m[-c(247), ] # Erasing super big Functional Group
+Osmolyte_MAG       = OSMO_TOTAL.MAG_m.1 %>% select(guild,genome.size_mean,OSMO_total)
+
+# Biofilm - genes (MAG)
+BIO_TOTAL.MAG = total_genes.guild.940_MAG %>% select(any_of(biofilm_rule$`microtrait_hmm-name`))
+BIO_TOTAL.MAG$genome.size = as.numeric(as.character(BIO_TOTAL.MAG$genome.size))
+BIO_TOTAL.MAG_m   = BIO_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                           list(mean=mean), na.rm=TRUE))
+BIO_TOTAL.MAG_m   = BIO_TOTAL.MAG_m %>% mutate(BIO_total = rowSums(BIO_TOTAL.MAG_m[,3:ncol(BIO_TOTAL.MAG_m)]))
+BIO_TOTAL.MAG_m.1 = BIO_TOTAL.MAG_m[-c(247), ] # Erasing super big Functional Group
+Biofilm_MAG       = BIO_TOTAL.MAG_m.1 %>% select(guild,genome.size_mean,BIO_total)
+
+# High Temp - genes (MAG)
+TEMP.MAG = total_genes.guild.940_MAG %>% select(any_of(high.T_rule$`microtrait_hmm-name`))
+TEMP.MAG$genome.size = as.numeric(as.character(TEMP.MAG$genome.size))
+TEMP.MAG_m   = TEMP.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                 list(mean=mean), na.rm=TRUE))
+TEMP.MAG_m   = TEMP.MAG_m %>% mutate(TEMP_total = rowSums(TEMP.MAG_m[,3:ncol(TEMP.MAG_m)]))
+TEMP.MAG_m.1 = TEMP.MAG_m[-c(247), ] # Erasing super big Functional Group
+TEMP_MAG     = TEMP.MAG_m.1 %>% select(guild,genome.size_mean,TEMP_total)
+
+# pH - genes (MAG)
+PH.MAG = total_genes.guild.940_MAG %>% select(any_of(pH_rule$`microtrait_hmm-name`))
+PH.MAG$genome.size = as.numeric(as.character(PH.MAG$genome.size))
+PH.MAG_m   = PH.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                             list(mean=mean), na.rm=TRUE))
+PH.MAG_m   = PH.MAG_m %>% mutate(PH_total = rowSums(PH.MAG_m[,3:ncol(PH.MAG_m)]))
+PH.MAG_m.1 = PH.MAG_m[-c(247), ] # Erasing super big Functional Group
+PH_MAG     = PH.MAG_m.1 %>% select(guild,genome.size_mean,PH_total)
+
 MAG_gen_trait    = as.data.frame(cbind(Aminoacids_T_MAG,PH_MAG$PH_total,
                                        TEMP_MAG$TEMP_total,Biofilm_MAG$BIO_total,
                                        Osmolyte_MAG$OSMO_total,GH_T_MAG$CAR_TRANSP_TOTAL,
@@ -660,9 +731,33 @@ colnames(MAG_gen_trait) = c("guild","genome.size","amino.transport","pH","temp",
                             "biofilm","osmolyte","GH.trasnport","tranport.total",
                             "Protein","CAZy")
 
-# Adding genome size to the trait dataset - MAG ----
+# Adding genome size to the trait dataset - MAG
 
-MAG_gen_trait       = read_sheet("https://docs.google.com/spreadsheets/d/1Y6yMpQygXJof8EdDAE967ufLbNxmJcBqSZzUgMBnpYY/edit?gid=0#gid=0")
+# Approximation for Y strategy (for MAG)
+
+total.granularity.3 = read.csv("Input_Data/IMG_JGI_MAGs/total.granularity.3_datasets.csv",dec=".") 
+MAG_id              = read.csv("Intermediate_Results/total_genes.guild.940_MAG.csv",dec=".")
+MAG_id              = as.data.frame(MAG_id$id)
+colnames(MAG_id)    = "id"
+Y_MAG               = merge(total.granularity.3,MAG_id,by = "id")
+Y_MAG               = Y_MAG %>% select(c("guild","genome.size","mgt","ogt"))
+Y_MAG.A             = Y_MAG %>% select(c("guild","genome.size","mgt"))
+
+# Minimum generation time > 5
+Y_MAG.A     = Y_MAG.A %>% filter(mgt > 5)
+Y_MAG.A.1   = Y_MAG.A %>% group_by(guild) %>% summarise(across(where(is.numeric),list(mean=mean), na.rm=TRUE))
+
+# Minimum generation time <= 5
+Y_MAG.B   = Y_MAG %>% select(c("guild","genome.size","mgt"))
+Y_MAG.B   = Y_MAG.B %>% filter(mgt <= 5)
+Y_MAG.B.1 = Y_MAG.B %>% group_by(guild) %>% summarise(across(where(is.numeric),
+                                                             list(mean=mean), na.rm=TRUE))
+
+# Optimal Growth Temperature
+Y_MAG.C     = Y_MAG %>% select(c("guild","genome.size","ogt"))
+Y_MAG.C     = na.omit(Y_MAG.C)
+Y_MAG.C.1   = Y_MAG.C %>% group_by(guild) %>% summarise(across(where(is.numeric),
+                                                               list(mean=mean), na.rm=TRUE)) 
 colnames(Y_MAG.B.1) = c("guild","genome.size","mgr")
 colnames(Y_MAG.A.1) = c("guild","genome.size","mgr")
 colnames(Y_MAG.C.1) = c("guild","genome.size","ogt")
@@ -670,20 +765,116 @@ MAG_gen_trait.1     = merge(MAG_gen_trait,Y_MAG.C.1,by = c("guild","genome.size"
 MAG_gen_trait.2     = merge(MAG_gen_trait.1,Y_MAG.B.1,by = c("guild","genome.size"))
 MAG_gen_trait.3     = merge(MAG_gen_trait.1,Y_MAG.A.1,by = c("guild","genome.size"))
 
-sheet_write(MAG_gen_trait.2,
-            ss = "https://docs.google.com/spreadsheets/d/1Gtb4oLsNibF-yPwA9f1y78axGuKCO70Y1cZKNw0KRtk/edit?gid=0#gid=0",
-            sheet = "MAG_gen_trait")
-sheet_write(MAG_gen_trait.3,
-            ss = "https://docs.google.com/spreadsheets/d/1Y6yMpQygXJof8EdDAE967ufLbNxmJcBqSZzUgMBnpYY/edit?gid=0#gid=0",
-            sheet = "MAG_gen_trait.5")
+write.csv(MAG_gen_trait.2, file = "Intermediate_Results/MAG_gen_trait.csv")
+write.csv(MAG_gen_trait.3, file = "Intermediate_Results/MAG_gen_trait.5.csv")
 
-# Adding genome size to the trait dataset - Isolates ----
+# Trait Data Preparation (Isolates) ----
 
-Isolates_gen_trait  = read_sheet("https://docs.google.com/spreadsheets/d/1xT3vB2K2tupkeHZwUlVzh4ZYWhmUpOmMQtESNH2Mst0/edit?gid=0#gid=0")
-isolates     = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Data/dement_isolates_CUE.csv",dec=".")
-isolatest    = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/total.granularity.3_datasets.csv",dec=".")
+total_genes.guild.940_ISO = read.csv("Intermediate_Results/total_genes.guild.940_ISO.csv",dec=".")
+
+# GH - genes (Isolates)
+GH_TOTAL.ISO = total_genes.guild.940_ISO %>% select(any_of(GH_rule$`microtrait_hmm-name`))
+GH_TOTAL.ISO$genome.size = as.numeric(as.character(GH_TOTAL.ISO$genome.size))
+GH_TOTAL_m   = GH_TOTAL.ISO %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                     list(mean=mean), na.rm=TRUE))
+GH_TOTAL_m   = GH_TOTAL_m %>% mutate(GH_total = rowSums(GH_TOTAL_m[,4:ncol(GH_TOTAL_m)]))
+GH_Isolates  = GH_TOTAL_m %>% select(guild,genome.size_mean,GH_total)
+
+# Protein - genes (Isolates)
+PH_TOTAL.ISO = total_genes.guild.940_ISO %>% select(any_of(PR_rule$`microtrait_hmm-name`))
+PH_TOTAL.ISO$genome.size = as.numeric(as.character(PH_TOTAL.ISO$genome.size))
+PH_TOTAL_m   = PH_TOTAL.ISO %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                     list(mean=mean), na.rm=TRUE))
+PH_TOTAL_m   = PH_TOTAL_m %>% mutate(PR_total = rowSums(PH_TOTAL_m[,4:ncol(PH_TOTAL_m)]))
+Protein_Isolates      = PH_TOTAL_m %>% select(guild,genome.size_mean,PR_total)
+
+# Transport - genes (Isolates)
+transp_rule    = transp_rule %>% filter(`function` == c("transporter"))
+transp_rule    = as.data.frame(rbind("id","guild","genome.size",transp_rule))
+TRANSP_TOTAL.i = total_genes.guild.940_ISO %>% select(any_of(transp_rule$`microtrait_hmm-name`))
+TRANSP_TOTAL.i$genome.size = as.numeric(as.character(TRANSP_TOTAL.i$genome.size))
+TRANSP_TOTAL_m = TRANSP_TOTAL.i %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                         list(mean=mean), na.rm=TRUE))
+TRANSP_TOTAL_m = TRANSP_TOTAL_m %>% mutate(transp_total = rowSums(TRANSP_TOTAL_m[,4:ncol(TRANSP_TOTAL_m)]))
+Transporter_Isolates  = TRANSP_TOTAL_m %>% select(guild,genome.size_mean,transp_total)
+
+# Transport - Aminoacids (Isolates)
+transp_rule_ami    = transp_rule %>% filter(class==c("aminoacid","peptide"))
+transp_rule_ami    = as.data.frame(rbind("id","guild","genome.size",transp_rule_ami))
+AMI_TRANSP_TOTAL.i = total_genes.guild.940_ISO %>% select(any_of(transp_rule_ami$`microtrait_hmm-name`))
+AMI_TRANSP_TOTAL.i$genome.size = as.numeric(as.character(AMI_TRANSP_TOTAL.i$genome.size))
+AMI_TRANSP_TOTAL.i_m = AMI_TRANSP_TOTAL.i %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                                   list(mean=mean), na.rm=TRUE))
+AMI_TRANSP_TOTAL.i_m = AMI_TRANSP_TOTAL.i_m %>% mutate(AMI_TRANSP_TOTAL = rowSums(AMI_TRANSP_TOTAL.i_m[,4:ncol(AMI_TRANSP_TOTAL.i_m)]))
+Aminoacids_T_Isolates = AMI_TRANSP_TOTAL.i_m %>% select(guild,genome.size_mean,AMI_TRANSP_TOTAL)
+
+# Transport - Carbohydrate (Isolates)
+transp_rule_car    = transp_rule %>% filter(class==c("carbohydrate"))
+transp_rule_car    = as.data.frame(rbind("id","guild","genome.size",transp_rule_car))
+CAR_TRANSP_TOTAL.i = total_genes.guild.940_ISO %>% select(any_of(transp_rule_car$`microtrait_hmm-name`))
+CAR_TRANSP_TOTAL.i$genome.size = as.numeric(as.character(CAR_TRANSP_TOTAL.i$genome.size))
+CAR_TRANSP_TOTAL.i_m = CAR_TRANSP_TOTAL.i %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                                   list(mean=mean), na.rm=TRUE))
+CAR_TRANSP_TOTAL.i_m = CAR_TRANSP_TOTAL.i_m %>% mutate(CAR_TRANSP_TOTAL = rowSums(CAR_TRANSP_TOTAL.i_m[,4:ncol(CAR_TRANSP_TOTAL.i_m)]))
+GH_T_Isolates     = CAR_TRANSP_TOTAL.i_m %>% select(guild,genome.size_mean,CAR_TRANSP_TOTAL)
+
+# Osmolytes - genes (Isolates)
+OSMO_TOTAL.TOTAL.i = total_genes.guild.940_ISO %>% select(any_of(osmo_rule$`microtrait_hmm-name`))
+OSMO_TOTAL.TOTAL.i$genome.size = as.numeric(as.character(OSMO_TOTAL.TOTAL.i$genome.size))
+OSMO_TOTAL.TOTAL.i_m   = OSMO_TOTAL.TOTAL.i %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                                     list(mean=mean), na.rm=TRUE))
+OSMO_TOTAL_m   = OSMO_TOTAL.TOTAL.i_m %>% mutate(OSMO_total = rowSums(OSMO_TOTAL.TOTAL.i_m[,4:ncol(OSMO_TOTAL.TOTAL.i_m)]))
+Osmolyte_Isolates = OSMO_TOTAL_m %>% select(guild,genome.size_mean,OSMO_total)
+
+# Biofilm - genes (Isolates)
+BIO_TOTAL.MAG = total_genes.guild.940_ISO %>% select(any_of(biofilm_rule$`microtrait_hmm-name`))
+BIO_TOTAL.MAG$genome.size = as.numeric(as.character(BIO_TOTAL.MAG$genome.size))
+BIO_TOTAL.MAG_m   = BIO_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                           list(mean=mean), na.rm=TRUE))
+BIO_TOTAL.MAG_m   = BIO_TOTAL.MAG_m %>% mutate(BIO_total = rowSums(BIO_TOTAL.MAG_m[,4:ncol(BIO_TOTAL.MAG_m)]))
+Biofilm_Isolates  = BIO_TOTAL.MAG_m %>% select(guild,genome.size_mean,BIO_total)
+
+# High Temperature - genes (Isolates)
+TEMP_TOTAL.MAG = total_genes.guild.940_ISO %>% select(any_of(high.T_rule$`microtrait_hmm-name`))
+TEMP_TOTAL.MAG$genome.size = as.numeric(as.character(TEMP_TOTAL.MAG$genome.size))
+TEMP_TOTAL.MAG_m   = TEMP_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                             list(mean=mean), na.rm=TRUE))
+TEMP_TOTAL.MAG_m   = TEMP_TOTAL.MAG_m %>% mutate(TEMP_total = rowSums(TEMP_TOTAL.MAG_m[,4:ncol(TEMP_TOTAL.MAG_m)]))
+TEMP_Isolates      = TEMP_TOTAL.MAG_m %>% select(guild,genome.size_mean,TEMP_total)
+
+# pH - genes (Isolates)
+pH_TOTAL.MAG = total_genes.guild.940_ISO %>% select(any_of(pH_rule$`microtrait_hmm-name`))
+pH_TOTAL.MAG$genome.size = as.numeric(as.character(pH_TOTAL.MAG$genome.size))
+pH_TOTAL.MAG_m   = pH_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                         list(mean=mean), na.rm=TRUE))
+pH_TOTAL.MAG_m   = pH_TOTAL.MAG_m %>% mutate(PH_total = rowSums(pH_TOTAL.MAG_m[,4:ncol(pH_TOTAL.MAG_m)]))
+PH_Isolates      = pH_TOTAL.MAG_m %>% select(guild,genome.size_mean,PH_total)
+
+Isolates_gen_trait    = as.data.frame(cbind(Aminoacids_T_Isolates,PH_Isolates$PH_total,
+                                            TEMP_Isolates$TEMP_total,Biofilm_Isolates$BIO_total,
+                                            Osmolyte_Isolates$OSMO_total,GH_T_Isolates$CAR_TRANSP_TOTAL,
+                                            Transporter_Isolates$transp_total,Protein_Isolates$PR_total,
+                                            GH_Isolates$GH_total))
+colnames(Isolates_gen_trait) = c("guild","genome.size","amino.transport","pH","temp",
+                                 "biofilm","osmolyte","GH.trasnport","tranport.total",
+                                 "Protein","CAZy")
+
+# Adding genome size to the trait dataset - Isolates
+
+Isolates_gen_trait    = as.data.frame(cbind(Aminoacids_T_Isolates,PH_Isolates$PH_total,
+                                            TEMP_Isolates$TEMP_total,Biofilm_Isolates$BIO_total,
+                                            Osmolyte_Isolates$OSMO_total,GH_T_Isolates$CAR_TRANSP_TOTAL,
+                                            Transporter_Isolates$transp_total,Protein_Isolates$PR_total,
+                                            GH_Isolates$GH_total))
+colnames(Isolates_gen_trait) = c("guild","genome.size","amino.transport","pH","temp",
+                                 "biofilm","osmolyte","GH.trasnport","tranport.total",
+                                 "Protein","CAZy")
+# CUE ----
+
+isolates     = read.csv("Input_Data/SOIL_ISOLATES/dement_isolates_CUE.csv",dec=".")
+isolatest    = read.csv("Input_Data/SOIL_ISOLATES/total.granularity.3_datasets.csv",dec=".")
 isolates.1   = subset(isolates, isolates$CUE !='NaN')
-total_genes.guild.940_ISO = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/total_genes.guild.940_ISO.csv",dec=".")
+
 isolates.2   = isolates.1 %>% left_join(total_genes.guild.940_ISO, by='id')
 isolates.2.m = isolates.2 %>% group_by(guild) %>% summarise(across(where(is.numeric), 
                                                                    list(mean=mean), na.rm=TRUE))
@@ -691,15 +882,23 @@ isolates.2.m = isolates.2.m %>% select(c("guild","CUE_mean","genome.size_mean",
                                          "mingentime_mean","optimumT_mean"))
 colnames(isolates.2.m) = c("guild","yield","genome.size","MGT","OGT")
 ISO_gen_trait.1        = merge(Isolates_gen_trait,isolates.2.m,by = c("guild","genome.size"))
+colnames(ISO_gen_trait.1) = c("Guild","Genome Size","Amino-transporter","pH-Tol",
+                              "Temp-Tol", "Biofilm", "Osmolyte","GH-transporter",
+                              "Total-transporter","Protein-enzyme","CAZy","Yield","MGT","OGT")
+col_order = c("Guild", "Genome Size","Yield","OGT","MGT","Amino-transporter","GH-transporter",
+              "Total-transporter","Protein-enzyme","CAZy","pH-Tol","Temp-Tol", 
+              "Biofilm", "Osmolyte")
+ISO_gen_trait.1   = ISO_gen_trait.1[, col_order]
+ISO_gen_trait.1   = ISO_gen_trait.1 %>% filter(Yield <= 0.9)
 
-sheet_write(ISO_gen_trait.1,
-            ss = "https://docs.google.com/spreadsheets/d/1xT3vB2K2tupkeHZwUlVzh4ZYWhmUpOmMQtESNH2Mst0/edit?gid=0#gid=0v",
-            sheet = "ISO_gen_trait.1")
+write.csv(ISO_gen_trait.1, file = "Intermediate_Results/ISO_gen_trait.1.csv")
 
 # Linear regressions with genome size for MAGs ----
 
-MAG_gen_trait.2  = read_sheet("https://docs.google.com/spreadsheets/d/1Gtb4oLsNibF-yPwA9f1y78axGuKCO70Y1cZKNw0KRtk/edit?gid=0#gid=0")
-MAG_gen_trait.3  = read_sheet("https://docs.google.com/spreadsheets/d/1Y6yMpQygXJof8EdDAE967ufLbNxmJcBqSZzUgMBnpYY/edit?gid=0#gid=0")
+MAG_gen_trait.2  = read.csv("Intermediate_Results/MAG_gen_trait.csv",dec=".")
+MAG_gen_trait.2  = MAG_gen_trait.2[, -1]
+MAG_gen_trait.3  = read.csv("Intermediate_Results/MAG_gen_trait.5.csv",dec=".")
+MAG_gen_trait.3  = MAG_gen_trait.3[, -1]
 
 colnames(MAG_gen_trait.2) = c("Guild", "Genome-Size", "Amino-transporter", "pH-Tol",
                               "Temp-Tol", "Biofilm", "Osmolyte","GH-transporter",
@@ -825,12 +1024,12 @@ Figure_test_11.new
 
 # Linear regressions with genome size for Isolates ----
 
-ISO_gen_trait.1  = read_sheet("https://docs.google.com/spreadsheets/d/1xT3vB2K2tupkeHZwUlVzh4ZYWhmUpOmMQtESNH2Mst0/edit?gid=0#gid=0",
-                              sheet = "ISO_gen_trait.1")
+ISO_gen_trait.1  = read.csv("Intermediate_Results/ISO_gen_trait.1.csv",dec=".")
+ISO_gen_trait.1  = ISO_gen_trait.1[, -1]
 Total.iso        = ISO_gen_trait.1 %>% mutate(speed = case_when(MGT <= 5 ~ "fast",
                                                                 MGT  > 5 ~ "slow"))
 # Erase outlier isolates that has a 0.99 yield value
-Total.iso        = Total.iso %>% filter(yield <= 0.9)
+Total.iso        = Total.iso %>% filter(Yield <= 0.9)
 
 # Figure 3C - CAZy enzyme ----
 
@@ -956,8 +1155,10 @@ Figure_test_12.ISO.new
 
 # Call data
 
-MAG_gen_trait.2  = read_sheet("https://docs.google.com/spreadsheets/d/1Gtb4oLsNibF-yPwA9f1y78axGuKCO70Y1cZKNw0KRtk/edit?gid=0#gid=0")
-MAG_gen_trait.3  = read_sheet("https://docs.google.com/spreadsheets/d/1Y6yMpQygXJof8EdDAE967ufLbNxmJcBqSZzUgMBnpYY/edit?gid=0#gid=0")
+MAG_gen_trait.2  = read.csv("Intermediate_Results/MAG_gen_trait.csv",dec=".")
+MAG_gen_trait.2  = MAG_gen_trait.2[, -1]
+MAG_gen_trait.3  = read.csv("Intermediate_Results/MAG_gen_trait.5.csv",dec=".")
+MAG_gen_trait.3  = MAG_gen_trait.3[, -1]
 
 colnames(MAG_gen_trait.2) = c("Guild", "Genome Size", "Amino-transporter", "pH-Tol",
                               "Temp-Tol", "Biofilm", "Osmolyte","GH-transporter",
@@ -982,16 +1183,12 @@ MAG_gen_trait.3 = MAG_gen_trait.3[, col_order]
 # Fast-growing bacteria
 
 cor_1 = as.data.frame(cor(MAG_gen_trait.2[,3:13]))
-sheet_write(cor_1,
-            ss = "https://docs.google.com/spreadsheets/d/1HD65sQRx-TTwWKxAodzZdl6f_DwJMqDh4hCfjMGWsV0/edit?gid=0#gid=0",
-            sheet = "cor_1")
+write.csv(cor_1, file = "Output_Data/Fast.growing_correlation.MAG.csv")
 
 # Slow-growing bacteria
 
 cor_2 = as.data.frame(cor(MAG_gen_trait.3[,3:13]))
-sheet_write(cor_2,
-            ss = "https://docs.google.com/spreadsheets/d/1ButitA5kIT-A5NtImGeFI5nbCX9yXGSGO-q2imemHIE/edit?gid=0#gid=0",
-            sheet = "cor_2")
+write.csv(cor_2, file = "Output_Data/Slow.growing_correlation.MAG.csv")
 
 # Function for merging colors and correlation plot
 my_fn <- function(data, mapping, method="p", use="pairwise", ...){
@@ -1031,43 +1228,10 @@ Figure_5.a
 
 # Cross correlations Isolates ----
 
-# Call data
-
-Isolates_gen_trait  = read_sheet("https://docs.google.com/spreadsheets/d/1xT3vB2K2tupkeHZwUlVzh4ZYWhmUpOmMQtESNH2Mst0/edit?gid=0#gid=0")
-isolates     = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MICROTRAIT_DEMENT/Data/dement_isolates_CUE.csv",dec=".")
-isolatest    = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/total.granularity.3_datasets.csv",dec=".")
-isolates.1   = subset(isolates, isolates$CUE !='NaN')
-total_genes.guild.940_ISO = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/total_genes.guild.940_ISO.csv",dec=".")
-
-# Merge
-
-isolates.2   = isolates.1 %>% left_join(total_genes.guild.940_ISO, by='id')
-isolates.2.m = isolates.2 %>% group_by(guild) %>% summarise(across(where(is.numeric), 
-                                                                   list(mean=mean), na.rm=TRUE))
-isolates.2.m = isolates.2.m %>% select(c("guild","CUE_mean","genome.size_mean",
-                                         "mingentime_mean","optimumT_mean"))
-colnames(isolates.2.m) = c("guild","yield","genome.size","MGT","OGT")
-ISO_gen_trait.1        = merge(Isolates_gen_trait,isolates.2.m,by = c("guild","genome.size"))
-
-sheet_write(ISO_gen_trait.1,
-            ss = "https://docs.google.com/spreadsheets/d/1xT3vB2K2tupkeHZwUlVzh4ZYWhmUpOmMQtESNH2Mst0/edit?gid=0#gid=0v",
-            sheet = "ISO_gen_trait.1")
-
 # Plotting cross correlations
 
-ISO_gen_trait.1  = read_sheet("https://docs.google.com/spreadsheets/d/1xT3vB2K2tupkeHZwUlVzh4ZYWhmUpOmMQtESNH2Mst0/edit?gid=0#gid=0",
-                              sheet = "ISO_gen_trait.1")
-
-colnames(ISO_gen_trait.1) = c("Guild","Genome Size","Amino-transporter","pH-Tol",
-                              "Temp-Tol", "Biofilm", "Osmolyte","GH-transporter",
-                              "Total-transporter","Protein-enzyme","CAZy","Yield","MGT","OGT")
-# Reordering columns
-
-col_order = c("Guild", "Genome Size","Yield","OGT","MGT","Amino-transporter","GH-transporter",
-              "Total-transporter","Protein-enzyme","CAZy","pH-Tol","Temp-Tol", 
-              "Biofilm", "Osmolyte")
-ISO_gen_trait.1   = ISO_gen_trait.1[, col_order]
-ISO_gen_trait.1   = ISO_gen_trait.1 %>% filter(Yield <= 0.9)
+ISO_gen_trait.1  = read.csv("Intermediate_Results/ISO_gen_trait.1.csv",dec=".")
+ISO_gen_trait.1  = ISO_gen_trait.1[, -1]
 
 # Figure 2 - Cross correlation Isolates ----
 
@@ -1092,27 +1256,24 @@ Figure_6.a
 # Fast-growing bacteria
 
 cor_1 = as.data.frame(cor(ISO_gen_trait.1.f[,3:14]))
-sheet_write(cor_1,
-            ss = "https://docs.google.com/spreadsheets/d/1K6vMCS_Fya3aiL7PmAU4BsT3r6fDNTU0MCG88KPVnQY/edit?gid=0#gid=0",
-            sheet = "cor_1")
+write.csv(cor_1, file = "Output_Data/Fast.growing_correlation.isolates.csv")
 
 # Slow-growing bacteria
 
 cor_2 = as.data.frame(cor(ISO_gen_trait.1.s[,3:14]))
-sheet_write(cor_2,
-            ss = "https://docs.google.com/spreadsheets/d/1vsHB_9Ywhgrhn5mUJSVbwqf5Z2r35_cjEcx7jnuRgMs/edit?gid=0#gid=0",
-            sheet = "cor_2")
+write.csv(cor_2, file = "Output_Data/Slow.growing_correlation.isolates.csv")
 
 # CUE for different taxonomic levels ----
 
-# Metadata
-
-meta_iso   = readr::read_tsv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/isolates_GOLD/soils_unpublished.tsv")
-meta_iso   = as.data.frame(cbind(meta_iso$`IMG Genome ID`,meta_iso$Phylum,
+isolates     = read.csv("Input_Data/SOIL_ISOLATES/dement_isolates_CUE.csv",dec=".")
+isolatest    = read.csv("Input_Data/SOIL_ISOLATES/total.granularity.3_datasets.csv",dec=".")
+isolates.1   = subset(isolates, isolates$CUE !='NaN')
+meta_iso   = read.delim("Input_Data/SOIL_ISOLATES/metadata_2.tsv",sep="\t")
+meta_iso   = as.data.frame(cbind(meta_iso$IMG.Genome.ID,meta_iso$Phylum,
                                  meta_iso$Class,meta_iso$Order,meta_iso$Family,
                                  meta_iso$Genus))
-meta_iso.1 = readr::read_tsv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/isolates_GOLD/soils.tsv")
-meta_iso.1 = as.data.frame(cbind(meta_iso.1$`IMG Genome ID`,meta_iso.1$Phylum,
+meta_iso.1 = read.delim("Input_Data/SOIL_ISOLATES/metadata_1.tsv",sep="\t")
+meta_iso.1 = as.data.frame(cbind(meta_iso.1$IMG.Genome.ID,meta_iso.1$Phylum,
                                  meta_iso.1$Class,meta_iso.1$Order,meta_iso.1$Family,
                                  meta_iso.1$Genus))
 
@@ -1244,20 +1405,20 @@ Figure_test_1.Genus.new
 
 # Summary statistics from the MAGs and isolates ----
 
-total_genes.guild     = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/global_datasets_guild.csv",dec=".")
+total_genes.guild     = read.csv("Intermediate_Results/global_datasets_guild.csv",dec=".")
 total_genes.guild     = total_genes.guild %>% select(id,guild)
-total_genes.guild.940_ISO = read.csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/Intermediate_results/total_genes.guild.940_ISO.csv",dec=".")
+total_genes.guild.940_ISO = read.csv("Intermediate_Results/total_genes.guild.940_ISO.csv",dec=".")
 total_genes.guild.940_ISO = total_genes.guild.940_ISO %>% select(id,guild)
 
 # MAGs
-meta_img.nr  = read_sheet("https://docs.google.com/spreadsheets/d/1pjlOXDIDhWv8bujJ4P9BdYC-sSA_kueDAi9T8FLgpm8/edit?gid=67047753#gid=67047753")
+meta_img.nr  = read.csv("Input_Data/IMG_JGI_MAGs/IMG_bindata_withmeta_norestricted.csv",dec=".")
 meta_img.nr  = meta_img.nr %>% select(Bin.ID, Bin.Completeness, Bin.Contamination)
 colnames(meta_img.nr) = c("id","completeness","contamination")
 
-loma_stat    = read_sheet("https://docs.google.com/spreadsheets/d/1uwpo3aUPodFvRzg_hPHH_mPNVq-gKUJOAEOakohL7ng/edit?gid=1062499715#gid=1062499715") 
+loma_stat    = read.csv("Input_Data/LOMA_MAGs/mag_stats.csv",dec=".") 
 loma_stat    = loma_stat %>% select(id,completeness,contamination)
   
-fire_meta    = read_excel("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/MAG_database/MAGs_burnt/MAG_Dataset_BurnSeverity_ARNelson.xlsx")
+fire_meta    = read_excel("Input_Data/FIRE_MAGs/MAG_Dataset_BurnSeverity_ARNelson.xlsx")
 fire_meta    = fire_meta %>% select("MAG Id #",Completeness,Contamination)
 colnames(fire_meta) = c("id","completeness","contamination")
 
@@ -1272,7 +1433,7 @@ MAGs_combined    = as.data.frame(rbind(MAGs_combined,loma_stat1))
 high_quality     = MAGs_combined %>% filter(completeness > 90 & contamination < 5)
 (nrow(high_quality)+100)*100/(27214)# 22.85221
 
-write.csv(MAGs_combined, file = "C:/luciana_datos/UCI/Project_2 (microtrait-dement)/Data_Publication/MAGs_FG_table.csv")
+write.csv(MAGs_combined, file = "Output_Data/MAGs_FG_table.csv")
 
 MAGs_combined.FG = MAGs_combined %>% group_by(guild) %>% summarise(completeness = mean(completeness),
                                                                    contamination = mean(contamination))
@@ -1293,10 +1454,10 @@ Figure_S5.B      = ggplot(data = total_data, aes(x=cat, y=contamination)) +
 Figure_S5.B  
 
 # Isolates
-meta_iso   = readr::read_tsv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/isolates_GOLD/soils_unpublished.tsv")
-meta_iso   = meta_iso %>% select(taxon_oid,"High Quality")
-meta_iso.1 = readr::read_tsv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/isolates_GOLD/soils.tsv")
-meta_iso.1 = meta_iso.1 %>% select(taxon_oid,"High Quality")
+meta_iso   = read.delim("Input_Data/SOIL_ISOLATES/metadata_1.tsv",sep="\t")
+meta_iso   = meta_iso %>% select(taxon_oid,High.Quality)
+meta_iso.1 = read.delim("Input_Data/SOIL_ISOLATES/metadata_2.tsv",sep="\t")
+meta_iso.1 = meta_iso.1 %>% select(taxon_oid,High.Quality)
 final_meta = as.data.frame(rbind(meta_iso,meta_iso.1))
 colnames(final_meta) = c("id","quality")
 Iso_combined  = merge(final_meta,total_genes.guild.940_ISO,by = "id")
