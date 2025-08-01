@@ -11,11 +11,11 @@ library(readxl)
 library(readr)
 library(vegan)
 library(devtools)
-library(ggvegan)
+#library(ggvegan)
 library(pairwiseAdonis)
-library(EcolUtils)
+#library(EcolUtils)
 library(olsrr)
-library(stats)
+#library(stats)
 library(corrr)
 library(car)
 #install.packages("collinear")
@@ -24,10 +24,11 @@ library(glmnet)
 library(parallelDist)
 #library(googledrive)
 #library(googlesheets4)
-library(readxl)
+#library(readxl)
 library(ggpmisc)
 library(GGally)
 library(reshape2)
+library(factoextra)
 
 # Set directory----
 
@@ -55,13 +56,14 @@ data_combined = data_combined %>% filter(Domain == "Bacteria")
 # Summary MAGs by project to select what project to use for extracting filtering genes
 data_combined   = data_combined[!(is.na(data_combined$avg_coverage)),]
 data_combined   = data_combined[!(is.na(data_combined$aaeB)),]
-data_combined   = apply(data_combined,2,as.character)
-write.csv(data_combined, file = "Intermediate_Results/Intermediate_results/IMG_global_dataset.csv")
-data_combined.1 = as.data.frame(data_combined) %>% select(2,44,69:1789)
+data_combined   = as.data.frame(apply(data_combined,2,as.character))
+# write.csv(data_combined, file = "Intermediate_Results/Intermediate_results/IMG_global_dataset.csv")
+data_combined.1   = as.data.frame(data_combined) %>% select(1,2,44,69:1789)
 data_combined_IMG.ID  = data_combined %>% group_by(IMG.Genome.ID) %>% count()
 data_combined_IMG.ID  = data_combined_IMG.ID %>% filter(n > 20)
 
 # Get hmm files from data_combined i.e. after data filtering
+hmm_img        = hmm_img[,-1]
 hmm_img.filter = data_combined %>% select(names(hmm_img))
 
 # Select and save individual projects with more than 20 MAGs for further analysis
@@ -69,17 +71,20 @@ a         = unique(data_combined_IMG.ID$IMG.Genome.ID)
 data_project_100 = c()
 for(i in a){
   project = data_combined %>% filter(IMG.Genome.ID == i)
-  temp    = project %>% summarise(sum(avg_coverage, na.rm = TRUE))
+  temp    = project %>% summarise(sum(as.numeric(avg_coverage), na.rm = TRUE))
   colnames(temp) = "Total"
-  project = project %>% mutate(RelAbund = avg_coverage/temp$Total)
+  project = project %>% mutate(RelAbund = as.numeric(avg_coverage)/temp$Total)
   data_project_100 = rbind(data_project_100, project) 
 }
-write.csv(data_project_100, file = "Intermediate_Results/IMG_global_datasets_relative_abundance.csv")
+# write.csv(data_project_100, file = "Intermediate_Results/IMG_global_datasets_relative_abundance.csv")
 
 # Reduce NAs
 data_project_20 = data_project_100[!(is.na(data_project_100$RelAbund)),]
+data_project_20[,1790] = as.numeric(data_project_20[,1790])
+data_project_20[,69:1789] = as.numeric(unlist(data_project_20[,69:1789]))
+
 # Reduce columns with zero
-temp.1            = as.data.frame(cbind((colSums(data_project_20[,c(69:1789,1791)]))))
+temp.1            = as.data.frame(cbind((colSums(data_project_20[,69:1789]))))
 erase.1           = temp.1 %>% filter(V1==0)
 erase.1$row_names = row.names(erase.1)
 data_project_20   = data_project_20[ , !(names(data_project_20) %in% erase.1$row_names)]
@@ -184,7 +189,7 @@ data.loma          = as.data.frame(rbind(grassland_ambient,shrubland_ambient,
                                          grassland_drought,shrubland_drought))
 
 a = unique(data.loma$treatment)
-for(i in a[1]){
+for(i in a){
   project  = data.loma %>% filter(treatment == i)
   mat_file = as.data.frame(project[,c(3:1298,1299)])
   # Reduce columns with zero
@@ -240,7 +245,7 @@ High_deep     = High_deep %>% mutate(treatment = rep("High_deep",each=nrow(High_
 data.fire     = as.data.frame(rbind(Low_shallow,Low_deep,High_shallow,High_deep))
 
 a = unique(data.fire$treatment)
-for(i in a[c(3,4)]){
+for(i in a){
   project  = data.fire %>% filter(treatment == i)
   mat_file = as.data.frame(project[,c(3:1214,1215)])
   # Reduce columns with zero
