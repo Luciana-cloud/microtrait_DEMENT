@@ -209,5 +209,135 @@ pdf("Output_Data/Figures/Figure_S5_overleaf.pdf",
 print(Figure_S5)
 dev.off()
 
+# Enzyme encoding genes ----
 
+Figure_2_power_law = ggarrange(Figure_CAZy, Figure_Protein,Figure_CAZy.total.ISO,
+                               Figure_Protein.enzyme.total.ISO, 
+                               labels = c("A","B","C","D"),
+                               ncol = 2, nrow = 2) + theme(panel.background = element_blank())
+Figure_2_power_law
+pdf("Output_Data/Figures/Figure_2_power_law.pdf",
+    width=12,height=12*3/5)
+print(Figure_2_power_law)
+dev.off()
+
+# Transporters encoding genes ----
+
+Figure_3_power_law = ggarrange(Figure_tranport.total, Figure_GH.trasnport,
+                               Figure_amino.transport,Figure_tranport.total_ISO,
+                               Figure_GH.transporter,Figure_Amino.transporter,
+                               labels = c("A","B","C","D","E","F"),
+                               ncol = 3, nrow = 2) + theme(panel.background = element_blank())
+Figure_3_power_law
+pdf("Output_Data/Figures/Figure_3_power_law.pdf",
+    width=12,height=12*3/5)
+print(Figure_3_power_law)
+dev.off()
+
+# Stress Tolerance encoding genes ----
+
+Figure_4_power_law = ggarrange(Figure_osmolyte,Figure_biofilm,Figure_temp_fast,
+                               Figure_pH_fast,Figure_osmolyte_ISO,Figure_Biofilm_ISO,
+                               Figure_Temp.Tol_ISO,Figure_pH_fast,
+                               labels = c("A","B","C","D","E","F","G","H"),
+                               ncol = 4, nrow = 2) + theme(panel.background = element_blank())
+Figure_4_power_law
+
+pdf("Output_Data/Figures/Figure_4_power_law.pdf",
+    width=12,height=12*3/5)
+print(Figure_4_power_law)
+dev.off()
+
+# Life History encoding genes (Yield) ----
+
+Figure_5_power_law = ggarrange(Figure_mgr_fast, Figure_mgr_ISO, Figure_Yield_ISO, 
+                               labels = c("A","B","C"),
+                               ncol = 3, nrow = 1) + theme(panel.background = element_blank())
+
+Figure_5_power_law
+
+pdf("Output_Data/Figures/Figure_5_power_law.pdf",
+    width=12,height=12*3/5)
+print(Figure_5_power_law)
+dev.off()
+
+# Life History encoding genes (Temperature) ----
+
+Figure_6_power_law = ggarrange(Figure_ogt_fast, Figure_OGT_ISO, 
+                               labels = c("A","B"),
+                               ncol = 2, nrow = 1) + theme(panel.background = element_blank())
+
+Figure_6_power_law
+
+pdf("Output_Data/Figures/Figure_6_power_law.pdf",
+    width=12,height=12*3/5)
+print(Figure_6_power_law)
+dev.off()
+
+# A/S ratio vs genome size ----
+
+Figure_7_A_S = ggarrange(Figure_genome_A_S_MAGs, Figure_genome_A_S_ISO, 
+                               labels = c("A","B"),
+                               ncol = 2, nrow = 1) + theme(panel.background = element_blank())
+
+Figure_7_A_S
+
+pdf("Output_Data/Figures/Figure_7_A_S.pdf",
+    width=12,height=12*3/5)
+print(Figure_7_A_S)
+dev.off()
+
+# Specific tradeoffs ----
+
+Figure_8_AS = ggarrange(Figure_Total_pH_MAGs,Figure_Total_pH_ISO,
+                        Figure_amino_pH_MAGs,Figure_amino_pH_ISO, 
+                        Figure_amino_GH_MAGs,Figure_amino_GH_ISO,
+                        Figure_protein_pH_MAGs,Figure_protein_pH_ISO,
+                        Figure_protein_CAZy_MAGs,Figure_CAZy_pH_ISO,
+                               labels = c("A","B","C","D", "E", "F", "G", "H","I", "J"),
+                               ncol = 2, nrow = 5) + theme(panel.background = element_blank())
+Figure_8_AS
+pdf("Output_Data/Figures/Figure_8_AS_pH.pdf",
+    width=12,height=12*3/5)
+print(Figure_8_AS)
+dev.off()
+
+Figure_9_AS = ggarrange(Figure_Total_temp_MAGs,Figure_Total_temp_ISO,
+                        Figure_amino_temp_MAGs,Figure_amino_temp_ISO, 
+                        Figure_GH_temp_MAGs,Figure_GH_temp_ISO,
+                        Figure_protein_temp_MAGs,Figure_protein_temp_ISO,
+                        Figure_CAZy_temp_MAGs,Figure_CAZy_temp_ISO,
+                        labels = c("A","B","C","D", "E", "F", "G", "H","I", "J"),
+                        ncol = 2, nrow = 5) + theme(panel.background = element_blank())
+Figure_9_AS
+pdf("Output_Data/Figures/Figure_9_AS_temp.pdf",
+    width=12,height=12*3/5)
+print(Figure_9_AS)
+dev.off()
+
+Figure_10_AS = ggarrange(Figure_Total_biofilm_MAGs,Figure_Total_biofilm_ISO,
+                        Figure_amino_biofilm_MAGs,Figure_amino_biofilm_ISO, 
+                        Figure_GH_biofilm_MAGs,Figure_GH_biofilm_ISO,
+                        Figure_protein_biofilm_MAGs,Figure_protein_biofilm_ISO,
+                        Figure_CAZy_biofilm_MAGs,Figure_CAZy_biofilm_ISO,
+                        labels = c("A","B","C","D", "E", "F", "G", "H","I", "J"),
+                        ncol = 2, nrow = 5) + theme(panel.background = element_blank())
+Figure_10_AS
+pdf("Output_Data/Figures/Figure_10_AS_biofilm.pdf",
+    width=12,height=12*3/5)
+print(Figure_10_AS)
+dev.off()
+
+Figure_11_AS = ggarrange(Figure_Total_osmolyte_MAGs,Figure_Total_osmolyte_ISO,
+                         Figure_amino_osmolyte_MAGs,Figure_amino_osmolyte_ISO, 
+                         Figure_GH_osmolyte_MAGs,Figure_GH_osmolyte_ISO,
+                         Figure_protein_osmolyte_MAGs,Figure_protein_osmolyte_ISO,
+                         Figure_CAZy_osmolyte_MAGs,Figure_CAZy_osmolyte_ISO,
+                         labels = c("A","B","C","D", "E", "F", "G", "H","I", "J"),
+                         ncol = 2, nrow = 5) + theme(panel.background = element_blank())
+Figure_11_AS
+pdf("Output_Data/Figures/Figure_11_AS_osmolyte.pdf",
+    width=12,height=12*3/5)
+print(Figure_11_AS)
+dev.off()
 
