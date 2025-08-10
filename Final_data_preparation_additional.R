@@ -2783,3 +2783,660 @@ Figure_CAZy_osmolyte_ISO   = ggplot(data = ISO_gen_test, aes(x = as.numeric((CAZ
   theme() + scale_color_gradient(low="blue", high="red") + ylim(0,30)# + xlim(0.5,12.5) + ylim(0.8,8.1)
 Figure_CAZy_osmolyte_ISO
 
+# Additional models ----
+
+library(domir)
+
+# S vs A tradeoffs (MAGs) ----
+
+MAG_gen_TOTAL_ab = read.csv("Intermediate_Results/MAG_gen_TOTAL_GC.csv",dec=".")
+MAG_gen_test     = MAG_gen_TOTAL_ab %>% mutate(A_trait = rowSums(MAG_gen_TOTAL_ab[,10:12]),
+                                               S_trait = rowSums(MAG_gen_TOTAL_ab[,5:8]))
+MAG_gen_test     = MAG_gen_test %>% mutate(A_S = A_trait/S_trait)
+MAG_gen_test     = MAG_gen_test %>% mutate(speed = case_when(mgr <= 5 ~ "fast",
+                                                             mgr  > 5 ~ "slow"))
+
+MAG_gen_test_log = as.data.frame(cbind(MAG_gen_test[,1:2],log(MAG_gen_test[3:14]),
+                                       MAG_gen_test[,15:20],log(MAG_gen_test[21]),
+                                       MAG_gen_test[,22]))
+MAG_gen_test_log = subset(MAG_gen_test_log, amino.transport!="-Inf") 
+MAG_gen_test_log = subset(MAG_gen_test_log, biofilm!="-Inf")
+MAG_gen_test_log = subset(MAG_gen_test_log, GH.trasnport!="-Inf")
+MAG_gen_test_log = subset(MAG_gen_test_log, CAZy!="-Inf")
+
+# CAZy enzyme ----
+
+cazy_fast_basic_total       = lm(CAZy ~ genome.size, data = MAG_gen_test)
+summary(cazy_fast_basic_total)
+
+cazy_fast_basic_total_A_S   = lm(CAZy ~ genome.size + A_S, data = MAG_gen_test)
+summary(cazy_fast_basic_total_A_S)
+domin(CAZy ~ genome.size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test)
+
+cazy_fast_basic_total_A_S_I = lm(CAZy ~ genome.size * A_S, data = MAG_gen_test)
+summary(cazy_fast_basic_total_A_S_I)
+domin(CAZy ~ genome.size * A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test)
+
+cazy_fast_basic_total_A_S_P = lm((CAZy) ~ (genome.size) + (A_S), 
+                                 data = MAG_gen_test_log, na.action=na.exclude)
+summary(cazy_fast_basic_total_A_S_P)
+domin(CAZy ~ genome.size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test_log)
+
+# Protein enzyme ----
+
+Protein_fast_basic_total       = lm(Protein ~ genome.size, data = MAG_gen_test)
+summary(Protein_fast_basic_total)
+
+Protein_fast_basic_total_A_S   = lm(Protein ~ genome.size + A_S, data = MAG_gen_test)
+summary(Protein_fast_basic_total_A_S)
+domin(Protein ~ genome.size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test)
+
+Protein_fast_basic_total_A_S_I = lm(Protein ~ genome.size * A_S, data = MAG_gen_test)
+summary(Protein_fast_basic_total_A_S_I)
+domin(Protein ~ genome.size * A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test)
+
+Protein_fast_basic_total_A_S_P = lm((Protein) ~ (genome.size) + (A_S), 
+                                    data = MAG_gen_test_log, na.action=na.exclude)
+summary(Protein_fast_basic_total_A_S_P)
+domin(Protein ~ genome.size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test_log)
+
+# Transport total Transporters ----
+
+tranport.total_fast_basic_total       = lm(tranport.total ~ genome.size, data = MAG_gen_test)
+summary(tranport.total_fast_basic_total)
+
+tranport.total_fast_basic_total_A_S   = lm(tranport.total ~ genome.size + A_S, data = MAG_gen_test)
+summary(tranport.total_fast_basic_total_A_S)
+domin(tranport.total ~ genome.size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test)
+
+tranport.total_fast_basic_total_A_S_I = lm(tranport.total ~ genome.size * A_S, data = MAG_gen_test)
+summary(tranport.total_fast_basic_total_A_S_I)
+domin(tranport.total ~ genome.size * A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test)
+
+tranport.total_fast_basic_total_A_S_P = lm((tranport.total) ~ (genome.size) + (A_S), 
+                                           data = MAG_gen_test_log, na.action=na.exclude)
+summary(tranport.total_fast_basic_total_A_S_P)
+domin(tranport.total ~ genome.size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test_log)
+
+# GH total Transporters ----
+
+GH.trasnport_fast_basic_total       = lm(GH.trasnport ~ genome.size, data = MAG_gen_test)
+summary(GH.trasnport_fast_basic_total)
+
+GH.trasnport_fast_basic_total_A_S   = lm(GH.trasnport ~ genome.size + A_S, data = MAG_gen_test)
+summary(GH.trasnport_fast_basic_total_A_S)
+domin(GH.trasnport ~ genome.size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test)
+
+GH.trasnport_fast_basic_total_A_S_I = lm(GH.trasnport ~ genome.size * A_S, data = MAG_gen_test)
+summary(GH.trasnport_fast_basic_total_A_S_I)
+domin(GH.trasnport ~ genome.size * A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test)
+
+GH.trasnport_fast_basic_total_A_S_P = lm((GH.trasnport) ~ (genome.size) + (A_S), 
+                                         data = MAG_gen_test_log, na.action=na.exclude)
+summary(GH.trasnport_fast_basic_total_A_S_P)
+domin(GH.trasnport ~ genome.size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test_log)
+
+# Amino total Transporters ----
+
+amino.transport_fast_basic_total       = lm(amino.transport ~ genome.size, data = MAG_gen_test)
+summary(amino.transport_fast_basic_total)
+
+amino.transport_fast_basic_total_A_S   = lm(amino.transport ~ genome.size + A_S, data = MAG_gen_test)
+summary(amino.transport_fast_basic_total_A_S)
+domin(amino.transport ~ genome.size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test)
+
+amino.transport_fast_basic_total_A_S_I = lm(amino.transport ~ genome.size * A_S, data = MAG_gen_test)
+summary(amino.transport_fast_basic_total_A_S_I)
+domin(amino.transport ~ genome.size * A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test)
+
+amino.transport_fast_basic_total_A_S_P = lm((amino.transport) ~ (genome.size) + (A_S), 
+                                            data = MAG_gen_test_log, na.action=na.exclude)
+summary(amino.transport_fast_basic_total_A_S_P)
+domin(amino.transport ~ genome.size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test_log)
+
+# Osmolytes ----
+
+osmolyte_fast_basic_total       = lm(osmolyte ~ genome.size, data = MAG_gen_test)
+summary(osmolyte_fast_basic_total)
+
+osmolyte_fast_basic_total_A_S   = lm(osmolyte ~ genome.size + A_S, data = MAG_gen_test)
+summary(osmolyte_fast_basic_total_A_S)
+domin(osmolyte ~ genome.size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test)
+
+osmolyte_fast_basic_total_A_S_I = lm(osmolyte ~ genome.size * A_S, data = MAG_gen_test)
+summary(osmolyte_fast_basic_total_A_S_I)
+domin(osmolyte ~ genome.size * A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test)
+
+osmolyte_fast_basic_total_A_S_P = lm((osmolyte) ~ (genome.size) + (A_S), 
+                                     data = MAG_gen_test_log, na.action=na.exclude)
+summary(osmolyte_fast_basic_total_A_S_P)
+domin(osmolyte ~ genome.size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test_log)
+
+# Biofilm ----
+
+biofilm_fast_basic_total       = lm(biofilm ~ genome.size, data = MAG_gen_test)
+summary(biofilm_fast_basic_total)
+
+biofilm_fast_basic_total_A_S   = lm(biofilm ~ genome.size + A_S, data = MAG_gen_test)
+summary(biofilm_fast_basic_total_A_S)
+domin(biofilm ~ genome.size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test)
+
+biofilm_fast_basic_total_A_S_I = lm(biofilm ~ genome.size * A_S, data = MAG_gen_test)
+summary(biofilm_fast_basic_total_A_S_I)
+domin(biofilm ~ genome.size * A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test)
+
+biofilm_fast_basic_total_A_S_P = lm((biofilm) ~ (genome.size) + (A_S), 
+                                    data = MAG_gen_test_log, na.action=na.exclude)
+summary(biofilm_fast_basic_total_A_S_P)
+domin(biofilm ~ genome.size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test_log)
+
+# Heat Resistance ----
+
+temp_fast_basic_total       = lm(temp ~ genome.size, data = MAG_gen_test)
+summary(temp_fast_basic_total)
+
+temp_fast_basic_total_A_S   = lm(temp ~ genome.size + A_S, data = MAG_gen_test)
+summary(temp_fast_basic_total_A_S)
+domin(temp ~ genome.size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test)
+
+temp_fast_basic_total_A_S_I = lm(temp ~ genome.size * A_S, data = MAG_gen_test)
+summary(temp_fast_basic_total_A_S_I)
+domin(temp ~ genome.size * A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test)
+
+temp_fast_basic_total_A_S_P = lm((temp) ~ (genome.size) + (A_S), 
+                                 data = MAG_gen_test_log, na.action=na.exclude)
+summary(temp_fast_basic_total_A_S_P)
+domin(temp ~ genome.size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test_log)
+
+# pH Resistance Transporters ----
+
+pH_fast_basic_total       = lm(pH ~ genome.size, data = MAG_gen_test)
+summary(pH_fast_basic_total)
+
+pH_fast_basic_total_A_S   = lm(pH ~ genome.size + A_S, data = MAG_gen_test)
+summary(pH_fast_basic_total_A_S)
+domin(pH ~ genome.size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test)
+
+pH_fast_basic_total_A_S_I = lm(pH ~ genome.size * A_S, data = MAG_gen_test)
+summary(pH_fast_basic_total_A_S_I)
+domin(pH ~ genome.size * A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test)
+
+pH_fast_basic_total_A_S_P = lm((pH) ~ (genome.size) + (A_S), 
+                               data = MAG_gen_test_log, na.action=na.exclude)
+summary(pH_fast_basic_total_A_S_P)
+domin(pH ~ genome.size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test_log)
+
+# Minimum Generation Time ----
+
+mgr_fast_basic_total       = lm(mgr ~ genome.size, data = MAG_gen_test)
+summary(mgr_fast_basic_total)
+
+mgr_fast_basic_total_A_S   = lm(mgr ~ genome.size + A_S, data = MAG_gen_test)
+summary(mgr_fast_basic_total_A_S)
+domin(mgr ~ genome.size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test)
+
+mgr_fast_basic_total_A_S_I = lm(mgr ~ genome.size * A_S, data = MAG_gen_test)
+summary(mgr_fast_basic_total_A_S_I)
+domin(mgr ~ genome.size * A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test)
+
+mgr_fast_basic_total_A_S_P = lm((mgr) ~ (genome.size) + (A_S), 
+                                data = MAG_gen_test_log, na.action=na.exclude)
+summary(mgr_fast_basic_total_A_S_P)
+domin(mgr ~ genome.size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test_log)
+
+# Optimum Growth Temperature ----
+
+ogt_fast_basic_total       = lm(ogt ~ genome.size, data = MAG_gen_test)
+summary(ogt_fast_basic_total)
+
+ogt_fast_basic_total_A_S   = lm(ogt ~ genome.size + A_S, data = MAG_gen_test)
+summary(ogt_fast_basic_total_A_S)
+domin(ogt ~ genome.size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test)
+
+ogt_fast_basic_total_A_S_I = lm(ogt ~ genome.size * A_S, data = MAG_gen_test)
+summary(ogt_fast_basic_total_A_S_I)
+domin(ogt ~ genome.size * A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test)
+
+ogt_fast_basic_total_A_S_P = lm((ogt) ~ (genome.size) + (A_S), 
+                                data = MAG_gen_test_log, na.action=na.exclude)
+summary(ogt_fast_basic_total_A_S_P)
+domin(ogt ~ genome.size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = MAG_gen_test_log)
+
+# S vs A tradeoffs (Isolates) ----
+
+ISO_gen_TOTAL_ab = read.csv("Intermediate_Results/ISO_gen_trait.1.csv",dec=".")
+ISO_gen_test     = ISO_gen_TOTAL_ab %>% mutate(A_trait = rowSums(ISO_gen_TOTAL_ab[,9:11]),
+                                               S_trait = rowSums(ISO_gen_TOTAL_ab[,12:15]))
+ISO_gen_test     = ISO_gen_test %>% mutate(A_S = A_trait/S_trait)
+ISO_gen_test     = ISO_gen_test %>% mutate(speed = case_when(MGT <= 5 ~ "fast",
+                                                             MGT  > 5 ~ "slow"))
+
+ISO_gen_test_log = as.data.frame(cbind(ISO_gen_test[,1:2],log(ISO_gen_test[3:15]),
+                                       ISO_gen_test[,16:17],log(ISO_gen_test[18]),
+                                       ISO_gen_test[,19]))
+ISO_gen_test_log = subset(ISO_gen_test_log, Amino.transporter!="-Inf") 
+ISO_gen_test_log = subset(ISO_gen_test_log, GH.transporter!="-Inf")
+ISO_gen_test_log = subset(ISO_gen_test_log, Biofilm!="-Inf")
+
+# CAZy enzyme ----
+
+cazy_fast_basic_total       = lm(CAZy ~ Genome.Size, data = ISO_gen_test)
+summary(cazy_fast_basic_total)
+
+cazy_fast_basic_total_A_S   = lm(CAZy ~ Genome.Size + A_S, data = ISO_gen_test)
+summary(cazy_fast_basic_total_A_S)
+domin(CAZy ~ Genome.Size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test)
+
+cazy_fast_basic_total_A_S_I = lm(CAZy ~ Genome.Size * A_S, data = ISO_gen_test)
+summary(cazy_fast_basic_total_A_S_I)
+domin(CAZy ~ Genome.Size * A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test)
+
+cazy_fast_basic_total_A_S_P = lm((CAZy) ~ (Genome.Size) + (A_S), 
+                                 data = ISO_gen_test_log, na.action=na.exclude)
+summary(cazy_fast_basic_total_A_S_P)
+domin(CAZy ~ Genome.Size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test_log)
+
+# Protein enzyme ----
+
+Protein_fast_basic_total       = lm(Protein.enzyme ~ Genome.Size, data = ISO_gen_test)
+summary(Protein_fast_basic_total)
+
+Protein_fast_basic_total_A_S   = lm(Protein.enzyme ~ Genome.Size + A_S, data = ISO_gen_test)
+summary(Protein_fast_basic_total_A_S)
+domin(Protein.enzyme ~ Genome.Size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test)
+
+Protein_fast_basic_total_A_S_I = lm(Protein.enzyme ~ Genome.Size * A_S, data = ISO_gen_test)
+summary(Protein_fast_basic_total_A_S_I)
+domin(Protein.enzyme ~ Genome.Size * A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test)
+
+Protein_fast_basic_total_A_S_P = lm((Protein.enzyme) ~ (Genome.Size) + (A_S), 
+                                    data = ISO_gen_test_log, na.action=na.exclude)
+summary(Protein_fast_basic_total_A_S_P)
+domin(Protein.enzyme ~ Genome.Size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test_log)
+
+# Transport total Transporters ----
+
+tranport.total_fast_basic_total       = lm(Total.transporter ~ Genome.Size, data = ISO_gen_test)
+summary(tranport.total_fast_basic_total)
+
+tranport.total_fast_basic_total_A_S   = lm(Total.transporter ~ Genome.Size + A_S, data = ISO_gen_test)
+summary(tranport.total_fast_basic_total_A_S)
+domin(Total.transporter ~ Genome.Size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test)
+
+tranport.total_fast_basic_total_A_S_I = lm(Total.transporter ~ Genome.Size * A_S, data = ISO_gen_test)
+summary(tranport.total_fast_basic_total_A_S_I)
+domin(Total.transporter ~ Genome.Size * A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test)
+
+tranport.total_fast_basic_total_A_S_P = lm((Total.transporter) ~ (Genome.Size) + (A_S), 
+                                           data = ISO_gen_test_log, na.action=na.exclude)
+summary(tranport.total_fast_basic_total_A_S_P)
+domin(Total.transporter ~ Genome.Size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test_log)
+
+# GH total Transporters ----
+
+GH.trasnport_fast_basic_total       = lm(GH.transporter ~ Genome.Size, data = ISO_gen_test)
+summary(GH.trasnport_fast_basic_total)
+
+GH.trasnport_fast_basic_total_A_S   = lm(GH.transporter ~ Genome.Size + A_S, data = ISO_gen_test)
+summary(GH.trasnport_fast_basic_total_A_S)
+domin(GH.transporter ~ Genome.Size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test)
+
+GH.trasnport_fast_basic_total_A_S_I = lm(GH.transporter ~ Genome.Size * A_S, data = ISO_gen_test)
+summary(GH.trasnport_fast_basic_total_A_S_I)
+domin(GH.transporter ~ Genome.Size * A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test)
+
+GH.trasnport_fast_basic_total_A_S_P = lm((GH.transporter) ~ (Genome.Size) + (A_S), 
+                                         data = ISO_gen_test_log, na.action=na.exclude)
+summary(GH.trasnport_fast_basic_total_A_S_P)
+domin(GH.transporter ~ Genome.Size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test_log)
+
+# Amino total Transporters ----
+
+amino.transport_fast_basic_total       = lm(Amino.transporter ~ Genome.Size, data = ISO_gen_test)
+summary(amino.transport_fast_basic_total)
+
+amino.transport_fast_basic_total_A_S   = lm(Amino.transporter ~ Genome.Size + A_S, data = ISO_gen_test)
+summary(amino.transport_fast_basic_total_A_S)
+domin(Amino.transporter ~ Genome.Size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test)
+
+amino.transport_fast_basic_total_A_S_I = lm(Amino.transporter ~ Genome.Size * A_S, data = ISO_gen_test)
+summary(amino.transport_fast_basic_total_A_S_I)
+domin(Amino.transporter ~ Genome.Size * A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test)
+
+amino.transport_fast_basic_total_A_S_P = lm((Amino.transporter) ~ (Genome.Size) + (A_S), 
+                                            data = ISO_gen_test_log, na.action=na.exclude)
+summary(amino.transport_fast_basic_total_A_S_P)
+domin(Amino.transporter ~ Genome.Size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test_log)
+
+# Osmolytes ----
+
+osmolyte_fast_basic_total       = lm(Osmolyte ~ Genome.Size, data = ISO_gen_test)
+summary(osmolyte_fast_basic_total)
+
+osmolyte_fast_basic_total_A_S   = lm(Osmolyte ~ Genome.Size + A_S, data = ISO_gen_test)
+summary(osmolyte_fast_basic_total_A_S)
+domin(Osmolyte ~ Genome.Size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test)
+
+osmolyte_fast_basic_total_A_S_I = lm(Osmolyte ~ Genome.Size * A_S, data = ISO_gen_test)
+summary(osmolyte_fast_basic_total_A_S_I)
+domin(Osmolyte ~ Genome.Size * A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test)
+
+osmolyte_fast_basic_total_A_S_P = lm((Osmolyte) ~ (Genome.Size) + (A_S), 
+                                     data = ISO_gen_test_log, na.action=na.exclude)
+summary(osmolyte_fast_basic_total_A_S_P)
+domin(Osmolyte ~ Genome.Size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test_log)
+
+# Biofilm ----
+
+biofilm_fast_basic_total       = lm(Biofilm ~ Genome.Size, data = ISO_gen_test)
+summary(biofilm_fast_basic_total)
+
+biofilm_fast_basic_total_A_S   = lm(Biofilm ~ Genome.Size + A_S, data = ISO_gen_test)
+summary(biofilm_fast_basic_total_A_S)
+domin(Biofilm ~ Genome.Size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test)
+
+biofilm_fast_basic_total_A_S_I = lm(Biofilm ~ Genome.Size * A_S, data = ISO_gen_test)
+summary(biofilm_fast_basic_total_A_S_I)
+domin(Biofilm ~ Genome.Size * A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test)
+
+biofilm_fast_basic_total_A_S_P = lm((Biofilm) ~ (Genome.Size) + (A_S), 
+                                    data = ISO_gen_test_log, na.action=na.exclude)
+summary(biofilm_fast_basic_total_A_S_P)
+domin(Biofilm ~ Genome.Size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test_log)
+
+# Heat Resistance ----
+
+temp_fast_basic_total       = lm(Temp.Tol ~ Genome.Size, data = ISO_gen_test)
+summary(temp_fast_basic_total)
+
+temp_fast_basic_total_A_S   = lm(Temp.Tol ~ Genome.Size + A_S, data = ISO_gen_test)
+summary(temp_fast_basic_total_A_S)
+domin(Temp.Tol ~ Genome.Size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test)
+
+temp_fast_basic_total_A_S_I = lm(Temp.Tol ~ Genome.Size * A_S, data = ISO_gen_test)
+summary(temp_fast_basic_total_A_S_I)
+domin(Temp.Tol ~ Genome.Size * A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test)
+
+temp_fast_basic_total_A_S_P = lm((Temp.Tol) ~ (Genome.Size) + (A_S), 
+                                 data = ISO_gen_test_log, na.action=na.exclude)
+summary(temp_fast_basic_total_A_S_P)
+domin(Temp.Tol ~ Genome.Size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test_log)
+
+# pH Resistance Transporters ----
+
+pH_fast_basic_total       = lm(pH.Tol ~ Genome.Size, data = ISO_gen_test)
+summary(pH_fast_basic_total)
+
+pH_fast_basic_total_A_S   = lm(pH.Tol ~ Genome.Size + A_S, data = ISO_gen_test)
+summary(pH_fast_basic_total_A_S)
+domin(pH.Tol ~ Genome.Size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test)
+
+pH_fast_basic_total_A_S_I = lm(pH.Tol ~ Genome.Size * A_S, data = ISO_gen_test)
+summary(pH_fast_basic_total_A_S_I)
+domin(pH.Tol ~ Genome.Size * A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test)
+
+pH_fast_basic_total_A_S_P = lm((pH.Tol) ~ (Genome.Size) + (A_S), 
+                               data = ISO_gen_test_log, na.action=na.exclude)
+summary(pH_fast_basic_total_A_S_P)
+domin(pH.Tol ~ Genome.Size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test_log)
+
+# Minimum Generation Time ----
+
+mgr_fast_basic_total       = lm(MGT ~ Genome.Size, data = ISO_gen_test)
+summary(mgr_fast_basic_total)
+
+mgr_fast_basic_total_A_S   = lm(MGT ~ Genome.Size + A_S, data = ISO_gen_test)
+summary(mgr_fast_basic_total_A_S)
+domin(MGT ~ Genome.Size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test)
+
+mgr_fast_basic_total_A_S_I = lm(MGT ~ Genome.Size * A_S, data = ISO_gen_test)
+summary(mgr_fast_basic_total_A_S_I)
+domin(MGT ~ Genome.Size * A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test)
+
+mgr_fast_basic_total_A_S_P = lm((MGT) ~ (Genome.Size) + (A_S), 
+                                data = ISO_gen_test_log, na.action=na.exclude)
+summary(mgr_fast_basic_total_A_S_P)
+domin(MGT ~ Genome.Size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test_log)
+
+# Optimum Growth Temperature ----
+
+ogt_fast_basic_total       = lm(OGT ~ Genome.Size, data = ISO_gen_test)
+summary(ogt_fast_basic_total)
+
+ogt_fast_basic_total_A_S   = lm(OGT ~ Genome.Size + A_S, data = ISO_gen_test)
+summary(ogt_fast_basic_total_A_S)
+domin(OGT ~ Genome.Size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test)
+
+ogt_fast_basic_total_A_S_I = lm(OGT ~ Genome.Size * A_S, data = ISO_gen_test)
+summary(ogt_fast_basic_total_A_S_I)
+domin(OGT ~ Genome.Size * A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test)
+
+ogt_fast_basic_total_A_S_P = lm((OGT) ~ (Genome.Size) + (A_S), 
+                                data = ISO_gen_test_log, na.action=na.exclude)
+summary(ogt_fast_basic_total_A_S_P)
+domin(OGT ~ Genome.Size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test_log)
+
+# Yield ----
+
+Yield_fast_basic_total       = lm(Yield ~ Genome.Size, data = ISO_gen_test)
+summary(Yield_fast_basic_total)
+
+Yield_fast_basic_total_A_S   = lm(Yield ~ Genome.Size + A_S, data = ISO_gen_test)
+summary(Yield_fast_basic_total_A_S)
+domin(Yield ~ Genome.Size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test)
+
+Yield_fast_basic_total_A_S_I = lm(Yield ~ Genome.Size * A_S, data = ISO_gen_test)
+summary(Yield_fast_basic_total_A_S_I)
+domin(Yield ~ Genome.Size * A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test)
+
+Yield_fast_basic_total_A_S_P = lm((Yield) ~ (Genome.Size) + (A_S), 
+                                  data = ISO_gen_test_log, na.action=na.exclude)
+summary(Yield_fast_basic_total_A_S_P)
+domin(Yield ~ Genome.Size + A_S, 
+      lm, 
+      list(summary, "r.squared"), 
+      data = ISO_gen_test_log)
