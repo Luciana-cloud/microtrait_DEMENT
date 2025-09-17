@@ -29,6 +29,7 @@ library(ggpmisc)
 library(GGally)
 library(reshape2)
 library(factoextra)
+library(domir)
 
 # Set directory----
 
@@ -1296,12 +1297,13 @@ phylum = merged_df %>% group_by(Phylum) %>% summarise(across(where(is.numeric),
 phylum = phylum %>% mutate(speed = case_when(mingentime_mean <= 5 ~ "fast",
                                              mingentime_mean  > 5 ~ "slow"))
 
-Figure_test_1.phylum = ggplot(data = phylum, aes(x = genome_length_mean/1e6, y = CUE_mean)) +
+Figure_test_1.phylum = ggplot(data = phylum, aes(x = log(genome_length_mean), y = log(CUE_mean))) +
   stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Mbp") + 
-  ylab("Yield (-)") +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 5), label.y = "bottom", label.x = "left") + 
+  xlab("Log(Genome size)") + 
+  ylab("Log(Yield)") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7/1e6) + ylim(0,1.5) + labs(title = "Phylum")
+  labs(title = "Phylum")
 Figure_test_1.phylum
 
 Figure_test_1.phylum.new = ggplot(data = phylum, aes(x = genome_length_mean/1e6, y = CUE_mean,
@@ -1319,12 +1321,13 @@ Class = merged_df %>% group_by(Class) %>% summarise(across(where(is.numeric),
                                                            list(mean=mean), na.rm=TRUE))
 Class = Class %>% mutate(speed = case_when(mingentime_mean <= 5 ~ "fast",
                                            mingentime_mean  > 5 ~ "slow"))
-Figure_test_1.Class = ggplot(data = Class, aes(x = genome_length_mean/1e6, y = CUE_mean)) +
+Figure_test_1.Class = ggplot(data = Class, aes(x = log(genome_length_mean), y = log(CUE_mean))) +
   stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Mbp") + 
-  ylab("Yield (-)") +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 5), label.y = "bottom", label.x = "left") + 
+  xlab("Log(Genome size)") + 
+  ylab("Log(Yield)") + 
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7/1e6) + ylim(0,1.5) + labs(title = "Class")
+  labs(title = "Class")
 Figure_test_1.Class
 
 Figure_test_1.Class.new = ggplot(data = Class, aes(x = genome_length_mean/1e6, y = CUE_mean,
@@ -1343,12 +1346,13 @@ Order = merged_df %>% group_by(Order) %>% summarise(across(where(is.numeric),
 Order = Order %>% mutate(speed = case_when(mingentime_mean <= 5 ~ "fast",
                                            mingentime_mean  > 5 ~ "slow"))
 
-Figure_test_1.Order = ggplot(data = Order, aes(x = genome_length_mean/1e6, y = CUE_mean)) +
+Figure_test_1.Order = ggplot(data = Order, aes(x = log(genome_length_mean), y = log(CUE_mean))) + 
   stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Mbp") + 
-  ylab("Yield (-)") +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 5), label.y = "bottom", label.x = "left") + 
+  xlab("Log(Genome size)") + 
+  ylab("Log(Yield)") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7/1e6) + ylim(0,1.5) + labs(title = "Order")
+  labs(title = "Order")
 Figure_test_1.Order
 
 Figure_test_1.Order.new = ggplot(data = Order, aes(x = genome_length_mean/1e6, y = CUE_mean,
@@ -1367,12 +1371,13 @@ Family = merged_df %>% group_by(Family) %>% summarise(across(where(is.numeric),
 Family = Family %>% mutate(speed = case_when(mingentime_mean <= 5 ~ "fast",
                                              mingentime_mean  > 5 ~ "slow"))
 
-Figure_test_1.Family = ggplot(data = Family, aes(x = genome_length_mean/1e6, y = CUE_mean)) +
+Figure_test_1.Family = ggplot(data = Family, aes(x = log(genome_length_mean), y = log(CUE_mean))) +
   stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Mbp") + 
-  ylab("Yield (-)") +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 5), label.y = "bottom", label.x = "left") + 
+  xlab("Log(Genome size)") + 
+  ylab("Log(Yield)") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7/1e6) + ylim(0,1.5) + labs(title = "Family")
+  labs(title = "Family")
 Figure_test_1.Family
 
 Figure_test_1.Family.new = ggplot(data = Family, aes(x = genome_length_mean/1e6, y = CUE_mean,
@@ -1391,12 +1396,13 @@ Genus = merged_df %>% group_by(Genus) %>% summarise(across(where(is.numeric),
 Genus = Genus %>% mutate(speed = case_when(mingentime_mean <= 5 ~ "fast",
                                            mingentime_mean  > 5 ~ "slow"))
 
-Figure_test_1.Genus = ggplot(data = Genus, aes(x = genome_length_mean/1e6, y = CUE_mean)) +
+Figure_test_1.Genus = ggplot(data = Genus, aes(x = log(genome_length_mean), y = log(CUE_mean))) +
   stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p"))) + xlab("Mbp") + 
-  ylab("Yield (-)") +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 5), label.y = "bottom", label.x = "left") + 
+  xlab("Log(Genome size)") + 
+  ylab("Log(Yield)") +
   geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
-  xlim(0,1.25e7/1e6) + ylim(0,1.5) + labs(title = "Genus")
+  labs(title = "Genus")
 Figure_test_1.Genus
 
 Figure_test_1.Genus.new = ggplot(data = Genus, aes(x = genome_length_mean/1e6, y = CUE_mean,

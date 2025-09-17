@@ -161,8 +161,9 @@ Figure_11 = ggarrange(Figure_test_1.phylum,Figure_test_1.Class,
                      labels = c("A","B","C","D","E"),
                      ncol = 3, nrow = 2) + theme(panel.background = element_blank())
 Figure_11
-png("Output_Data/Figures/Figure_11.png",
-    width=3500*1.35,height=1969*1.35,res=300)
+
+pdf("Output_Data/Figures/Figure_7_power_law_new.pdf",
+    width=14,height=14*3/5)
 print(Figure_11)
 dev.off()
 
@@ -216,8 +217,8 @@ Figure_2_power_law = ggarrange(Figure_CAZy, Figure_Protein,Figure_CAZy.total.ISO
                                labels = c("A","B","C","D"),
                                ncol = 2, nrow = 2) + theme(panel.background = element_blank())
 Figure_2_power_law
-pdf("Output_Data/Figures/Figure_2_power_law.pdf",
-    width=12,height=12*3/5)
+pdf("Output_Data/Figures/Figure_2_power_law_new.pdf",
+    width=14,height=14*3/5)
 print(Figure_2_power_law)
 dev.off()
 
@@ -229,8 +230,8 @@ Figure_3_power_law = ggarrange(Figure_tranport.total, Figure_GH.trasnport,
                                labels = c("A","B","C","D","E","F"),
                                ncol = 3, nrow = 2) + theme(panel.background = element_blank())
 Figure_3_power_law
-pdf("Output_Data/Figures/Figure_3_power_law.pdf",
-    width=12,height=12*3/5)
+pdf("Output_Data/Figures/Figure_3_power_law_new.pdf",
+    width=15,height=15*3/5)
 print(Figure_3_power_law)
 dev.off()
 
@@ -238,13 +239,13 @@ dev.off()
 
 Figure_4_power_law = ggarrange(Figure_osmolyte,Figure_biofilm,Figure_temp_fast,
                                Figure_pH_fast,Figure_osmolyte_ISO,Figure_Biofilm_ISO,
-                               Figure_Temp.Tol_ISO,Figure_pH_fast,
+                               Figure_Temp.Tol_ISO,Figure_pH.Tol_ISO,
                                labels = c("A","B","C","D","E","F","G","H"),
                                ncol = 4, nrow = 2) + theme(panel.background = element_blank())
 Figure_4_power_law
 
-pdf("Output_Data/Figures/Figure_4_power_law.pdf",
-    width=12,height=12*3/5)
+pdf("Output_Data/Figures/Figure_4_power_law_new.pdf",
+    width=16,height=16*3/5)
 print(Figure_4_power_law)
 dev.off()
 
@@ -256,7 +257,7 @@ Figure_5_power_law = ggarrange(Figure_mgr_fast, Figure_mgr_ISO, Figure_Yield_ISO
 
 Figure_5_power_law
 
-pdf("Output_Data/Figures/Figure_5_power_law.pdf",
+pdf("Output_Data/Figures/Figure_5_power_law_new.pdf",
     width=12,height=12*3/5)
 print(Figure_5_power_law)
 dev.off()
@@ -269,7 +270,7 @@ Figure_6_power_law = ggarrange(Figure_ogt_fast, Figure_OGT_ISO,
 
 Figure_6_power_law
 
-pdf("Output_Data/Figures/Figure_6_power_law.pdf",
+pdf("Output_Data/Figures/Figure_6_power_law_new.pdf",
     width=12,height=12*3/5)
 print(Figure_6_power_law)
 dev.off()
