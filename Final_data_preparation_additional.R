@@ -3712,7 +3712,8 @@ Figure_Total_S_SA_MAGs   = ggplot(data = MAG_gen_trait_total, aes(x = as.numeric
   xlab("A Traits") + 
   ylab("S Traits") +
   geom_point(size = 3) + theme_classic() + theme(text = element_text(size=14)) + 
-  theme() + scale_color_gradient(low="blue", high="red")  + ylim(0,80)  + xlim(0,250) 
+  theme() + scale_color_gradient(low="blue", high="red", limits = c(0.5,8.5))  + 
+  ylim(0,80)  + xlim(0,250) 
 Figure_Total_S_SA_MAGs
 
 Figure_Total_S_SA_ISO   = ggplot(data = ISO_gen_TOTAL_ab, aes(x = as.numeric((A_traits)), 
@@ -3722,7 +3723,8 @@ Figure_Total_S_SA_ISO   = ggplot(data = ISO_gen_TOTAL_ab, aes(x = as.numeric((A_
   xlab("A Traits") + 
   ylab("S Traits") +
   geom_point(size = 3) + theme_classic() + theme(text = element_text(size=14)) + 
-  theme() + scale_color_gradient(low="blue", high="red")  + ylim(0,80)  + xlim(0,250) 
+  theme() + scale_color_gradient(low="blue", high="red", limits = c(0.5,8.5))  + 
+  ylim(0,80)  + xlim(0,250) 
 Figure_Total_S_SA_ISO
 
 Figure_aggregates.A_S = ggarrange(Figure_Total_S_SA_MAGs, Figure_Total_S_SA_ISO, 
@@ -3746,7 +3748,7 @@ Figure_Total_S_SA_MAG_nor   = ggplot(data = MAG_gen_trait_total_nor,
   xlab("A Traits") + 
   ylab("S Traits") +
   geom_point(size = 3) + theme_classic() + theme(text = element_text(size=14)) + 
-  theme() + scale_color_gradient(low="blue", high="red")# + ylim(3.5e-6,1.5e-5) + xlim(8e-6,4e-5) 
+  theme() + scale_color_gradient(low="blue", high="red", limits = c(0.5,8.5))# + ylim(3.5e-6,1.5e-5) + xlim(8e-6,4e-5) 
 Figure_Total_S_SA_MAG_nor
 
 Figure_Total_S_SA_ISO_nor   = ggplot(data = ISO_gen_TOTAL_ab_nor, 
@@ -3758,7 +3760,7 @@ Figure_Total_S_SA_ISO_nor   = ggplot(data = ISO_gen_TOTAL_ab_nor,
   xlab("A Traits") + 
   ylab("S Traits") +
   geom_point(size = 3) + theme_classic() + theme(text = element_text(size=14)) + 
-  theme() + scale_color_gradient(low="blue", high="red")# + ylim(3.5e-6,1.5e-5) + xlim(8e-6,4e-5) 
+  theme() + scale_color_gradient(low="blue", high="red", limits = c(0.5,8.5))# + ylim(3.5e-6,1.5e-5) + xlim(8e-6,4e-5) 
 Figure_Total_S_SA_ISO_nor
 
 Figure_aggregates.A_S_norm = ggarrange(Figure_Total_S_SA_MAG_nor, Figure_Total_S_SA_ISO_nor, 
