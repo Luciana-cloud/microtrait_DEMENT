@@ -941,22 +941,22 @@ ISO_gen_TOTAL_ab   = ISO_gen_TOTAL_ab %>% mutate(A_S = A_traits/S_traits)
 
 Figure_Total_S_SA_MAGs   = ggplot(data = MAG_gen_trait_total, aes(x = as.numeric((A_traits)), 
                                                                   y = as.numeric((S_traits)),color = A_S)) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=14)) +
   stat_poly_line() +
   stat_cor(method = "pearson", label.x = 3, label.y = 80) + 
   xlab("A Traits") + 
   ylab("S Traits") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=14)) + 
   theme() + scale_color_gradient(low="blue", high="red", limits = c(0.5,8.5))  + 
   ylim(0,80)  + xlim(0,250) 
 Figure_Total_S_SA_MAGs
 
 Figure_Total_S_SA_ISO   = ggplot(data = ISO_gen_TOTAL_ab, aes(x = as.numeric((A_traits)), 
                                                               y = as.numeric((S_traits)),color = A_S)) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=14)) +
   stat_poly_line() +
   stat_cor(method = "pearson", label.x = 3, label.y = 80) + 
   xlab("A Traits") + 
   ylab("S Traits") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=14)) + 
   theme() + scale_color_gradient(low="blue", high="red", limits = c(0.5,8.5))  + 
   ylim(0,80)  + xlim(0,250) 
 Figure_Total_S_SA_ISO
@@ -988,24 +988,24 @@ ISO_gen_TOTAL_ab_nor       = ISO_gen_TOTAL_ab %>% mutate (S_traits_nor  = S_trai
 Figure_Total_S_SA_MAG_nor   = ggplot(data = MAG_gen_trait_total_nor, 
                                      aes(x = as.numeric((A_traits_nor)),
                                          y = as.numeric((S_traits_nor)),
-                                         color = A_S)) +
+                                         color = A_S)) + 
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=14)) +
   stat_poly_line() +
   stat_cor(method = "pearson") + 
   xlab("A Traits") + 
   ylab("S Traits") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=14)) + 
   theme() + scale_color_gradient(low="blue", high="red", limits = c(0.5,8.5))# + ylim(3.5e-6,1.5e-5) + xlim(8e-6,4e-5) 
 Figure_Total_S_SA_MAG_nor
 
 Figure_Total_S_SA_ISO_nor   = ggplot(data = ISO_gen_TOTAL_ab_nor, 
                                      aes(x = as.numeric((A_traits_nor)),
                                          y = as.numeric((S_traits_nor)),
-                                         color = A_S)) +
+                                         color = A_S)) + 
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=14)) +
   stat_poly_line() +
   stat_cor(method = "pearson") + 
   xlab("A Traits") + 
   ylab("S Traits") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=14)) + 
   theme() + scale_color_gradient(low="blue", high="red", limits = c(0.5,8.5))# + ylim(3.5e-6,1.5e-5) + xlim(8e-6,4e-5) 
 Figure_Total_S_SA_ISO_nor
 
@@ -1887,10 +1887,10 @@ CAZy_data     = as.data.frame(rbind(CAZy_data_fast,CAZy_data_slow))
 
 Figure_CAZy   = ggplot(data = CAZy_data, aes(x = as.numeric(genome.size), 
                                              y = as.numeric(CAZy))) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5) + xlab("Log(Genome Size)") + 
   ylab("Log(CAZy)") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) + 
   theme(legend.position="none") + xlim(13,16.5) + ylim(-0.8,3.5)
 Figure_CAZy
 
@@ -1909,10 +1909,10 @@ Protein_data     = as.data.frame(rbind(Protein_data_fast,Protein_data_slow))
 
 Figure_Protein   = ggplot(data = Protein_data, aes(x = as.numeric(genome.size), 
                                                    y = as.numeric(Protein))) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5) + xlab("Log(Genome Size)") + 
   ylab("Log(Protein)") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) + 
   theme(legend.position="none") + xlim(13,16.5) + ylim(0.8,4)
 Figure_Protein
 
@@ -1932,10 +1932,10 @@ tranport.total_data.1     = as.data.frame(rbind(tranport.total_data_fast,
 
 Figure_tranport.total   = ggplot(data = tranport.total_data.1, aes(x = as.numeric(genome.size), 
                                                                    y = as.numeric(tranport.total))) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5, label.y = "bottom", label.x = "right") + xlab("Log (Genome Size)") + 
   ylab("Log (Transporters)") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) + 
   theme(legend.position="none") + xlim(13,16.5) + ylim(-0.5,5.5)
 Figure_tranport.total
 
@@ -1955,10 +1955,10 @@ GH.trasnport_data     = as.data.frame(rbind(GH.trasnport_data_fast,
 
 Figure_GH.trasnport   = ggplot(data = GH.trasnport_data, aes(x = as.numeric(genome.size), 
                                                              y = as.numeric(GH.trasnport))) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5, label.y = "bottom", label.x = "right") + xlab("Log (Genome Size)") + 
   ylab("Log (GH transporters)") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) + 
   theme(legend.position="none") + xlim(13,16.5) + ylim(-3.5,4.0)
 Figure_GH.trasnport
 
@@ -1978,10 +1978,10 @@ amino.transport_data     = as.data.frame(rbind(amino.transport_data_fast,
 
 Figure_amino.transport   = ggplot(data = amino.transport_data, aes(x = as.numeric(genome.size), 
                                                                    y = as.numeric(amino.transport))) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5) + xlab("Log (Genome Size)") + 
   ylab("Log (Animo transporters)") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) + 
   theme(legend.position="none") + xlim(13,16.5) + ylim(0,3.5)
 Figure_amino.transport
 
@@ -2001,10 +2001,10 @@ osmolyte_data     = as.data.frame(rbind(osmolyte_data_fast,
 
 Figure_osmolyte  = ggplot(data = osmolyte_data, aes(x = as.numeric(genome.size), 
                                                     y = as.numeric(osmolyte))) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4, label.y = "bottom", label.x = "right") + xlab("Log (Genome Size)") + 
   ylab("Log (Osmolytes)") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) + 
   theme(legend.position="none") + xlim(13,16.5) + ylim(-2.7,3.5)
 Figure_osmolyte
 
@@ -2026,10 +2026,10 @@ biofilm_data     = subset(biofilm_data, biofilm!="-Inf")
 
 Figure_biofilm  = ggplot(data = biofilm_data, aes(x = as.numeric(genome.size), 
                                                   y = as.numeric(biofilm))) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4, label.y = "bottom", label.x = "right") + xlab("Log (Genome Size)") + 
   ylab("Log (Biofilm)") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) + 
   theme(legend.position="none") + xlim(13,16.5) + ylim(-3.2,2.8)
 Figure_biofilm
 
@@ -2051,10 +2051,10 @@ temp_fast_data     = as.data.frame(rbind(temp_fast_data_fast,
 
 Figure_temp_fast  = ggplot(data = temp_fast_data, aes(x = as.numeric(genome.size), 
                                                       y = as.numeric(temp_fast))) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4, label.y = "bottom", label.x = "right") + xlab("Log (Genome Size)") + 
   ylab("Log (Temperature Tolerance)") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) + 
   theme(legend.position="none") + xlim(13,16.5) + ylim(0.5,2.6)
 Figure_temp_fast
 
@@ -2076,10 +2076,10 @@ pH_data     = subset(pH_data, pH!="-Inf")
 
 Figure_pH_fast  = ggplot(data = pH_data, aes(x = as.numeric(genome.size), 
                                              y = as.numeric(pH))) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4, label.y = "bottom", label.x = "right") + xlab("Log (Genome Size)") + 
   ylab("Log (pH Tolerance)") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) + 
   theme(legend.position="none") + xlim(13,16.5) + ylim(-2.7,2.85)
 Figure_pH_fast
 
@@ -2099,10 +2099,10 @@ mgr_data     = as.data.frame(rbind(mgr_data_fast,
 
 Figure_mgr_fast  = ggplot(data = mgr_data, aes(x = as.numeric(genome.size), 
                                                y = as.numeric(mgr))) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4, label.y = "top", label.x = "left") + xlab("Log (Genome Size)") + 
   ylab("Log (mgr)") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) + 
   theme(legend.position="none") + xlim(13,16.5) + ylim(-2.55,3.45)
 Figure_mgr_fast
 
@@ -2122,10 +2122,10 @@ ogt_data     = as.data.frame(rbind(ogt_data_fast,
 
 Figure_ogt_fast  = ggplot(data = ogt_data, aes(x = as.numeric(genome.size), 
                                                y = as.numeric(ogt))) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4, label.y = "bottom", label.x = "right") + xlab("Log (Genome Size)") + 
   ylab("Log (OGT)") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) + 
   theme(legend.position="none") + xlim(13,16.5) + ylim(2.9,4.3)
 Figure_ogt_fast
 
@@ -2156,10 +2156,10 @@ CAZy.total_data.ISO     = as.data.frame(rbind(CAZy.total_data_fast,
 
 Figure_CAZy.total.ISO   = ggplot(data = CAZy.total_data.ISO, aes(x = as.numeric(genome.size), 
                                                                  y = as.numeric(CAZy))) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5) + xlab("Log (Genome Size)") + 
   ylab("Log (CAZy)") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) + 
   theme(legend.position="none") + xlim(13,16.5) + ylim(-0.8,3.5)
 Figure_CAZy.total.ISO
 
@@ -2179,10 +2179,10 @@ Protein.enzyme.total_data.ISO     = as.data.frame(rbind(Protein.enzyme.total_dat
 
 Figure_Protein.enzyme.total.ISO   = ggplot(data = Protein.enzyme.total_data.ISO, aes(x = as.numeric(genome.size), 
                                                                                      y = as.numeric(Protein.enzyme))) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5) + xlab("Log (Genome Size)") + 
   ylab("Log (Protein)") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) + 
   theme(legend.position="none") + xlim(13,16.5) + ylim(0.8,4)
 Figure_Protein.enzyme.total.ISO
 
@@ -2202,10 +2202,10 @@ tranport.total_data     = as.data.frame(rbind(tranport.total_data_fast,
 
 Figure_tranport.total_ISO   = ggplot(data = tranport.total_data, aes(x = as.numeric(genome.size), 
                                                                      y = as.numeric(tranport.total))) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5, label.y = "bottom", label.x = "right") + xlab("Log (Genome Size)") + 
   ylab("Log (Transporters)") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) + 
   theme(legend.position="none") + xlim(13,16.5) + ylim(-0.5,5.5)
 Figure_tranport.total_ISO
 
@@ -2225,10 +2225,10 @@ GH.transporter_data     = as.data.frame(rbind(GH.transporter_data_fast,
 
 Figure_GH.transporter   = ggplot(data = GH.transporter_data, aes(x = as.numeric(genome.size), 
                                                                  y = as.numeric(GH.transporter))) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5, label.y = "bottom", label.x = "right") + xlab("Log (Genome Size)") + 
   ylab("Log (GH transporters)") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) + 
   theme(legend.position="none") + xlim(13,16.5) + ylim(-3.5,4.0)
 Figure_GH.transporter
 
@@ -2248,10 +2248,10 @@ Amino.transporter_data     = as.data.frame(rbind(Amino.transporter_data_fast,
 
 Figure_Amino.transporter   = ggplot(data = Amino.transporter_data, aes(x = as.numeric(genome.size), 
                                                                        y = as.numeric(Amino.transporter))) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5) + xlab("Log (Genome Size)") + 
   ylab("Log (Amino transporters)") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) + 
   theme(legend.position="none") + xlim(13,16.5) + ylim(0,3.5)
 Figure_Amino.transporter
 
@@ -2271,10 +2271,10 @@ osmolyte_data_ISO     = as.data.frame(rbind(osmolyte_data_fast_ISO,
 
 Figure_osmolyte_ISO   = ggplot(data = osmolyte_data_ISO, aes(x = as.numeric(genome.size), 
                                                              y = as.numeric(osmolyte))) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 4), label.y = "bottom", label.x = "left") + xlab("Log (Genome Size)") + 
   ylab("Log (Osmolytes)") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) + 
   theme(legend.position="none") + xlim(13,16.5) + ylim(-2.7,3.5)
 Figure_osmolyte_ISO
 
@@ -2294,10 +2294,10 @@ Biofilm_data_ISO     = as.data.frame(rbind(Biofilm_data_fast_ISO,
 
 Figure_Biofilm_ISO   = ggplot(data = Biofilm_data_ISO, aes(x = as.numeric(genome.size), 
                                                            y = as.numeric(Biofilm))) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 4), label.y = "bottom", label.x = "left") + xlab("Log (Genome Size)") + 
   ylab("Log (Biofilm)") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) + 
   theme(legend.position="none") + xlim(13,16.5) + ylim(-3.2,2.8)
 Figure_Biofilm_ISO
 
@@ -2317,10 +2317,10 @@ Temp.Tol_data_ISO     = as.data.frame(rbind(Temp.Tol_data_fast_ISO,
 
 Figure_Temp.Tol_ISO   = ggplot(data = Temp.Tol_data_ISO, aes(x = as.numeric(genome.size), 
                                                              y = as.numeric(Temp.Tol))) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 4), label.y = "bottom", label.x = "left") + xlab("Log (Genome Size)") + 
   ylab("Log (Temperature Tolerance)") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) + 
   theme(legend.position="none") + xlim(13,16.5) + ylim(0.5,2.6)
 Figure_Temp.Tol_ISO
 
@@ -2340,10 +2340,10 @@ pH.Tol_data_ISO     = as.data.frame(rbind(pH.Tol_data_fast_ISO,
 
 Figure_pH.Tol_ISO   = ggplot(data = pH.Tol_data_ISO, aes(x = as.numeric(genome.size), 
                                                          y = as.numeric(pH.Tol))) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 4), label.y = "bottom", label.x = "left") + xlab("Log (Genome Size)") + 
   ylab("Log (pH Tolerance)") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) + 
   theme(legend.position="none") + xlim(13,16.5) + ylim(-2.7,2.85)
 Figure_pH.Tol_ISO
 
@@ -2363,10 +2363,10 @@ Yield_data     = as.data.frame(rbind(Yield_data_fast,
 
 Figure_Yield_ISO   = ggplot(data = Yield_data, aes(x = as.numeric(genome.size), 
                                                    y = as.numeric(Yield))) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 4), label.y = "bottom", label.x = "left") + xlab("Log (Genome Size)") + 
   ylab("Log (Yield)") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) + 
   theme(legend.position="none") + xlim(13,16.5)
 Figure_Yield_ISO
 
@@ -2386,10 +2386,10 @@ mgr_data_ISO     = as.data.frame(rbind(mgr_data_fast_ISO,
 
 Figure_mgr_ISO   = ggplot(data = mgr_data_ISO, aes(x = as.numeric(genome.size), 
                                                    y = as.numeric(mgr))) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 4), label.y = "top", label.x = "left") + xlab("Log (Genome Size)") + 
   ylab("Log (mgr)") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) + 
   theme(legend.position="none") + xlim(13,16.5) + ylim(-2.55,3.45)
 Figure_mgr_ISO
 
@@ -2409,10 +2409,10 @@ OGT_data_ISO     = as.data.frame(rbind(OGT_data_fast_ISO,
 
 Figure_OGT_ISO   = ggplot(data = OGT_data_ISO, aes(x = as.numeric(genome.size), 
                                                    y = as.numeric(OGT))) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 4), label.y = "bottom", label.x = "left") + xlab("Log (Genome Size)") + 
   ylab("Log (OGT)") +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) + 
   theme(legend.position="none") + xlim(13,16.5) + ylim(2.9,4.3)
 Figure_OGT_ISO
 
@@ -2510,12 +2510,13 @@ phylum = merged_df %>% group_by(Phylum) %>% summarise(across(where(is.numeric),
 phylum = phylum %>% mutate(speed = case_when(mingentime_mean <= 5 ~ "fast",
                                              mingentime_mean  > 5 ~ "slow"))
 
-Figure_test_1.phylum = ggplot(data = phylum, aes(x = log(genome_length_mean), y = log(CUE_mean))) +
+Figure_test_1.phylum = ggplot(data = phylum, aes(x = log(genome_length_mean), 
+                                                 y = log(CUE_mean))) +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 5), label.y = "bottom", label.x = "left") + 
   xlab("Log(Genome size)") + 
   ylab("Log(Yield)") +
-  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
   labs(title = "Phylum")
 Figure_test_1.phylum
 
@@ -2525,12 +2526,13 @@ Class = merged_df %>% group_by(Class) %>% summarise(across(where(is.numeric),
                                                            list(mean=mean), na.rm=TRUE))
 Class = Class %>% mutate(speed = case_when(mingentime_mean <= 5 ~ "fast",
                                            mingentime_mean  > 5 ~ "slow"))
-Figure_test_1.Class = ggplot(data = Class, aes(x = log(genome_length_mean), y = log(CUE_mean))) +
+Figure_test_1.Class = ggplot(data = Class, aes(x = log(genome_length_mean), 
+                                               y = log(CUE_mean))) +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 5), label.y = "bottom", label.x = "left") + 
   xlab("Log(Genome size)") + 
   ylab("Log(Yield)") + 
-  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
   labs(title = "Class")
 Figure_test_1.Class
 
@@ -2541,12 +2543,13 @@ Order = merged_df %>% group_by(Order) %>% summarise(across(where(is.numeric),
 Order = Order %>% mutate(speed = case_when(mingentime_mean <= 5 ~ "fast",
                                            mingentime_mean  > 5 ~ "slow"))
 
-Figure_test_1.Order = ggplot(data = Order, aes(x = log(genome_length_mean), y = log(CUE_mean))) + 
+Figure_test_1.Order = ggplot(data = Order, aes(x = log(genome_length_mean), 
+                                               y = log(CUE_mean))) + 
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 5), label.y = "bottom", label.x = "left") + 
   xlab("Log(Genome size)") + 
   ylab("Log(Yield)") +
-  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
   labs(title = "Order")
 Figure_test_1.Order
 
@@ -2557,12 +2560,13 @@ Family = merged_df %>% group_by(Family) %>% summarise(across(where(is.numeric),
 Family = Family %>% mutate(speed = case_when(mingentime_mean <= 5 ~ "fast",
                                              mingentime_mean  > 5 ~ "slow"))
 
-Figure_test_1.Family = ggplot(data = Family, aes(x = log(genome_length_mean), y = log(CUE_mean))) +
+Figure_test_1.Family = ggplot(data = Family, aes(x = log(genome_length_mean), 
+                                                 y = log(CUE_mean))) +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 5), label.y = "bottom", label.x = "left") + 
   xlab("Log(Genome size)") + 
   ylab("Log(Yield)") +
-  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
   labs(title = "Family")
 Figure_test_1.Family
 
@@ -2573,12 +2577,13 @@ Genus = merged_df %>% group_by(Genus) %>% summarise(across(where(is.numeric),
 Genus = Genus %>% mutate(speed = case_when(mingentime_mean <= 5 ~ "fast",
                                            mingentime_mean  > 5 ~ "slow"))
 
-Figure_test_1.Genus = ggplot(data = Genus, aes(x = log(genome_length_mean), y = log(CUE_mean))) +
+Figure_test_1.Genus = ggplot(data = Genus, aes(x = log(genome_length_mean), 
+                                               y = log(CUE_mean))) +
+  geom_point() + theme_classic() + theme(text = element_text(size=14)) +
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 5), label.y = "bottom", label.x = "left") + 
   xlab("Log(Genome size)") + 
   ylab("Log(Yield)") +
-  geom_point() + theme_classic() + theme(text = element_text(size=14)) + 
   labs(title = "Genus")
 Figure_test_1.Genus
 
