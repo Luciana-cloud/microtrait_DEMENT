@@ -1,10 +1,94 @@
-# Y-A+S and not YAS: Microbial trait-tradeoffs and life history strategies at the genome-scale
+# Y‑A+S is the new Y‑A‑S: Updating microbial life‑history tradeoffs with comparative genomics
 
-Trait-based theory coupled with mechanistic trait-based models can help explore how changes in environmental conditions affect microbial community assembly and the subsequent impact on soil biogeochemical processes. In this work, we used a dataset of 30000 metagenome-assembled genomes (MAGs) and 5000 soil isolates to test how life history strategies are encoded in the genome by relating genome size and functional traits, measured as gene counts per trait. We characterized traits based on the YAS framework, which classifies microorganisms and communities into high-yield (Y), resource-acquisition (A), and stress-tolerance (S) strategists. We aggregated the functional traits into emergent functional groups based on their functional capabilities. The YAS framework predicts that if a population or community has a higher investment in one strategy, it should have a lower investment in the other two. We did not find evidence for tradeoffs using gene counts. In contrast to the hypothesized three-way tradeoff, we observed a clear positive correlation between genome size and functional traits representing the S and A strategies and a negative correlation between genome size and the Y strategy measured as carbon use efficiency. This negative relationship could be related to the costs associated with maintaining larger genomes. Our results suggest that microbes with larger genomes have life histories favoring investment in resource acquisition, stress tolerance, and maybe other traits, but at the cost of higher maintenance and lower yield. Our results affect how microbial life history strategies are represented in models. We argue that trait-based models could represent functional traits more parsimoniously by treating genome size as a master trait.
+Trait‑based ecology proposes that microorganisms balance investments in **yield (Y)**, **resource acquisition (A)**, and **stress tolerance (S)**. These tradeoffs shape microbial community assembly and influence soil biogeochemical processes. This repository contains the data‑processing and analysis workflow for the manuscript:
 
-This repository is related to the manuscript "Y-A+S is the new Y-A-S: Updating microbial life history tradeoffs with comparative genomics".
+**_“Updating microbial life history tradeoffs with comparative genomics.”_**
 
-## Roadmap for the files
+---
 
-- Final_data_preparation_file.R: Data preparation
-- Final_Plots.R: Final plots for main manuscript and supplementary information
+## Overview
+
+We analyzed **~30,000 metagenome‑assembled genomes (MAGs)** and **~5,000 soil isolate genomes** to test whether microbial life‑history strategies are encoded at the genome scale. Functional traits were quantified as **gene counts per trait**, and traits were grouped into emergent functional categories aligned with the **YAS framework**:
+
+- **Y (Yield)** – efficiency of converting resources into biomass  
+- **A (Acquisition)** – investment in resource uptake and processing  
+- **S (Stress tolerance)** – mechanisms enabling survival under environmental stress  
+
+The YAS framework predicts a **three‑way tradeoff**, where investment in one strategy reduces investment in the others.
+
+### Key findings
+
+- No evidence was found for the expected Y–A–S tradeoffs when traits were measured as gene counts.  
+- **Genome size** showed a strong positive correlation with **A** and **S** traits.  
+- Genome size was **negatively correlated** with **Y**, measured as carbon use efficiency.  
+- Larger genomes appear to support broader functional capabilities but incur higher maintenance costs, reducing yield.  
+- Genome size may therefore serve as a **master trait** for representing microbial life‑history strategies in trait‑based models.
+
+These results challenge the classical YAS tradeoff model and suggest a revised interpretation: **Y‑A+S**, where acquisition and stress tolerance scale together with genome size, while yield declines.
+
+---
+
+## Repository structure
+
+This repository contains the scripts used to prepare data, generate figures, and reproduce the analyses presented in the manuscript.
+
+1. Final_data_preparation_file.R     # Data preparation and trait aggregation
+2. Final_Plots.R                     # Main-text and supplementary figures
+3. README.md                         # Project documentation
+
+
+---
+
+## Workflow summary
+
+### 1. Data preparation  
+`Final_data_preparation_file.R` performs:
+
+- Import and cleaning of MAG and isolate metadata  
+- Calculation of gene counts per functional trait  
+- Aggregation of traits into emergent functional groups  
+- Integration of genome size and carbon use efficiency metrics  
+
+### 2. Plot generation  
+`Final_Plots.R` produces:
+
+- Genome size vs. trait investment relationships  
+- Trait–trait correlation matrices  
+- Emergent functional group visualizations  
+- All figures used in the main manuscript and supplementary information  
+
+---
+
+## Requirements
+
+The analysis was performed in **R**.  
+A typical environment includes:
+
+- `tidyverse`  
+- `data.table`  
+- `ggplot2`  
+- `patchwork`  
+- `readr`  
+- `dplyr`  
+
+---
+
+## Reproducibility
+
+The scripts are modular and transparent, enabling reuse for:
+
+- Trait‑based ecological analyses  
+- Comparative genomics workflows  
+- Genome‑scale trait aggregation  
+- Model‑ready trait dataset generation  
+
+---
+
+## Contact
+
+For questions or collaboration inquiries, please contact:  
+**Luciana Chávez Rodriguez**  
+Wageningen University & Research
+
+
+
