@@ -1185,6 +1185,95 @@ pdf("Output_Data/Figures/Figure_S4.pdf",
 print(Figure_S4)
 dev.off()
 
+# MAGs normalized 2 ----
+
+MAG_gen_trait_total_nor_2 =
+  MAG_gen_trait_total %>%
+  select(guild, genome.size, amino.transport,
+         pH, temp, biofilm, osmolyte,
+         GH.trasnport, tranport.total,
+         Protein, CAZy, ogt, mgr) %>%
+  mutate(across(
+    c(amino.transport, pH, temp, biofilm, osmolyte,
+      GH.trasnport, tranport.total, Protein, CAZy),
+    ~ .x / MAG_gen_trait_total$genome.size
+  ))
+
+# Add contamination, GC content etc ----
+
+MAG_gen_TOTAL_ab = MAG_gen_TOTAL_ab %>% select(guild,completeness_mean,
+                                               contamination_mean,GC_count_mean)
+MAG_gen_trait_total_nor_2 = merge(MAG_gen_trait_total_nor_2,MAG_gen_TOTAL_ab,by="guild")
+
+# Colnames ----
+colnames(MAG_gen_trait_total_nor_2) = c("Guild", "Genome Size", "Amino-transporter", "pH-Tol",
+                                        "Temp-Tol", "Biofilm", "Osmolyte","GH-transporter",
+                                        "Total-transporter","Protein-enzyme","CAZy","OGT","MGR",
+                                        "Completeness","Contamination","GC-count")
+
+# Reordering columns ----
+
+col_order = c("Guild", "Genome Size","OGT","MGR","Amino-transporter","GH-transporter",
+              "Total-transporter","Protein-enzyme","CAZy","pH-Tol","Temp-Tol", 
+              "Biofilm", "Osmolyte","Completeness","Contamination","GC-count")
+MAG_gen_trait_total_nor_2 = MAG_gen_trait_total_nor_2[, col_order]
+# Convert MGT to MGR ----
+MAG_gen_trait_total_nor_2 = MAG_gen_trait_total_nor_2 %>% mutate(MGR = 1/MGR)
+
+# Figure S3A - Cross correlation MAGs normalized ----
+
+Figure_S3A = ggpairs(MAG_gen_trait_total_nor_2[,3:16], 
+                     upper = list(continuous = my_fn),
+                     lower = list(continuous = "smooth"))  
+Figure_S3A
+
+pdf("Output_Data/Figures/Figure_S3A.pdf",
+    width=4*4,height=4*4)
+print(Figure_S3A)
+dev.off()
+
+# Isolates normalized ----
+
+ISO_gen_TOTAL_ab_nor_2    = ISO_gen_TOTAL_ab %>%
+  select(Guild, Genome.Size, Amino.transporter,
+         pH.Tol, Temp.Tol, Biofilm, Osmolyte,
+         GH.transporter, Total.transporter,
+         Protein.enzyme, CAZy, OGT, MGT,Yield) %>%
+  mutate(across(
+    c(Amino.transporter,
+      pH.Tol, Temp.Tol, Biofilm, Osmolyte,
+      GH.transporter, Total.transporter,
+      Protein.enzyme, CAZy),
+    ~ .x / ISO_gen_TOTAL_ab$Genome.Size
+  ))
+
+# Colnames ----
+colnames(ISO_gen_TOTAL_ab_nor_2) = c("Guild", "Genome Size", "Amino-transporter", "pH-Tol",
+                                     "Temp-Tol", "Biofilm", "Osmolyte","GH-transporter",
+                                     "Total-transporter","Protein-enzyme","CAZy","OGT","MGR",
+                                     "Yield")
+
+# Reordering columns ----
+
+col_order = c("Guild", "Genome Size","Yield","OGT","MGR","Amino-transporter","GH-transporter",
+              "Total-transporter","Protein-enzyme","CAZy","pH-Tol","Temp-Tol", 
+              "Biofilm", "Osmolyte")
+ISO_gen_TOTAL_ab_nor_2 = ISO_gen_TOTAL_ab_nor_2[, col_order]
+# Convert MGT to MGR ----
+ISO_gen_TOTAL_ab_nor_2 = ISO_gen_TOTAL_ab_nor_2 %>% mutate(MGR = 1/MGR)
+
+# Figure S4A - Cross correlation ISOLATES ----
+
+Figure_S4A = ggpairs(ISO_gen_TOTAL_ab_nor_2[,3:14], 
+                     upper = list(continuous = my_fn),
+                     lower = list(continuous = "smooth"))  
+Figure_S4A
+
+pdf("Output_Data/Figures/Figure_S4A.pdf",
+    width=4*4,height=4*4)
+print(Figure_S4A)
+dev.off()
+
 # Empirical models between Genome Size and functional groups for MAGs (Table S1) ----
 
 # S vs A tradeoffs (MAGs) ----
@@ -2661,4 +2750,21 @@ pdf("Output_Data/Figures/Figure_S6.pdf",
     width=4.81*1.5,height=2.21*1.5)
 print(Figure_S6)
 dev.off()
+
+# New Figures arised during revision ----
+
+# Scatterplot Yield vs A+S traits ----
+
+pdf("Output_Data/Figures/Figure_S9.pdf",
+    width=2.5*2.5,height=2.5*2.5)
+plot(ISO_gen_TOTAL_ab$A_traits+ISO_gen_TOTAL_ab$S_traits, ISO_gen_TOTAL_ab$Yield,
+     xlab = "Total S+A gene counts per functional group",
+     ylab = "Yield (CUE)",
+     main = "Yield vs S+A gene counts — isolate functional groups")
+abline(lm(ISO_gen_TOTAL_ab$Yield ~ ISO_gen_TOTAL_ab$A_traits+ISO_gen_TOTAL_ab$S_traits), col = "red", lwd = 2)
+legend("bottomleft", 
+       legend = "r = -0.136, p = 0.042",
+       bty = "n")
+dev.off()
+
 
