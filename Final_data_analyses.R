@@ -510,7 +510,7 @@ data = as.data.frame(cbind(MAG_number.1$mag,plot_file$V1))
 
 model = lm(plot_file$V1 ~ MAG_number.1$mag)
 
-# Figure S1 ----
+# Fig_S1 ----
 
 Figure_S1 = ggplot(data,aes(V1,V2)) +
   geom_point() +
@@ -739,42 +739,7 @@ colnames(MAG_gen_trait) = c("guild","genome.size","amino.transport","pH","temp",
                             "biofilm","osmolyte","GH.trasnport","tranport.total",
                             "Protein","CAZy")
 
-# Adding genome size to the trait dataset - MAG
-
-# Approximation for Y strategy (for MAG)
-
-total.granularity.3 = read.csv("Input_Data/IMG_JGI_MAGs/total.granularity.3_datasets.csv",dec=".") 
-MAG_id              = read.csv("Intermediate_Results/total_genes.guild.940_MAG.csv",dec=".")
-MAG_id              = as.data.frame(MAG_id$id)
-colnames(MAG_id)    = "id"
-Y_MAG               = merge(total.granularity.3,MAG_id,by = "id")
-Y_MAG               = Y_MAG %>% select(c("guild","genome.size","mgt","ogt"))
-Y_MAG.A             = Y_MAG %>% select(c("guild","genome.size","mgt"))
-
-# Minimum generation time > 5
-Y_MAG.A     = Y_MAG.A %>% filter(mgt > 5)
-Y_MAG.A.1   = Y_MAG.A %>% group_by(guild) %>% summarise(across(where(is.numeric),list(mean=mean), na.rm=TRUE))
-
-# Minimum generation time <= 5
-Y_MAG.B   = Y_MAG %>% select(c("guild","genome.size","mgt"))
-Y_MAG.B   = Y_MAG.B %>% filter(mgt <= 5)
-Y_MAG.B.1 = Y_MAG.B %>% group_by(guild) %>% summarise(across(where(is.numeric),
-                                                             list(mean=mean), na.rm=TRUE))
-
-# Optimal Growth Temperature
-Y_MAG.C     = Y_MAG %>% select(c("guild","genome.size","ogt"))
-Y_MAG.C     = na.omit(Y_MAG.C)
-Y_MAG.C.1   = Y_MAG.C %>% group_by(guild) %>% summarise(across(where(is.numeric),
-                                                               list(mean=mean), na.rm=TRUE)) 
-colnames(Y_MAG.B.1) = c("guild","genome.size","mgr")
-colnames(Y_MAG.A.1) = c("guild","genome.size","mgr")
-colnames(Y_MAG.C.1) = c("guild","genome.size","ogt")
-MAG_gen_trait.1     = merge(MAG_gen_trait,Y_MAG.C.1,by = c("guild","genome.size"))
-MAG_gen_trait.2     = merge(MAG_gen_trait.1,Y_MAG.B.1,by = c("guild","genome.size"))
-MAG_gen_trait.3     = merge(MAG_gen_trait.1,Y_MAG.A.1,by = c("guild","genome.size"))
-
-write.csv(MAG_gen_trait.2, file = "Intermediate_Results/MAG_gen_trait.csv")
-write.csv(MAG_gen_trait.3, file = "Intermediate_Results/MAG_gen_trait.5.csv")
+write.csv(MAG_gen_trait, file = "Intermediate_Results/MAG_gen_trait.csv")
 
 # Trait Data Preparation (Isolates) ----
 
@@ -867,146 +832,375 @@ colnames(Isolates_gen_trait) = c("guild","genome.size","amino.transport","pH","t
                                  "biofilm","osmolyte","GH.trasnport","tranport.total",
                                  "Protein","CAZy")
 
-# Adding genome size to the trait dataset - Isolates
+write.csv(Isolates_gen_trait, file = "Intermediate_Results/Isolates_gen_trait.csv")
 
-Isolates_gen_trait    = as.data.frame(cbind(Aminoacids_T_Isolates,PH_Isolates$PH_total,
-                                            TEMP_Isolates$TEMP_total,Biofilm_Isolates$BIO_total,
-                                            Osmolyte_Isolates$OSMO_total,GH_T_Isolates$CAR_TRANSP_TOTAL,
-                                            Transporter_Isolates$transp_total,Protein_Isolates$PR_total,
-                                            GH_Isolates$GH_total))
-colnames(Isolates_gen_trait) = c("guild","genome.size","amino.transport","pH","temp",
-                                 "biofilm","osmolyte","GH.trasnport","tranport.total",
-                                 "Protein","CAZy")
+# Additional preparations for MAGs ----
 
-# CUE ----
+# Adding ogt and mgt ----
 
-isolates     = read.csv("Input_Data/SOIL_ISOLATES/dement_isolates_CUE.csv",dec=".")
-isolatest    = read.csv("Input_Data/SOIL_ISOLATES/total.granularity.3_datasets.csv",dec=".")
-isolates.1   = subset(isolates, isolates$CUE !='NaN')
+microtrait = read_csv("Input_Data/IMG_JGI_MAGs/total.granularity.3_datasets.csv")
+total_genes.guild.940_MAG = read.csv("Intermediate_Results/total_genes.guild.940_MAG.csv",dec=".")
+guild_n = total_genes.guild.940_MAG %>% count(guild, name = "n_mags")
 
-isolates.2   = isolates.1 %>% left_join(total_genes.guild.940_ISO, by='id')
-isolates.2.m = isolates.2 %>% group_by(guild) %>% summarise(across(where(is.numeric), 
-                                                                   list(mean=mean), na.rm=TRUE))
-isolates.2.m = isolates.2.m %>% select(c("guild","CUE_mean","genome.size_mean",
-                                         "mingentime_mean","optimumT_mean"))
-colnames(isolates.2.m) = c("guild","yield","genome.size","MGT","OGT")
-ISO_gen_trait.1        = merge(Isolates_gen_trait,isolates.2.m,by = c("guild","genome.size"))
-colnames(ISO_gen_trait.1) = c("Guild","Genome Size","Amino-transporter","pH-Tol",
-                              "Temp-Tol", "Biofilm", "Osmolyte","GH-transporter",
-                              "Total-transporter","Protein-enzyme","CAZy","Yield","MGT","OGT")
-col_order = c("Guild", "Genome Size","Yield","OGT","MGT","Amino-transporter","GH-transporter",
-              "Total-transporter","Protein-enzyme","CAZy","pH-Tol","Temp-Tol", 
-              "Biofilm", "Osmolyte")
-ISO_gen_trait.1   = ISO_gen_trait.1[, col_order]
-ISO_gen_trait.1   = ISO_gen_trait.1 %>% filter(Yield <= 0.9)
+# One aggregation step for ogt + mgt + genome.size together ----
 
-write.csv(ISO_gen_trait.1, file = "Intermediate_Results/ISO_gen_trait.1.csv")
+MAG_growth = microtrait %>% select(guild, genome.size, ogt, mgt) %>%
+  group_by(guild) %>% summarise(across(everything(), mean, na.rm = TRUE))
 
-# Aggregated Traits ----
+# Calculating maximum growth rate ----
+MAG_growth = MAG_growth %>% mutate(mgr = 1/mgt)   
 
-# MAGs no normalized ----
+# Updated MAG_gen_trait file ----
 
-MAG_gen_trait.fast   = read.csv("Intermediate_Results/MAG_gen_trait.csv",dec=".")
-MAG_gen_trait.slow   = read.csv("Intermediate_Results/MAG_gen_trait.5.csv",dec=".")
+MAG_gen_trait_v2 = merge(MAG_gen_trait, MAG_growth %>% select(guild, ogt, mgt, mgr),
+                         by = "guild")
+MAG_gen_trait_v2 = merge(MAG_gen_trait_v2, guild_n, by = "guild")
+MAG_gen_trait_v2 = MAG_gen_trait_v2 %>% select(-`...1`)
 
-# A-S-traits ----
+write.csv(MAG_gen_trait_v2, file = "Intermediate_Results/MAG_gen_trait.csv")
 
-MAG_gen_trait.fast   =  MAG_gen_trait.fast %>% mutate(S_traits  = rowSums(MAG_gen_trait.fast[,5:8]),
-                                                      A_traits  = rowSums(MAG_gen_trait.fast[,10:12]),
-                                                      A_enzymes = rowSums(MAG_gen_trait.fast[,11:12]),
-                                                      speed     = rep("fast",nrow(MAG_gen_trait.fast)))
+# Adding contamination, GC count and completeness ----
 
-MAG_gen_trait.slow   =  MAG_gen_trait.slow %>% mutate(S_traits  = rowSums(MAG_gen_trait.slow[,5:8]),
-                                                      A_traits  = rowSums(MAG_gen_trait.slow[,10:12]),
-                                                      A_enzymes = rowSums(MAG_gen_trait.slow[,11:12]),
-                                                      speed     = rep("low",nrow(MAG_gen_trait.slow)))
+# Calling Data
 
+# IMG MAGs
+metadata = read.csv("Input_Data/IMG_JGI_MAGs/IMG_bindata_withmeta_norestricted.csv", dec=".")  # or wherever `metadata` came from originally
 
-MAG_gen_trait_total  = as.data.frame(rbind(MAG_gen_trait.fast,MAG_gen_trait.slow))
-MAG_gen_trait_total  = MAG_gen_trait_total %>% mutate(A_S = A_traits/S_traits)
+# Fire
+fire_meta   = readxl::read_excel("Input_Data/FIRE_MAGs/MAG_Dataset_BurnSeverity_ARNelson.xlsx")
+colnames(fire_meta)[1] = "id"
+fire_stat   = read.csv("Input_Data/FIRE_MAGs/fire_metadata.csv",dec=".")
 
-# Isolates ----
+# Loma
+mag_stat = read.csv("Input_Data/LOMA_MAGs/mag_stats.csv", dec=".")
+mag_abun = read.csv("Input_Data/LOMA_MAGs/mag_adundance.csv", dec=".")
+mag_stat = mag_stat %>% full_join(mag_abun)
 
-ISO_gen_TOTAL_ab = read.csv("Intermediate_Results/ISO_gen_trait.1.csv",dec=".")
-ISO_gen_TOTAL_ab = ISO_gen_TOTAL_ab %>% mutate(speed = case_when(MGT <= 5 ~ "fast",
-                                                                 MGT  > 5 ~ "slow"))
-# A-S-traits ----
+# Aligning the IDs
 
-ISO_gen_TOTAL_ab   =  ISO_gen_TOTAL_ab %>% mutate(S_traits      = rowSums(ISO_gen_TOTAL_ab[,12:15]),
-                                                  A_traits  = rowSums(ISO_gen_TOTAL_ab[,9:11]),
-                                                  A_enzymes = rowSums(ISO_gen_TOTAL_ab[,10:11]))
-ISO_gen_TOTAL_ab   = ISO_gen_TOTAL_ab %>% mutate(A_S = A_traits/S_traits)
+# Split the guild table's ids by source
+guild_ids = total_genes.guild.940_MAG %>% select(id, guild, genome.size)
 
-# Figure 1 ----
+guild_ids_fire = guild_ids %>% filter(grepl("^RYN", id))
+guild_ids_loma = guild_ids %>% filter(grepl("shrub|grass", id, ignore.case = TRUE)) %>%
+  mutate(id_stripped = sub("\\.orig$|\\.strict$", "", id))
+guild_ids_img  = guild_ids %>% filter(!grepl("^RYN", id) & !grepl("shrub|grass", id, ignore.case = TRUE))
 
-Figure_Total_S_SA_MAGs   = ggplot(data = MAG_gen_trait_total, aes(x = as.numeric((A_traits)), 
-                                                                  y = as.numeric((S_traits)),color = A_S)) +
+cat("Routing check - should sum to", nrow(guild_ids), "total rows:\n")
+cat("  IMG: ", nrow(guild_ids_img),
+    "| Fire:", nrow(guild_ids_fire),
+    "| Loma:", nrow(guild_ids_loma),
+    "| Sum:", nrow(guild_ids_img) + nrow(guild_ids_fire) + nrow(guild_ids_loma), "\n\n")
+
+# IMG: join by Bin.ID
+IMG_meta = metadata %>% select(Bin.ID, Bin.Completeness, Bin.Contamination, GC.....assembled) %>%
+  rename(id = Bin.ID, completeness = Bin.Completeness,
+         contamination = Bin.Contamination, GC_count = GC.....assembled)
+IMG_joined = left_join(guild_ids_img, IMG_meta, by = "id")
+cat("IMG - rows before:", nrow(guild_ids_img), "| after join:", nrow(IMG_joined),
+    "| unmatched (NA completeness):", sum(is.na(IMG_joined$completeness)), "\n\n")
+
+# Fire: join by id (RYN_n) directly
+FIRE_meta = fire_meta %>%
+  merge(fire_stat, by = "id") %>%
+  select(id, Completeness, Contamination, GC) %>%
+  rename(completeness = Completeness, contamination = Contamination, GC_count = GC)
+FIRE_joined = left_join(guild_ids_fire, FIRE_meta, by = "id")
+cat("Fire - rows before:", nrow(guild_ids_fire), "| after join:", nrow(FIRE_joined),
+    "| unmatched (NA completeness):", sum(is.na(FIRE_joined$completeness)), "\n\n")
+
+# Loma: join by stripped id
+LOMA_meta = mag_stat %>% select(id, completeness, contamination) %>% mutate(GC_count = NA)
+LOMA_joined = left_join(guild_ids_loma, LOMA_meta, by = c("id_stripped" = "id"))
+cat("Loma - rows before:", nrow(guild_ids_loma), "| after join:", nrow(LOMA_joined),
+    "| unmatched (NA completeness):", sum(is.na(LOMA_joined$completeness)), "\n\n")
+LOMA_joined = LOMA_joined %>% select(-id_stripped)
+
+# Recombine
+TOTAL_MAGs_fixed = bind_rows(IMG_joined, FIRE_joined, LOMA_joined)
+cat("=== TOTAL (all sources) ===\n")
+cat("Rows:", nrow(TOTAL_MAGs_fixed), "| unique ids:", n_distinct(TOTAL_MAGs_fixed$id),
+    "| unique guilds:", n_distinct(TOTAL_MAGs_fixed$guild), "\n")
+cat("Rows with any NA completeness/contamination:",
+    sum(is.na(TOTAL_MAGs_fixed$completeness) | is.na(TOTAL_MAGs_fixed$contamination)), "\n\n")
+
+write.csv(TOTAL_MAGs_fixed, file = "Intermediate_Results/TOTAL_MAGs_fixed.csv")
+
+# Guild-level aggregation
+TOTAL_MAGs_guild = TOTAL_MAGs_fixed %>%
+  group_by(guild) %>%
+  summarise(completeness_mean = mean(completeness, na.rm = TRUE),
+            contamination_mean = mean(contamination, na.rm = TRUE),
+            GC_count_mean = mean(GC_count, na.rm = TRUE))
+cat("Guild-level completeness/contamination/GC table - guilds:", nrow(TOTAL_MAGs_guild), "\n")
+cat("(compare to MAG_gen_trait_v2's 1342 guilds)\n")
+
+# Merge with MAG_gen_trait_v2
+
+MAG_gen_trait_v3 = merge(MAG_gen_trait_v2, TOTAL_MAGs_guild, by = "guild")
+
+write.csv(MAG_gen_trait_v3, file = "Intermediate_Results/MAG_gen_trait.csv")
+
+# Adding CUE ----
+
+sim_10000 = read.csv("Output_Data/my_MAGs_BGE_glucose_10000.csv")
+
+# Map MAG-level CUE to guild via the real id
+guild_lookup = total_genes.guild.940_MAG %>% select(id, guild)
+
+cue_with_guild = sim_10000 %>%
+  left_join(guild_lookup, by = c("MAG_id" = "id"))
+
+# Guild-level mean CUE (BGE)
+CUE_guild = cue_with_guild %>%
+  filter(!is.na(guild)) %>%
+  group_by(guild) %>%
+  summarise(CUE_mean = mean(BGE, na.rm = TRUE),
+            CUE_n_mags = n())
+
+# Merge into the running MAG base
+MAG_gen_trait_v4 = merge(MAG_gen_trait_v3, CUE_guild, by = "guild", all.x = TRUE)
+
+write.csv(MAG_gen_trait_v4, file = "Intermediate_Results/MAG_gen_trait.csv")
+
+# Adding A and S traits ----
+
+MAG_gen_trait_v5 = MAG_gen_trait_v4 %>%
+  mutate(
+    S_traits  = rowSums(across(c(pH, temp, biofilm, osmolyte)), na.rm = TRUE),
+    A_traits  = rowSums(across(c(tranport.total, Protein, CAZy)), na.rm = TRUE),
+    A_enzymes = rowSums(across(c(Protein, CAZy)), na.rm = TRUE),
+    A_S       = A_traits / S_traits
+  )
+
+write.csv(MAG_gen_trait_v5, file = "Intermediate_Results/MAG_gen_trait.csv")
+
+# Normalizing by genome size ----
+
+MAG_gen_trait_v6 = MAG_gen_trait_v5 %>%
+  mutate(across(
+    c(amino.transport, pH, temp, biofilm, osmolyte,
+      GH.trasnport, tranport.total, Protein, CAZy,
+      S_traits, A_traits, A_enzymes),
+    ~ .x / genome.size,          # uses the piped df's own genome.size - safe against future filters
+    .names = "{.col}_nor"
+  ))
+
+write.csv(MAG_gen_trait_v6, file = "Intermediate_Results/MAG_gen_trait_normalized.csv")
+
+# Additional preparations for ISOLATES ----
+
+# Adding ogt and mgt ----
+
+isolates_microtrait = read_csv("Input_Data/SOIL_ISOLATES/dement_isolates_CUE.csv")
+my_isolates_BGE_glucose = read_csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/DEBmicroTrait.jl-main/DEBmicroTrait.jl-main/files/my_isolates_BGE_glucose.csv")
+
+guild_lookup_iso = total_genes.guild.940_ISO %>% select(id, guild, genome.size)
+
+guild_n_iso = total_genes.guild.940_ISO %>% count(guild, name = "n_mags")
+
+#ogt/mgt from isolates_microtrait 
+iso_with_guild = left_join(guild_lookup_iso,
+                           isolates_microtrait %>% select(id, mingentime, optimumT),
+                           by = "id")
+
+# CUE joined separately
+iso_with_cue = left_join(guild_lookup_iso %>% select(id, guild),
+                         my_isolates_BGE_glucose %>% select(isolate_id, BGE),
+                         by = c("id" = "isolate_id"))
+
+# Aggregate growth traits (genome.size + ogt + mgt together)
+ISO_growth = iso_with_guild %>%
+  group_by(guild) %>%
+  summarise(
+    genome.size_check = mean(genome.size, na.rm = TRUE),
+    mgt = mean(mingentime, na.rm = TRUE),
+    ogt = mean(optimumT, na.rm = TRUE)
+  ) %>%
+  mutate(mgr = 1/mgt)
+cat("Guild-level growth table - guilds:", nrow(ISO_growth), "\n\n")
+
+# Aggregate CUE separately (own simulation)
+ISO_CUE = iso_with_cue %>%
+  group_by(guild) %>%
+  summarise(
+    CUE_mean = mean(BGE, na.rm = TRUE),
+    CUE_n_isolates = sum(!is.na(BGE))
+  )
+
+# Merge both into checkpoint-1 base
+Isolates_gen_trait_v2 = merge(Isolates_gen_trait,
+                              ISO_growth %>% select(guild, mgt, ogt, mgr),
+                              by = "guild")
+Isolates_gen_trait_v2 = merge(Isolates_gen_trait_v2,
+                              ISO_CUE %>% select(guild, CUE_mean, CUE_n_isolates),
+                              by = "guild", all.x = TRUE)
+
+Isolates_gen_trait_v2 = merge(Isolates_gen_trait_v2, guild_n_iso, by = "guild")
+
+cat("Guilds before:", n_distinct(Isolates_gen_trait$guild), "\n")
+cat("Guilds after: ", n_distinct(Isolates_gen_trait_v2$guild), "\n")
+cat("Any NA n_mags:", sum(is.na(Isolates_gen_trait_v2$n_mags)), "\n")
+
+write.csv(Isolates_gen_trait_v2, file = "Intermediate_Results/Isolates_gen_trait.csv")
+
+# Add S and A traits
+
+Isolates_gen_trait_v3 = Isolates_gen_trait_v2 %>%
+  mutate(
+    S_traits  = rowSums(across(c(pH, temp, biofilm, osmolyte)), na.rm = TRUE),
+    A_traits  = rowSums(across(c(tranport.total, Protein, CAZy)), na.rm = TRUE),
+    A_enzymes = rowSums(across(c(Protein, CAZy)), na.rm = TRUE),
+    A_S       = A_traits / S_traits
+  )
+
+write.csv(Isolates_gen_trait_v3, file = "Intermediate_Results/Isolates_gen_trait.csv")
+
+# Normalization
+
+Isolates_gen_trait_v4 = Isolates_gen_trait_v3 %>%
+  mutate(across(
+    c(amino.transport, pH, temp, biofilm, osmolyte,
+      GH.trasnport, tranport.total, Protein, CAZy,
+      S_traits, A_traits, A_enzymes),
+    ~ .x / genome.size,
+    .names = "{.col}_nor"
+  ))
+
+write.csv(Isolates_gen_trait_v4, file = "Intermediate_Results/Isolates_gen_trait_normalized.csv")
+
+# FIGURES ----
+
+# Call data
+
+MAG_gen_trait_total = read.csv("Intermediate_Results/MAG_gen_trait.csv",dec=".")
+ISO_gen_TOTAL_ab    = read.csv("Intermediate_Results/Isolates_gen_trait.csv",dec=".")
+
+MAG_gen_trait_total_nor = read.csv("Intermediate_Results/MAG_gen_trait_normalized.csv",dec=".")
+ISO_gen_TOTAL_ab_nor    = read.csv("Intermediate_Results/Isolates_gen_trait_normalized.csv",dec=".")
+
+# Fig_2 ----
+
+lm_weighted   = lm(S_traits ~ A_traits, data = MAG_gen_trait_total, weights = n_mags)
+wcor = cov.wt(cbind(MAG_gen_trait_total$A_traits, MAG_gen_trait_total$S_traits),
+              wt = MAG_gen_trait_total$n_mags, cor = TRUE)
+r_weighted = wcor$cor[1, 2]
+
+cat("Weighted Pearson r:", round(r_weighted, 3), "\n")
+cat("Unweighted Pearson r (for comparison):", 
+    round(cor(MAG_gen_trait_total$A_traits, MAG_gen_trait_total$S_traits), 3), "\n")
+p_weighted = summary(lm_weighted)$coefficients[2, 4]
+cat("p-value:", p_weighted, "\n")
+
+Figure_Total_S_SA_MAGs = ggplot(data = MAG_gen_trait_total, 
+                                aes(x = as.numeric(A_traits), 
+                                    y = as.numeric(S_traits),
+                                    color = A_S,
+                                    weight = n_mags)) +
   geom_point(size = 2.5) + theme_classic() + theme(text = element_text(size=14)) +
   stat_poly_line() +
-  stat_cor(method = "pearson", label.x = 3, label.y = 80) + 
+  annotate("text", x = 3, y = 80, hjust = 0,
+           label = paste0("r = ", round(r_weighted, 2), ", p ", 
+                          ifelse(p_weighted < 0.001, "< 0.001", paste0("= ", round(p_weighted, 3))))) +
   xlab("A Traits") + 
   ylab("S Traits") +
-  theme() + scale_color_gradient(low="red", high="blue", limits = c(0.5,8.5))  + 
-  ylim(0,80)  + xlim(0,250) 
+  scale_color_gradient(low="red", high="blue", limits = c(0.5,8.5)) + 
+  ylim(0,80) + xlim(0,250)
 Figure_Total_S_SA_MAGs
 
-Figure_Total_S_SA_ISO   = ggplot(data = ISO_gen_TOTAL_ab, aes(x = as.numeric((A_traits)), 
-                                                              y = as.numeric((S_traits)),color = A_S)) +
+lm_weighted   = lm(S_traits ~ A_traits, data = ISO_gen_TOTAL_ab, weights = n_mags)
+wcor = cov.wt(cbind(ISO_gen_TOTAL_ab$A_traits, ISO_gen_TOTAL_ab$S_traits),
+              wt = ISO_gen_TOTAL_ab$n_mags, cor = TRUE)
+r_weighted = wcor$cor[1, 2]
+
+cat("Weighted Pearson r:", round(r_weighted, 3), "\n")
+cat("Unweighted Pearson r (for comparison):", 
+    round(cor(ISO_gen_TOTAL_ab$A_traits, ISO_gen_TOTAL_ab$S_traits), 3), "\n")
+p_weighted = summary(lm_weighted)$coefficients[2, 4]
+cat("p-value:", p_weighted, "\n")
+
+Figure_Total_S_SA_ISO   = ggplot(data = ISO_gen_TOTAL_ab, 
+                                 aes(x = as.numeric(A_traits), 
+                                     y = as.numeric(S_traits),
+                                     color = A_S,
+                                     weight = n_mags)) +
   geom_point(size = 2.5) + theme_classic() + theme(text = element_text(size=14)) +
   stat_poly_line() +
-  stat_cor(method = "pearson", label.x = 3, label.y = 80) + 
+  annotate("text", x = 3, y = 80, hjust = 0,
+           label = paste0("r = ", round(r_weighted, 2), ", p ", 
+                          ifelse(p_weighted < 0.001, "< 0.001", paste0("= ", round(p_weighted, 3))))) +
   xlab("A Traits") + 
   ylab("S Traits") +
-  theme() + scale_color_gradient(low="red", high="blue", limits = c(0.5,8.5))  + 
-  ylim(0,80)  + xlim(0,250) 
+  scale_color_gradient(low="red", high="blue", limits = c(0.5,8.5)) + 
+  ylim(0,80) + xlim(0,250) 
 Figure_Total_S_SA_ISO
 
-Figure_1 = ggarrange(Figure_Total_S_SA_MAGs, Figure_Total_S_SA_ISO, 
-                     labels = c("A","B"),
-                     ncol = 2, nrow = 1) + theme(panel.background = element_blank())
+Fig_2 = ggarrange(Figure_Total_S_SA_MAGs, Figure_Total_S_SA_ISO, 
+                  labels = c("A","B"),
+                  ncol = 2, nrow = 1) + theme(panel.background = element_blank())
 
-Figure_1
-pdf("Output_Data/Figures/Figure_1.pdf",
+Fig_2
+pdf("Output_Data/Figures/Fig_2.pdf",
     width=12,height=12*2/5)
-print(Figure_1)
+print(Fig_2)
 dev.off()
 
-# MAGs normalized ----
+# Fig_S2 ----
 
-MAG_gen_trait_total_nor = MAG_gen_trait_total %>% mutate (S_traits_nor  = S_traits/genome.size,
-                                                          A_traits_nor  = A_traits/genome.size,
-                                                          A_enzymes_nor = A_enzymes/genome.size)
+lm_weighted   = lm(S_traits_nor ~ A_traits_nor, data = MAG_gen_trait_total_nor, weights = n_mags)
+wcor = cov.wt(cbind(MAG_gen_trait_total_nor$A_traits_nor, MAG_gen_trait_total_nor$S_traits_nor),
+              wt = MAG_gen_trait_total_nor$n_mags, cor = TRUE)
+r_weighted = wcor$cor[1, 2]
 
-# Isolates normalized ----
+cat("Weighted Pearson r:", round(r_weighted, 3), "\n")
+cat("Unweighted Pearson r (for comparison):", 
+    round(cor(MAG_gen_trait_total_nor$A_traits_nor, MAG_gen_trait_total_nor$S_traits_nor), 3), "\n")
+p_weighted = summary(lm_weighted)$coefficients[2, 4]
+cat("p-value:", p_weighted, "\n")
 
-ISO_gen_TOTAL_ab_nor       = ISO_gen_TOTAL_ab %>% mutate (S_traits_nor  = S_traits/Genome.Size,
-                                                          A_traits_nor  = A_traits/Genome.Size,
-                                                          A_enzymes_nor = A_enzymes/Genome.Size)
-
-# Figure S2 ----
-
-Figure_Total_S_SA_MAG_nor   = ggplot(data = MAG_gen_trait_total_nor, 
-                                     aes(x = as.numeric((A_traits_nor)),
-                                         y = as.numeric((S_traits_nor)),
-                                         color = A_S)) + 
+Figure_Total_S_SA_MAG_nor = ggplot(data = MAG_gen_trait_total_nor, 
+                                   aes(x = as.numeric(A_traits_nor),
+                                       y = as.numeric(S_traits_nor),
+                                       color = A_S,
+                                       weight = n_mags)) + 
   geom_point(size = 2.5) + theme_classic() + theme(text = element_text(size=14)) +
   stat_poly_line() +
-  stat_cor(method = "pearson") + 
+  annotate("text", x = min(MAG_gen_trait_total_nor$A_traits_nor, na.rm=TRUE), 
+           y = max(MAG_gen_trait_total_nor$S_traits_nor, na.rm=TRUE), 
+           hjust = 0, vjust = 1,
+           label = paste0("r = ", round(r_weighted, 2), ", p ", 
+                          ifelse(p_weighted < 0.001, "< 0.001", paste0("= ", round(p_weighted, 3))))) +
   xlab("A Traits") + 
   ylab("S Traits") +
-  theme() + scale_color_gradient(low="red", high="blue", limits = c(0.5,8.5))# + ylim(3.5e-6,1.5e-5) + xlim(8e-6,4e-5) 
+  theme() + scale_color_gradient(low="red", high="blue", limits = c(0.5,8.5))
 Figure_Total_S_SA_MAG_nor
 
+lm_weighted   = lm(S_traits_nor ~ A_traits_nor, data = ISO_gen_TOTAL_ab_nor, weights = n_mags)
+wcor = cov.wt(cbind(ISO_gen_TOTAL_ab_nor$A_traits_nor, ISO_gen_TOTAL_ab_nor$S_traits_nor),
+              wt = ISO_gen_TOTAL_ab_nor$n_mags, cor = TRUE)
+r_weighted = wcor$cor[1, 2]
+
+cat("Weighted Pearson r:", round(r_weighted, 3), "\n")
+cat("Unweighted Pearson r (for comparison):", 
+    round(cor(ISO_gen_TOTAL_ab_nor$A_traits_nor, ISO_gen_TOTAL_ab_nor$S_traits_nor), 3), "\n")
+p_weighted = summary(lm_weighted)$coefficients[2, 4]
+cat("p-value:", p_weighted, "\n")
+
 Figure_Total_S_SA_ISO_nor   = ggplot(data = ISO_gen_TOTAL_ab_nor, 
-                                     aes(x = as.numeric((A_traits_nor)),
-                                         y = as.numeric((S_traits_nor)),
-                                         color = A_S)) + 
+                                     aes(x = as.numeric(A_traits_nor),
+                                         y = as.numeric(S_traits_nor),
+                                         color = A_S,
+                                         weight = n_mags)) + 
   geom_point(size = 2.5) + theme_classic() + theme(text = element_text(size=14)) +
   stat_poly_line() +
-  stat_cor(method = "pearson") + 
+  annotate("text", x = min(ISO_gen_TOTAL_ab_nor$A_traits_nor, na.rm=TRUE), 
+           y = max(ISO_gen_TOTAL_ab_nor$S_traits_nor, na.rm=TRUE), 
+           hjust = 0, vjust = 1,
+           label = paste0("r = ", round(r_weighted, 2), ", p ", 
+                          ifelse(p_weighted < 0.001, "< 0.001", paste0("= ", round(p_weighted, 3))))) +
   xlab("A Traits") + 
   ylab("S Traits") +
-  theme() + scale_color_gradient(low="red", high="blue", limits = c(0.5,8.5))# + ylim(3.5e-6,1.5e-5) + xlim(8e-6,4e-5) 
+  theme() + scale_color_gradient(low="red", high="blue", limits = c(0.5,8.5))
 Figure_Total_S_SA_ISO_nor
 
 Figure_S2 = ggarrange(Figure_Total_S_SA_MAG_nor, Figure_Total_S_SA_ISO_nor, 
@@ -1019,212 +1213,698 @@ pdf("Output_Data/Figures/Figure_S2.pdf",
 print(Figure_S2)
 dev.off()
 
-# Adding GC content to the dataset of traits ----
+# MAGs ----
 
-# MAGs----
+# CAZy----
 
-# All MAGs
-meta_img.nr   = read.csv("Input_Data/IMG_JGI_MAGs/IMG_bindata_withmeta_norestricted.csv",dec=".")
-IMG_MAGs      = meta_img.nr %>% select(Total.Number.of.Bases,Bin.Completeness,Bin.Contamination,GC.....assembled)
-colnames(IMG_MAGs) = c("genome.size", "completeness",
-                       "contamination","GC_count")
-hmm_img     = read.csv("Intermediate_Results/IMG_global_dataset.csv",dec=".")
-hmm_img     = as.data.frame(hmm_img) %>% select(3,26,70:1790)
-colnames(hmm_img)[1]  = "id"
-colnames(hmm_img)[2]  = "genome.size"
-IMG_MAGs    = left_join(hmm_img, IMG_MAGs, by=c('genome.size'))
-IMG_MAGs    = IMG_MAGs %>% select(genome.size,completeness,contamination,GC_count)
+Figure_CAZy = ggplot(data = MAG_gen_trait_total, 
+                     aes(x = as.numeric(log(genome.size)), 
+                         y = as.numeric(log(CAZy + 1)),
+                         weight = n_mags)) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5) + 
+  xlab("Log(Genome Size)") + 
+  ylab("Log(CAZy)") +
+  theme(legend.position="none") + xlim(13,16.5) + ylim(-0.8,3.5)
+Figure_CAZy
 
-# Loma
-mag_stat    = read.csv("Input_Data/LOMA_MAGs/mag_stats.csv",dec=".") 
-mag_abun    = read.csv("Input_Data/LOMA_MAGs/mag_adundance.csv",dec=".") 
-mag_stat    = mag_stat %>% full_join(mag_abun)
-LOMA_MAGs   = mag_stat %>% select(size,completeness,contamination)
-LOMA_MAGs   = LOMA_MAGs %>% mutate(GC_count=NA)
-colnames(LOMA_MAGs) = c("genome.size", "completeness",
-                        "contamination","GC_count")
-# Fire
-fire_meta   = read_excel("Input_Data/FIRE_MAGs/MAG_Dataset_BurnSeverity_ARNelson.xlsx")
-colnames(fire_meta)[1] = "id"
-fire_stat   = read.csv("Input_Data/FIRE_MAGs/fire_metadata.csv",dec=".")
-FIRE_MAGs   = merge(x = fire_meta, y = fire_stat, by = "id")
-FIRE_MAGs   = FIRE_MAGs %>% select(Genome_size,Completeness,Contamination,GC)
-colnames(FIRE_MAGs) = c("genome.size", "completeness",
-                        "contamination","GC_count")
-# Merge datasets
-TOTAL_MAGs = as.data.frame(rbind(IMG_MAGs,LOMA_MAGs,FIRE_MAGs))
+# Protein enzyme ----
 
-# Guild codes
-total_genes.guild.940_MAG = read.csv("Intermediate_Results/total_genes.guild.940_MAG.csv",dec=".")
-# Extracting completeness, GC counts and contamination
-TOTAL_MAGs_1 = left_join(total_genes.guild.940_MAG, TOTAL_MAGs, by=c('genome.size'))
-# Remove duplicaes
-TOTAL_MAGs_1 = TOTAL_MAGs_1[!duplicated(TOTAL_MAGs_1$id), ]
-TOTAL_MAGs_1 = TOTAL_MAGs_1 %>% select(id,guild,genome.size,completeness,contamination,GC_count)
-# Summarize by guild
-TOTAL_MAGS_2 = TOTAL_MAGs_1 %>% group_by(guild) %>% summarise(across(where(is.numeric), list(mean=mean), na.rm=TRUE))
-# Merge with trait data (normalized)
-# Fast growing
-MAG_gen_trait.2  = read.csv("Intermediate_Results/MAG_gen_trait_norm.csv",dec=".")
-MAG_gen_trait.2  = MAG_gen_trait.2[, -1]
-MAG_gen_trait.fast  = merge(x = MAG_gen_trait.2, y = TOTAL_MAGS_2, by = "guild")
-write.csv(MAG_gen_trait.fast, file = "Intermediate_Results/MAG_gen_trait.fast_GC_norm.csv")
+Figure_Protein   = ggplot(data = MAG_gen_trait_total, 
+                          aes(x = as.numeric(log(genome.size)), 
+                              y = as.numeric(log(Protein + 1)),
+                              weight = n_mags)) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5) + 
+  xlab("Log(Genome Size)") + 
+  ylab("Log(Protein)") +
+  theme(legend.position="none") + xlim(13,16.5) + ylim(0.8,4)
+Figure_Protein
 
-# Slow growing
-MAG_gen_trait.3  = read.csv("Intermediate_Results/MAG_gen_trait.5_norm.csv",dec=".")
-MAG_gen_trait.3  = MAG_gen_trait.3[, -1]
-MAG_gen_trait.slow  = merge(x = MAG_gen_trait.3, y = TOTAL_MAGS_2, by = "guild")
-write.csv(MAG_gen_trait.slow, file = "Intermediate_Results/MAG_gen_trait.slow_GC_norm.csv")
+# Transport total Transporters ----
 
-# Total
-MAG_gen_TOTAL = as.data.frame(rbind(MAG_gen_trait.fast,MAG_gen_trait.slow))
-write.csv(MAG_gen_TOTAL, file = "Intermediate_Results/MAG_gen_TOTAL_GC_norm.csv")
+Figure_tranport.total   = ggplot(data = MAG_gen_trait_total, 
+                                 aes(x = as.numeric(log(genome.size)), 
+                                     y = as.numeric(log(tranport.total + 1)),
+                                     weight = n_mags)) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5) + 
+  xlab("Log(Genome Size)") + 
+  ylab("Log(Transporters)") +
+  theme(legend.position="none") + xlim(13,16.5) + ylim(-0.5,5.5)
+Figure_tranport.total
 
-# Merge with trait data (gene counts)
-# Fast growing
-MAG_gen_trait.2  = read.csv("Intermediate_Results/MAG_gen_trait.csv",dec=".")
-MAG_gen_trait.2  = MAG_gen_trait.2[, -1]
-MAG_gen_trait.fast  = merge(x = MAG_gen_trait.2, y = TOTAL_MAGS_2, by = "guild")
-write.csv(MAG_gen_trait.fast, file = "Intermediate_Results/MAG_gen_trait.fast_GC.csv")
+# GH total Transporters ----
 
-# Slow growing
-MAG_gen_trait.3  = read.csv("Intermediate_Results/MAG_gen_trait.5.csv",dec=".")
-MAG_gen_trait.3  = MAG_gen_trait.3[, -1]
-MAG_gen_trait.slow  = merge(x = MAG_gen_trait.3, y = TOTAL_MAGS_2, by = "guild")
-write.csv(MAG_gen_trait.slow, file = "Intermediate_Results/MAG_gen_trait.slow_GC.csv")
+Figure_GH.trasnport   = ggplot(data = MAG_gen_trait_total, 
+                               aes(x = as.numeric(log(genome.size)), 
+                                   y = as.numeric(log(GH.trasnport + 1)),
+                                   weight = n_mags)) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5) + 
+  xlab("Log(Genome Size)") + 
+  ylab("Log(GH transporters)") +
+  theme(legend.position="none") + xlim(13,16.5) + ylim(-3.5,4.0)
+Figure_GH.trasnport
 
-# Total
-MAG_gen_TOTAL = as.data.frame(rbind(MAG_gen_trait.fast,MAG_gen_trait.slow))
-write.csv(MAG_gen_TOTAL, file = "Intermediate_Results/MAG_gen_TOTAL_GC.csv")
+# Amino total Transporters ----
 
-# Correlation tables ----
+Figure_amino.transport   = ggplot(data = MAG_gen_trait_total, 
+                                  aes(x = as.numeric(log(genome.size)), 
+                                      y = as.numeric(log(amino.transport + 1)),
+                                      weight = n_mags)) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5) + 
+  xlab("Log(Genome Size)") + 
+  ylab("Log(Amino transporters)") +
+  theme(legend.position="none") + xlim(13,16.5) + ylim(0,3.5)
+Figure_amino.transport
 
-# MAGs gene counts ----
-MAG_gen_TOTAL_ab = read.csv("Intermediate_Results/MAG_gen_TOTAL_GC.csv",dec=".")
-MAG_gen_TOTAL_ab = MAG_gen_TOTAL_ab[, -c(1,15)]
+# Osmolytes ----
 
-# Convert MGT to MGR ----
-MAG_gen_TOTAL_ab = MAG_gen_TOTAL_ab %>% mutate(mgr = 1/mgr)
+Figure_osmolyte  = ggplot(data = MAG_gen_trait_total, 
+                          aes(x = as.numeric(log(genome.size)), 
+                              y = as.numeric(log(osmolyte + 1)),
+                              weight = n_mags)) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4,
+               label.x = "left", label.y = "bottom") + 
+  xlab("Log(Genome Size)") + 
+  ylab("Log(Osmolytes)") +
+  theme(legend.position="none") + xlim(13,16.5) + ylim(-2.7,3.5)
+Figure_osmolyte
 
-# Colnames ----
-colnames(MAG_gen_TOTAL_ab) = c("Guild", "Genome Size", "Amino-transporter", "pH-Tol",
-                               "Temp-Tol", "Biofilm", "Osmolyte","GH-transporter",
-                               "Total-transporter","Protein-enzyme","CAZy","OGT",
-                               "MGR","Completeness","Contamination","GC-count")
+# Biofilm ----
 
-# Reordering columns ----
+Figure_biofilm  = ggplot(data = MAG_gen_trait_total, 
+                         aes(x = as.numeric(log(genome.size)), 
+                             y = as.numeric(log(biofilm + 1)),
+                             weight = n_mags)) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4,
+               label.x = "left", label.y = "bottom") + 
+  xlab("Log(Genome Size)") + 
+  ylab("Log(Biofilm)") +
+  theme(legend.position="none") + xlim(13,16.5) + ylim(-3.2,2.8)
+Figure_biofilm
 
-col_order = c("Guild", "Genome Size","OGT","MGR","Amino-transporter","GH-transporter",
-              "Total-transporter","Protein-enzyme","CAZy","pH-Tol","Temp-Tol", 
-              "Biofilm", "Osmolyte", "Completeness","Contamination","GC-count")
+# Heat Tolerance ----
 
-MAG_gen_TOTAL_ab = MAG_gen_TOTAL_ab[, col_order]
+Figure_temp  = ggplot(data = MAG_gen_trait_total, 
+                      aes(x = as.numeric(log(genome.size)), 
+                          y = as.numeric(log(temp + 1)),
+                          weight = n_mags)) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4,
+               label.x = "left", label.y = "bottom") + 
+  xlab("Log(Genome Size)") + 
+  ylab("Log(Temperature Tolerance)") +
+  theme(legend.position="none") + xlim(13,16.5) + ylim(0.5,2.6)
+Figure_temp
 
-# Correlations
+# pH Tolerance Transporters ----
 
-cor_1 = as.data.frame(cor(MAG_gen_TOTAL_ab[,3:16]))
-write.csv(cor_1, file = "Output_Data/MAG.correlation_complete.csv")
+Figure_pH  = ggplot(data = MAG_gen_trait_total, 
+                    aes(x = as.numeric(log(genome.size)), 
+                        y = as.numeric(log(pH + 1)),
+                        weight = n_mags)) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4,
+               label.x = "left", label.y = "bottom") + 
+  xlab("Log(Genome Size)") + 
+  ylab("Log(pH Tolerance)") +
+  theme(legend.position="none") + xlim(13,16.5) # + ylim(-2.7,2.85)
+Figure_pH
 
-# Function for merging colors and correlation plot
-my_fn <- function(data, mapping, method="p", use="pairwise", ...){
-  
-  # grab data
-  x <- eval_data_col(data, mapping$x)
-  y <- eval_data_col(data, mapping$y)
-  
-  # calculate correlation
-  corr <- cor(x, y, method=method, use=use)
-  
-  # calculate colour based on correlation value
-  # Here I have set a correlation of minus one to blue, 
-  # zero to white, and one to red 
-  # Change this to suit: possibly extend to add as an argument of `my_fn`
-  colFn <- colorRampPalette(c("red", "white", "blue"), interpolate ='spline')
-  fill <- colFn(100)[findInterval(corr, seq(-1, 1, length=100))]
-  
-  ggally_cor(data = data, mapping = mapping, ...) + 
-    theme_void() +
-    theme(panel.background = element_rect(fill=fill)) 
+# Maximum Growth Rate ----
+
+Figure_mgr = ggplot(data = MAG_gen_trait_total, 
+                    aes(x = as.numeric(log(genome.size)), 
+                        y = as.numeric(log(mgr)),
+                        weight = n_mags)) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4) + 
+  xlab("Log(Genome Size)") + 
+  ylab("Log(mgr)") +
+  theme(legend.position="none") + xlim(13,16.5)
+Figure_mgr
+
+# Optimum Growth Temperature ----
+
+Figure_ogt = ggplot(data = MAG_gen_trait_total %>% 
+                      filter(is.finite(ogt)),  # 9 guilds excluded: entirely/mostly Loma MAGs, 
+                    # which lack ogt data (consistent with other 
+                    # documented Loma metadata gaps)
+                    aes(x = as.numeric(log(genome.size)), 
+                        y = as.numeric(log(ogt)),
+                        weight = n_mags)) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4, label.y = "bottom", label.x = "right") + 
+  xlab("Log (Genome Size)") + 
+  ylab("Log (ogt)") +
+  theme(legend.position="none") + xlim(13,16.5) + ylim(2.9,4.3)
+Figure_ogt
+
+# Yield ----
+
+guild_lookup = total_genes.guild.940_MAG %>% select(id, guild)
+cue_with_guild = sim_10000 %>%
+  left_join(guild_lookup, by = c("MAG_id" = "id")) %>%
+  filter(!is.na(guild))
+
+guild_cue_without = cue_with_guild %>%
+  filter(BGE <= 0.848) %>%
+  group_by(guild) %>%
+  summarise(CUE_mean = mean(BGE, na.rm = TRUE),
+            genome.size = mean(genomesize, na.rm = TRUE),
+            n_cue_mags = n())          # <-- how many MAGs survived the filter for THIS guild
+
+guild_cue_without = guild_cue_without %>%
+  mutate(CUE_logit = log(CUE_mean / (1 - CUE_mean)))
+
+cat("Any non-finite logit values:", sum(!is.finite(guild_cue_without$CUE_logit)), "\n\n")
+cat("Any single-MAG guilds still present:", sum(guild_cue_without$n_cue_mags == 1), "\n\n")
+
+Figure_yield_logit = ggplot(data = guild_cue_without,
+                            aes(x = log(genome.size), y = CUE_logit,
+                                weight = n_cue_mags)) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4, label.y = "bottom", label.x = "right") +
+  xlab("Log (Genome Size)") +
+  ylab("Logit (Yield)") +
+  theme(legend.position="none") +
+  coord_cartesian(xlim = c(13, 16.5))
+Figure_yield_logit
+
+# ISOLATES ----
+
+# CAZy----
+
+Figure_CAZy.total.ISO = ggplot(data = ISO_gen_TOTAL_ab, 
+                               aes(x = as.numeric(log(genome.size)), 
+                                   y = as.numeric(log(CAZy + 1)),
+                                   weight = n_mags)) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5) + 
+  xlab("Log(Genome Size)") + 
+  ylab("Log(CAZy)") +
+  theme(legend.position="none") + coord_cartesian(xlim = c(13,16.5), ylim = c(-0.8,3.5))
+Figure_CAZy.total.ISO
+
+# Protein enzyme ----
+
+Figure_Protein.enzyme.total.ISO = ggplot(data = ISO_gen_TOTAL_ab, 
+                                         aes(x = as.numeric(log(genome.size)), 
+                                             y = as.numeric(log(Protein + 1)),
+                                             weight = n_mags)) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5) + 
+  xlab("Log(Genome Size)") + 
+  ylab("Log(Protein)") +
+  theme(legend.position="none") + coord_cartesian(xlim = c(13,16.5), ylim = c(0.8,4))
+Figure_Protein.enzyme.total.ISO
+
+# Transport total Transporters ----
+
+Figure_tranport.total_ISO = ggplot(data = ISO_gen_TOTAL_ab, 
+                                   aes(x = as.numeric(log(genome.size)), 
+                                       y = as.numeric(log(tranport.total + 1)),
+                                       weight = n_mags)) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5) + 
+  xlab("Log(Genome Size)") + 
+  ylab("Log(Transporters)") +
+  theme(legend.position="none") + coord_cartesian(xlim = c(13,16.5), ylim = c(-0.5,5.5))
+Figure_tranport.total_ISO
+
+# GH transporter ----
+
+Figure_GH.transporter = ggplot(data = ISO_gen_TOTAL_ab, 
+                               aes(x = as.numeric(log(genome.size)), 
+                                   y = as.numeric(log(GH.trasnport + 1)),
+                                   weight = n_mags)) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5, 
+               label.x = "left", label.y = "bottom") + 
+  xlab("Log(Genome Size)") + 
+  ylab("Log(GH transporters)") +
+  theme(legend.position="none") + coord_cartesian(xlim = c(13,16.5), ylim = c(-3.5,4.0))
+Figure_GH.transporter
+
+# Amino transporter ----
+
+Figure_Amino.transporter = ggplot(data = ISO_gen_TOTAL_ab, 
+                                  aes(x = as.numeric(log(genome.size)), 
+                                      y = as.numeric(log(amino.transport + 1)),
+                                      weight = n_mags)) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5) + 
+  xlab("Log(Genome Size)") + 
+  ylab("Log(Amino transporters)") +
+  theme(legend.position="none") + coord_cartesian(xlim = c(13,16.5), ylim = c(0,3.5))
+Figure_Amino.transporter
+
+# Osmolyte ----
+
+Figure_osmolyte_ISO = ggplot(data = ISO_gen_TOTAL_ab, 
+                             aes(x = as.numeric(log(genome.size)), 
+                                 y = as.numeric(log(osmolyte + 1)),
+                                 weight = n_mags)) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4,
+               label.x = "left", label.y = "bottom") + 
+  xlab("Log(Genome Size)") + 
+  ylab("Log(Osmolytes)") +
+  theme(legend.position="none") + coord_cartesian(xlim = c(13,16.5), ylim = c(-2.7,3.5))
+Figure_osmolyte_ISO
+
+# Biofilm ----
+
+Figure_Biofilm_ISO = ggplot(data = ISO_gen_TOTAL_ab, 
+                            aes(x = as.numeric(log(genome.size)), 
+                                y = as.numeric(log(biofilm + 1)),
+                                weight = n_mags)) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4,
+               label.x = "left", label.y = "bottom") + 
+  xlab("Log(Genome Size)") + 
+  ylab("Log(Biofilm)") +
+  theme(legend.position="none") + coord_cartesian(xlim = c(13,16.5), ylim = c(-3.2,2.8))
+Figure_Biofilm_ISO
+
+# Heat Tolerance ----
+
+Figure_Temp.Tol_ISO = ggplot(data = ISO_gen_TOTAL_ab, 
+                             aes(x = as.numeric(log(genome.size)), 
+                                 y = as.numeric(log(temp + 1)),
+                                 weight = n_mags)) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4,
+               label.x = "left", label.y = "bottom") + 
+  xlab("Log(Genome Size)") + 
+  ylab("Log(Temperature Tolerance)") +
+  theme(legend.position="none") + coord_cartesian(xlim = c(13,16.5), ylim = c(0.5,2.6))
+Figure_Temp.Tol_ISO
+
+# pH Tolerance ----
+
+Figure_pH.Tol_ISO = ggplot(data = ISO_gen_TOTAL_ab, 
+                           aes(x = as.numeric(log(genome.size)), 
+                               y = as.numeric(log(pH + 1)),
+                               weight = n_mags)) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4,
+               label.x = "left", label.y = "bottom") + 
+  xlab("Log(Genome Size)") + 
+  ylab("Log(pH Tolerance)") +
+  theme(legend.position="none") + coord_cartesian(xlim = c(13,16.5), ylim = c(-2.7,2.85))
+Figure_pH.Tol_ISO
+
+# Minimum Generation Time ----
+
+Figure_mgr_ISO = ggplot(data = ISO_gen_TOTAL_ab, 
+                        aes(x = as.numeric(log(genome.size)), 
+                            y = as.numeric(log(mgt)),
+                            weight = n_mags)) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4) + 
+  xlab("Log(Genome Size)") + 
+  ylab("Log(mgr)") +
+  theme(legend.position="none") + coord_cartesian(xlim = c(13,16.5), ylim = c(-2.55,3.45))
+Figure_mgr_ISO
+
+# Optimum Growth Temperature ----
+
+Figure_OGT_ISO = ggplot(data = ISO_gen_TOTAL_ab, 
+                        aes(x = as.numeric(log(genome.size)), 
+                            y = as.numeric(log(ogt)),
+                            weight = n_mags)) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4) + 
+  xlab("Log(Genome Size)") + 
+  ylab("Log(ogt)") +
+  theme(legend.position="none") + coord_cartesian(xlim = c(13,16.5), ylim = c(2.9,4.))
+Figure_OGT_ISO
+
+# Yield ----
+
+guild_lookup_iso = total_genes.guild.940_ISO %>% select(id, guild)
+
+iso_cue_with_guild = my_isolates_BGE_glucose %>%
+  left_join(guild_lookup_iso, by = c("isolate_id" = "id")) %>%
+  filter(!is.na(guild))
+
+# Genome size skew check for the CORRECTED threshold
+iso_cue_with_guild %>%
+  mutate(near_ceiling = BGE > 0.90) %>%
+  filter(!is.na(near_ceiling)) %>%
+  group_by(near_ceiling) %>%
+  summarise(mean_genome_size = mean(genomesize, na.rm=TRUE), n = n())
+
+guild_cue_iso = iso_cue_with_guild %>%
+  filter(BGE <= 0.90) %>%
+  group_by(guild) %>%
+  summarise(CUE_mean = mean(BGE, na.rm = TRUE),
+            genome.size = mean(genomesize, na.rm = TRUE),
+            n_cue_mags = n())
+
+guild_cue_iso = guild_cue_iso %>%
+  mutate(CUE_logit = log(CUE_mean / (1 - CUE_mean)))
+
+cat("Any non-finite logit values:", sum(!is.finite(guild_cue_iso$CUE_logit)), "\n")
+cat("Any single-isolate guilds:", sum(guild_cue_iso$n_cue_mags == 1), "\n")
+cat("Guilds remaining:", nrow(guild_cue_iso), "\n\n")
+
+Figure_yield_logit_ISO = ggplot(data = guild_cue_iso,
+                                aes(x = log(genome.size), y = CUE_logit,
+                                    weight = n_cue_mags)) +
+  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
+  stat_poly_line() +
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4, label.y = "bottom", label.x = "right") +
+  xlab("Log (Genome Size)") +
+  ylab("Logit (Yield)") +
+  theme(legend.position="none") +
+  coord_cartesian(xlim = c(13, 16.5))
+Figure_yield_logit_ISO
+
+# Fig_3 ----
+
+Fig_3 = ggarrange(Figure_CAZy, Figure_Protein,Figure_CAZy.total.ISO,
+                  Figure_Protein.enzyme.total.ISO,
+                  labels = c("A","B","C","D"),ncol = 2, nrow = 2) + 
+  theme(panel.background = element_blank())
+
+Fig_3
+pdf("Output_Data/Figures/Fig_3.pdf",
+    width=14,height=14*5/5)
+print(Fig_3)
+dev.off()
+
+# Fig_4 ----
+
+Fig_4 = ggarrange(Figure_tranport.total, Figure_GH.trasnport,
+                  Figure_amino.transport,Figure_tranport.total_ISO,
+                  Figure_GH.transporter,Figure_Amino.transporter,
+                  labels = c("A","B","C","D","E","F"),ncol = 3, nrow = 2) + 
+  theme(panel.background = element_blank())
+
+Fig_4
+pdf("Output_Data/Figures/Fig_4.pdf",
+    width=15,height=15*4/5)
+print(Fig_4)
+dev.off()
+
+# Fig_5 ----
+
+Fig_5 = ggarrange(Figure_osmolyte,Figure_biofilm,Figure_temp,
+                  Figure_pH,Figure_osmolyte_ISO,Figure_Biofilm_ISO,
+                  Figure_Temp.Tol_ISO,Figure_pH.Tol_ISO,
+                  labels = c("A","B","C","D","E","F","G","H"),ncol = 4, 
+                  nrow = 2) + theme(panel.background = element_blank())
+Fig_5
+
+pdf("Output_Data/Figures/Fig_5.pdf",
+    width=16,height=16*3/5)
+print(Fig_5)
+dev.off()
+
+# Fig_6 ----
+
+Fig_6 = ggarrange(Figure_mgr, Figure_mgr_ISO, Figure_yield_logit,
+                  Figure_yield_logit_ISO,
+                  labels = c("A","B","C","D"),ncol = 2, nrow = 2) + 
+  theme(panel.background = element_blank())
+
+Fig_6
+
+pdf("Output_Data/Figures/Fig_6.pdf",
+    width=12,height=12*5/5)
+print(Fig_6)
+dev.off()
+
+# Fig_7 ----
+
+Fig_7 = ggarrange(Figure_ogt, Figure_OGT_ISO,labels = c("A","B"),
+                  ncol = 2, nrow = 1) + theme(panel.background = element_blank())
+
+Fig_7
+
+pdf("Output_Data/Figures/Fig_7.pdf",
+    width=12,height=12*1/2)
+print(Fig_7)
+dev.off()
+
+# Fig_S3 ----
+
+# Weighted correlation matrix
+
+total_genes.guild.940_MAG = read.csv("Intermediate_Results/total_genes.guild.940_MAG.csv", dec=".")
+sim_10000 = read.csv("Output_Data/my_MAGs_BGE_glucose_10000.csv")
+
+guild_lookup = total_genes.guild.940_MAG %>% select(id, guild)
+
+cue_with_guild = sim_10000 %>%
+  left_join(guild_lookup, by = c("MAG_id" = "id")) %>%
+  filter(!is.na(guild))
+
+guild_cue_without = cue_with_guild %>%
+  filter(BGE <= 0.848) %>%
+  group_by(guild) %>%
+  summarise(CUE_mean = mean(BGE, na.rm = TRUE),
+            genome.size = mean(genomesize, na.rm = TRUE),
+            n_cue_mags = n())
+
+# Step 1: merge full-trait guild table with the CORRECTED CUE-only guild table.
+# IMPORTANT: MAG_gen_trait_total already has CUE_mean/CUE_n_mags columns, but
+# these were computed BEFORE the BGE-artifact fix (BR≈0 rows excluded at
+# BGE > 0.848). Confirmed 744/1342 guilds differ meaningfully between the two
+# versions (some by up to 0.85!) - so we DROP the stale columns and replace
+# them with the corrected ones from guild_cue_without, rather than adding
+# alongside (which would invite accidentally using the wrong one later).
+
+MAG_corr_data = MAG_gen_trait_total %>%
+  select(-CUE_mean, -CUE_n_mags) %>%
+  left_join(guild_cue_without %>% select(guild, CUE_mean, n_cue_mags), by = "guild")
+
+cat("Guilds before merge:", n_distinct(MAG_gen_trait_total$guild), "\n")
+cat("Guilds after merge: ", n_distinct(MAG_corr_data$guild), "(should be unchanged)\n")
+cat("Guilds with NA CUE:  ", sum(is.na(MAG_corr_data$CUE_mean)), "\n\n")
+
+# Readable column names
+
+MAG_corr_data = MAG_corr_data %>%
+  rename(
+    "Guild" = guild,
+    "Genome Size" = genome.size,
+    "Amino-transporter" = amino.transport,
+    "pH-Tol" = pH,
+    "Temp-Tol" = temp,
+    "Biofilm" = biofilm,
+    "Osmolyte" = osmolyte,
+    "GH-transporter" = GH.trasnport,
+    "Total-transporter" = tranport.total,
+    "Protein-enzyme" = Protein,
+    "CAZy" = CAZy,
+    "OGT" = ogt,
+    "MGR" = mgr,
+    "Completeness" = completeness_mean,
+    "Contamination" = contamination_mean,
+    "GC-count" = GC_count_mean,
+    "Yield" = CUE_mean
+  )
+
+# Step 2: weighted correlation function
+
+# WEIGHTING NOTE: MAG_corr_data has TWO possible weight columns:
+#   - n_mags: total MAGs in the guild (used for all non-CUE trait pairs)
+#   - n_cue_mags: MAGs that survived the BGE artifact filter for THIS guild's
+#     CUE (only meaningful/available for pairs involving CUE_mean)
+# The function below picks the right one automatically based on whether
+# CUE_mean is one of the two variables being correlated.
+
+weighted_cor = function(x, y, w) {
+  ok = complete.cases(x, y, w)
+  if (sum(ok) < 3) return(list(r = NA, p = NA))
+  x = x[ok]; y = y[ok]; w = w[ok]
+  r = cov.wt(cbind(x, y), wt = w, cor = TRUE)$cor[1, 2]
+  # p-value via weighted lm - mathematically equivalent to testing correlation significance
+  p = tryCatch({
+    summary(lm(y ~ x, weights = w))$coefficients[2, 4]
+  }, error = function(e) NA)
+  list(r = r, p = p)
 }
 
-# Figure S3 - Cross correlation MAGs ----
+sig_stars = function(p) {
+  if (is.na(p)) return("")
+  if (p < 0.001) return("***")
+  if (p < 0.01) return("**")
+  if (p < 0.05) return("*")
+  return("")
+}
 
-Figure_S3 = ggpairs(MAG_gen_TOTAL_ab[,3:16], 
-                    upper = list(continuous = my_fn),
-                    lower = list(continuous = "smooth"))  
-Figure_S3
+# Step 3: custom ggpairs panel function - weighted correlation,
+
+my_fn_weighted = function(data, mapping, ...) {
+  x_col = rlang::as_label(mapping$x)
+  y_col = rlang::as_label(mapping$y)
+  x = eval_data_col(data, mapping$x)
+  y = eval_data_col(data, mapping$y)
+  
+  # Use n_cue_mags if Yield is involved in this pair, otherwise n_mags
+  # (checking against "Yield" - the renamed display column, not "CUE_mean")
+  w = if (x_col == "Yield" | y_col == "Yield") data$n_cue_mags else data$n_mags
+  
+  result = weighted_cor(x, y, w)
+  corr = result$r
+  stars = sig_stars(result$p)
+  
+  colFn = colorRampPalette(c("red", "white", "blue"), interpolate = 'spline')
+  fill = if (is.na(corr)) "grey90" else colFn(100)[findInterval(corr, seq(-1, 1, length = 100))]
+  
+  label_text = if (is.na(corr)) "NA" else sprintf("Corr: %.3f%s", corr, stars)
+  
+  ggplot() +
+    annotate("text", x = 0.5, y = 0.5, label = label_text, size = 3.5) +
+    theme_void() +
+    theme(panel.background = element_rect(fill = fill)) +
+    xlim(0,1) + ylim(0,1)
+}
+# Step 4: build the plot
+# IMPORTANT: n_mags AND n_cue_mags must both be present in MAG_corr_data
+# (not listed in trait_cols) so my_fn_weighted can access them via
+# data$n_mags / data$n_cue_mags even though they aren't plotted themselves.
+
+trait_cols = c("Yield","OGT","MGR","Amino-transporter","GH-transporter",
+               "Total-transporter","Protein-enzyme","CAZy","pH-Tol","Temp-Tol", 
+               "Biofilm", "Osmolyte", "Completeness","Contamination","GC-count")
+
+Figure_S3_weighted = ggpairs(MAG_corr_data, 
+                             columns = trait_cols,
+                             upper = list(continuous = my_fn_weighted),
+                             lower = list(continuous = "smooth"))
+Figure_S3_weighted
 
 pdf("Output_Data/Figures/Figure_S3.pdf",
     width=4*4,height=4*4)
-print(Figure_S3)
+print(Figure_S3_weighted)
 dev.off()
 
-# Isolates ----
+# Fig_S7 ----
 
-ISO_gen_trait.1  = read.csv("Intermediate_Results/ISO_gen_trait.1.csv",dec=".")
-ISO_gen_trait.1  = ISO_gen_trait.1[, -1]
+# Step 1: merge full-trait guild table with the CORRECTED CUE-only guild table.
+MAG_corr_data = MAG_gen_trait_total_nor %>%
+  select(-CUE_mean, -CUE_n_mags) %>%
+  left_join(guild_cue_without %>% select(guild, CUE_mean, n_cue_mags), by = "guild")
 
-# Convert MGT to MGR ----
-ISO_gen_trait.1 = ISO_gen_trait.1 %>% mutate(MGT = 1/MGT)
-colnames(ISO_gen_trait.1)[5] = "MGR"
+cat("Guilds before merge:", n_distinct(MAG_gen_trait_total_nor$guild), "\n")
+cat("Guilds after merge: ", n_distinct(MAG_corr_data$guild), "(should be unchanged)\n")
+cat("Guilds with NA CUE:  ", sum(is.na(MAG_corr_data$CUE_mean)), "\n\n")
 
-# Correlation tables----
+# Readable column names
 
-cor_1 = as.data.frame(cor(ISO_gen_trait.1[,3:14]))
-write.csv(cor_1, file = "Output_Data/ISOLATE.correlation_complete.csv")
+MAG_corr_data = MAG_corr_data %>%
+  rename(
+    "Guild" = guild,
+    "Genome Size" = genome.size,
+    "Amino-transporter-n" = amino.transport_nor,
+    "pH-Tol-n" = pH_nor,
+    "Temp-Tol-n" = temp_nor,
+    "Biofilm-n" = biofilm_nor,
+    "Osmolyte-n" = osmolyte_nor,
+    "GH-transporter-n" = GH.trasnport_nor,
+    "Total-transporter-n" = tranport.total_nor,
+    "Protein-enzyme-n" = Protein_nor,
+    "CAZy-n" = CAZy_nor,
+    "OGT" = ogt,
+    "MGR" = mgr,
+    "Completeness" = completeness_mean,
+    "Contamination" = contamination_mean,
+    "GC-count" = GC_count_mean,
+    "Yield" = CUE_mean
+  )
 
-# Figure S4 - Cross correlation ISOLATES ----
+# Step 2: weighted correlation function
 
-Figure_S4 = ggpairs(ISO_gen_trait.1[,3:14], 
-                    upper = list(continuous = my_fn),
-                    lower = list(continuous = "smooth"))  
-Figure_S4
+weighted_cor = function(x, y, w) {
+  ok = complete.cases(x, y, w)
+  if (sum(ok) < 3) return(list(r = NA, p = NA))
+  x = x[ok]; y = y[ok]; w = w[ok]
+  r = cov.wt(cbind(x, y), wt = w, cor = TRUE)$cor[1, 2]
+  # p-value via weighted lm - mathematically equivalent to testing correlation significance
+  p = tryCatch({
+    summary(lm(y ~ x, weights = w))$coefficients[2, 4]
+  }, error = function(e) NA)
+  list(r = r, p = p)
+}
 
-pdf("Output_Data/Figures/Figure_S4.pdf",
-    width=4*4,height=4*4)
-print(Figure_S4)
-dev.off()
+sig_stars = function(p) {
+  if (is.na(p)) return("")
+  if (p < 0.001) return("***")
+  if (p < 0.01) return("**")
+  if (p < 0.05) return("*")
+  return("")
+}
 
-# MAGs normalized 2 ----
+# Step 3: custom ggpairs panel function - weighted correlation,
 
-MAG_gen_trait_total_nor_2 =
-  MAG_gen_trait_total %>%
-  select(guild, genome.size, amino.transport,
-         pH, temp, biofilm, osmolyte,
-         GH.trasnport, tranport.total,
-         Protein, CAZy, ogt, mgr) %>%
-  mutate(across(
-    c(amino.transport, pH, temp, biofilm, osmolyte,
-      GH.trasnport, tranport.total, Protein, CAZy),
-    ~ .x / MAG_gen_trait_total$genome.size
-  ))
+my_fn_weighted = function(data, mapping, ...) {
+  x_col = rlang::as_label(mapping$x)
+  y_col = rlang::as_label(mapping$y)
+  x = eval_data_col(data, mapping$x)
+  y = eval_data_col(data, mapping$y)
+  
+  # Use n_cue_mags if Yield is involved in this pair, otherwise n_mags
+  # (checking against "Yield" - the renamed display column, not "CUE_mean")
+  w = if (x_col == "Yield" | y_col == "Yield") data$n_cue_mags else data$n_mags
+  
+  result = weighted_cor(x, y, w)
+  corr = result$r
+  stars = sig_stars(result$p)
+  
+  colFn = colorRampPalette(c("red", "white", "blue"), interpolate = 'spline')
+  fill = if (is.na(corr)) "grey90" else colFn(100)[findInterval(corr, seq(-1, 1, length = 100))]
+  
+  label_text = if (is.na(corr)) "NA" else sprintf("Corr: %.3f%s", corr, stars)
+  
+  ggplot() +
+    annotate("text", x = 0.5, y = 0.5, label = label_text, size = 3.5) +
+    theme_void() +
+    theme(panel.background = element_rect(fill = fill)) +
+    xlim(0,1) + ylim(0,1)
+}
+# Step 4: build the plot
 
-# Add contamination, GC content etc ----
+trait_cols = c("Yield","OGT","MGR","Amino-transporter-n","GH-transporter-n",
+               "Total-transporter-n","Protein-enzyme-n","CAZy-n","pH-Tol-n","Temp-Tol-n", 
+               "Biofilm-n", "Osmolyte-n", "Completeness","Contamination","GC-count")
 
-MAG_gen_TOTAL_ab = MAG_gen_TOTAL_ab %>% select(guild,completeness_mean,
-                                               contamination_mean,GC_count_mean)
-MAG_gen_trait_total_nor_2 = merge(MAG_gen_trait_total_nor_2,MAG_gen_TOTAL_ab,by="guild")
-
-# Colnames ----
-colnames(MAG_gen_trait_total_nor_2) = c("Guild", "Genome Size", "Amino-transporter", "pH-Tol",
-                                        "Temp-Tol", "Biofilm", "Osmolyte","GH-transporter",
-                                        "Total-transporter","Protein-enzyme","CAZy","OGT","MGR",
-                                        "Completeness","Contamination","GC-count")
-
-# Reordering columns ----
-
-col_order = c("Guild", "Genome Size","OGT","MGR","Amino-transporter","GH-transporter",
-              "Total-transporter","Protein-enzyme","CAZy","pH-Tol","Temp-Tol", 
-              "Biofilm", "Osmolyte","Completeness","Contamination","GC-count")
-MAG_gen_trait_total_nor_2 = MAG_gen_trait_total_nor_2[, col_order]
-# Convert MGT to MGR ----
-MAG_gen_trait_total_nor_2 = MAG_gen_trait_total_nor_2 %>% mutate(MGR = 1/MGR)
-
-# Figure S3A - Cross correlation MAGs normalized ----
-
-Figure_S3A = ggpairs(MAG_gen_trait_total_nor_2[,3:16], 
-                     upper = list(continuous = my_fn),
-                     lower = list(continuous = "smooth"))  
+Figure_S3A = ggpairs(MAG_corr_data, 
+                     columns = trait_cols,
+                     upper = list(continuous = my_fn_weighted),
+                     lower = list(continuous = "smooth"))
 Figure_S3A
 
 pdf("Output_Data/Figures/Figure_S3A.pdf",
@@ -1232,1454 +1912,288 @@ pdf("Output_Data/Figures/Figure_S3A.pdf",
 print(Figure_S3A)
 dev.off()
 
-# Isolates normalized ----
+# Fig_S4 ----
 
-ISO_gen_TOTAL_ab_nor_2    = ISO_gen_TOTAL_ab %>%
-  select(Guild, Genome.Size, Amino.transporter,
-         pH.Tol, Temp.Tol, Biofilm, Osmolyte,
-         GH.transporter, Total.transporter,
-         Protein.enzyme, CAZy, OGT, MGT,Yield) %>%
-  mutate(across(
-    c(Amino.transporter,
-      pH.Tol, Temp.Tol, Biofilm, Osmolyte,
-      GH.transporter, Total.transporter,
-      Protein.enzyme, CAZy),
-    ~ .x / ISO_gen_TOTAL_ab$Genome.Size
-  ))
+# Step 1: check for the same stale-CUE problem we found in MAGs
+cat("Does ISO_gen_TOTAL_ab have old CUE columns?\n")
+cat("  CUE_mean present:", "CUE_mean" %in% colnames(ISO_gen_TOTAL_ab), "\n")
+cat("  n_mags present:  ", "n_mags" %in% colnames(ISO_gen_TOTAL_ab), "\n\n")
 
-# Colnames ----
-colnames(ISO_gen_TOTAL_ab_nor_2) = c("Guild", "Genome Size", "Amino-transporter", "pH-Tol",
-                                     "Temp-Tol", "Biofilm", "Osmolyte","GH-transporter",
-                                     "Total-transporter","Protein-enzyme","CAZy","OGT","MGR",
-                                     "Yield")
+# Step 2: merge in the CORRECTED isolate Yield (built with 0.90 threshold)
 
-# Reordering columns ----
+ISO_corr_data = ISO_gen_TOTAL_ab %>%
+  select(-any_of(c("CUE_mean", "CUE_n_isolates"))) %>%   # drop stale columns if present
+  left_join(guild_cue_iso %>% select(guild, CUE_mean, n_cue_mags), by = "guild")
 
-col_order = c("Guild", "Genome Size","Yield","OGT","MGR","Amino-transporter","GH-transporter",
+cat("Guilds before merge:", n_distinct(ISO_gen_TOTAL_ab$guild), "\n")
+cat("Guilds after merge: ", n_distinct(ISO_corr_data$guild), "(should be unchanged)\n")
+cat("Guilds with NA Yield:", sum(is.na(ISO_corr_data$CUE_mean)), "\n\n")
+
+# Step 3: weighted correlation + significance (same functions as MAGs)
+weighted_cor = function(x, y, w) {
+  ok = complete.cases(x, y, w)
+  if (sum(ok) < 3) return(list(r = NA, p = NA))
+  x = x[ok]; y = y[ok]; w = w[ok]
+  r = cov.wt(cbind(x, y), wt = w, cor = TRUE)$cor[1, 2]
+  p = tryCatch({
+    summary(lm(y ~ x, weights = w))$coefficients[2, 4]
+  }, error = function(e) NA)
+  list(r = r, p = p)
+}
+
+sig_stars = function(p) {
+  if (is.na(p)) return("")
+  if (p < 0.001) return("***")
+  if (p < 0.01) return("**")
+  if (p < 0.05) return("*")
+  return("")
+}
+
+my_fn_weighted_iso = function(data, mapping, ...) {
+  x_col = rlang::as_label(mapping$x)
+  y_col = rlang::as_label(mapping$y)
+  x = eval_data_col(data, mapping$x)
+  y = eval_data_col(data, mapping$y)
+  
+  # Use n_cue_mags if Yield is involved, otherwise n_mags
+  w = if (x_col == "Yield" | y_col == "Yield") data$n_cue_mags else data$n_mags
+  
+  result = weighted_cor(x, y, w)
+  corr = result$r
+  stars = sig_stars(result$p)
+  
+  colFn = colorRampPalette(c("red", "white", "blue"), interpolate = 'spline')
+  fill = if (is.na(corr)) "grey90" else colFn(100)[findInterval(corr, seq(-1, 1, length = 100))]
+  label_text = if (is.na(corr)) "NA" else sprintf("Corr: %.3f%s", corr, stars)
+  
+  ggplot() +
+    annotate("text", x = 0.5, y = 0.5, label = label_text, size = 3.5) +
+    theme_void() +
+    theme(panel.background = element_rect(fill = fill)) +
+    xlim(0,1) + ylim(0,1)
+}
+
+# Step 4: readable column names
+# NOTE: n_mags and n_cue_mags NOT renamed - accessed programmatically.
+# NOTE: no Completeness/Contamination/GC-count - see header note above.
+
+ISO_corr_data = ISO_corr_data %>%
+  rename(
+    "Guild" = guild,
+    "Genome Size" = genome.size,
+    "Amino-transporter" = amino.transport,
+    "pH-Tol" = pH,
+    "Temp-Tol" = temp,
+    "Biofilm" = biofilm,
+    "Osmolyte" = osmolyte,
+    "GH-transporter" = GH.trasnport,
+    "Total-transporter" = tranport.total,
+    "Protein-enzyme" = Protein,
+    "CAZy" = CAZy,
+    "OGT" = ogt,
+    "MGR" = mgr,
+    "Yield" = CUE_mean
+  )
+
+col_order = c("Yield","OGT","MGR","Amino-transporter","GH-transporter",
               "Total-transporter","Protein-enzyme","CAZy","pH-Tol","Temp-Tol", 
               "Biofilm", "Osmolyte")
-ISO_gen_TOTAL_ab_nor_2 = ISO_gen_TOTAL_ab_nor_2[, col_order]
-# Convert MGT to MGR ----
-ISO_gen_TOTAL_ab_nor_2 = ISO_gen_TOTAL_ab_nor_2 %>% mutate(MGR = 1/MGR)
 
-# Figure S4A - Cross correlation ISOLATES ----
+# Step 5: build the plot
 
-Figure_S4A = ggpairs(ISO_gen_TOTAL_ab_nor_2[,3:14], 
-                     upper = list(continuous = my_fn),
-                     lower = list(continuous = "smooth"))  
+Figure_S3_ISO_weighted = ggpairs(ISO_corr_data, 
+                                 columns = col_order,
+                                 upper = list(continuous = my_fn_weighted_iso),
+                                 lower = list(continuous = "smooth"))
+Figure_S3_ISO_weighted
+
+pdf("Output_Data/Figures/Figure_S4.pdf",
+    width=4*4,height=4*4)
+print(Figure_S3_ISO_weighted)
+dev.off()
+
+# Fig_S8 ----
+
+# Step 1: check for the same stale-CUE problem we found in MAGs
+cat("Does ISO_gen_TOTAL_ab_nor have old CUE columns?\n")
+cat("  CUE_mean present:", "CUE_mean" %in% colnames(ISO_gen_TOTAL_ab_nor), "\n")
+cat("  n_mags present:  ", "n_mags" %in% colnames(ISO_gen_TOTAL_ab_nor), "\n\n")
+
+# Step 2: merge in the CORRECTED isolate Yield (built with 0.90 threshold)
+
+ISO_corr_data = ISO_gen_TOTAL_ab_nor %>%
+  select(-any_of(c("CUE_mean", "CUE_n_isolates"))) %>%   # drop stale columns if present
+  left_join(guild_cue_iso %>% select(guild, CUE_mean, n_cue_mags), by = "guild")
+
+cat("Guilds before merge:", n_distinct(ISO_gen_TOTAL_ab_nor$guild), "\n")
+cat("Guilds after merge: ", n_distinct(ISO_corr_data$guild), "(should be unchanged)\n")
+cat("Guilds with NA Yield:", sum(is.na(ISO_corr_data$CUE_mean)), "\n\n")
+
+# Step 3: weighted correlation + significance (same functions as MAGs)
+weighted_cor = function(x, y, w) {
+  ok = complete.cases(x, y, w)
+  if (sum(ok) < 3) return(list(r = NA, p = NA))
+  x = x[ok]; y = y[ok]; w = w[ok]
+  r = cov.wt(cbind(x, y), wt = w, cor = TRUE)$cor[1, 2]
+  p = tryCatch({
+    summary(lm(y ~ x, weights = w))$coefficients[2, 4]
+  }, error = function(e) NA)
+  list(r = r, p = p)
+}
+
+sig_stars = function(p) {
+  if (is.na(p)) return("")
+  if (p < 0.001) return("***")
+  if (p < 0.01) return("**")
+  if (p < 0.05) return("*")
+  return("")
+}
+
+my_fn_weighted_iso = function(data, mapping, ...) {
+  x_col = rlang::as_label(mapping$x)
+  y_col = rlang::as_label(mapping$y)
+  x = eval_data_col(data, mapping$x)
+  y = eval_data_col(data, mapping$y)
+  
+  # Use n_cue_mags if Yield is involved, otherwise n_mags
+  w = if (x_col == "Yield" | y_col == "Yield") data$n_cue_mags else data$n_mags
+  
+  result = weighted_cor(x, y, w)
+  corr = result$r
+  stars = sig_stars(result$p)
+  
+  colFn = colorRampPalette(c("red", "white", "blue"), interpolate = 'spline')
+  fill = if (is.na(corr)) "grey90" else colFn(100)[findInterval(corr, seq(-1, 1, length = 100))]
+  label_text = if (is.na(corr)) "NA" else sprintf("Corr: %.3f%s", corr, stars)
+  
+  ggplot() +
+    annotate("text", x = 0.5, y = 0.5, label = label_text, size = 3.5) +
+    theme_void() +
+    theme(panel.background = element_rect(fill = fill)) +
+    xlim(0,1) + ylim(0,1)
+}
+
+# Step 4: readable column names
+# NOTE: n_mags and n_cue_mags NOT renamed - accessed programmatically.
+# NOTE: no Completeness/Contamination/GC-count - see header note above.
+
+ISO_corr_data = ISO_corr_data %>%
+  rename(
+    "Guild" = guild,
+    "Genome Size" = genome.size,
+    "Amino-transporter-n" = amino.transport_nor,
+    "pH-Tol-n" = pH_nor,
+    "Temp-Tol-n" = temp_nor,
+    "Biofilm-n" = biofilm_nor,
+    "Osmolyte-n" = osmolyte_nor,
+    "GH-transporter-n" = GH.trasnport_nor,
+    "Total-transporter-n" = tranport.total_nor,
+    "Protein-enzyme-n" = Protein_nor,
+    "CAZy-n" = CAZy_nor,
+    "OGT" = ogt,
+    "MGR" = mgr,
+    "Yield" = CUE_mean
+  )
+
+col_order = c("Yield","OGT","MGR","Amino-transporter-n","GH-transporter-n",
+              "Total-transporter-n","Protein-enzyme-n","CAZy-n","pH-Tol-n","Temp-Tol-n", 
+              "Biofilm-n", "Osmolyte-n")
+
+# Step 5: build the plot
+
+Figure_S4A = ggpairs(ISO_corr_data, 
+                     columns = col_order,
+                     upper = list(continuous = my_fn_weighted_iso),
+                     lower = list(continuous = "smooth"))
 Figure_S4A
 
-pdf("Output_Data/Figures/Figure_S4A.pdf",
+pdf("Output_Data/Figures/Figure_S4A4.pdf",
     width=4*4,height=4*4)
 print(Figure_S4A)
 dev.off()
 
-# Empirical models between Genome Size and functional groups for MAGs (Table S1) ----
+# Fig_S5 -----
 
-# S vs A tradeoffs (MAGs) ----
+# Load raw files
 
-MAG_gen_TOTAL_ab = read.csv("Intermediate_Results/MAG_gen_TOTAL_GC.csv",dec=".")
-MAG_gen_test     = MAG_gen_TOTAL_ab %>% mutate(A_trait = rowSums(MAG_gen_TOTAL_ab[,10:12]),
-                                               S_trait = rowSums(MAG_gen_TOTAL_ab[,5:8]))
-MAG_gen_test     = MAG_gen_test %>% mutate(A_S = A_trait/S_trait)
+my_isolates_BGE_glucose = read.csv("Output_Data/my_isolates_BGE_glucose.csv")  # CONFIRM PATH
+total_genes.guild.940_ISO = read.csv("Intermediate_Results/total_genes.guild.940_ISO.csv", dec=".")
 
-# CAZy enzyme ----
-
-# Linear Model 
-cazy_model_A       = lm(CAZy ~ genome.size, data = MAG_gen_test)
-summary(cazy_model_A)
-
-# Genome Size and Completeness
-cazy_model_B       = lm(CAZy ~ genome.size*completeness_mean, data = MAG_gen_test)
-summary(cazy_model_B)
-
-domin(CAZy ~ genome.size*completeness_mean, 
-      lm, 
-      list(summary, "r.squared"), 
-      data = MAG_gen_test)
-
-# Genome size and Contamination
-cazy_model_C       = lm(CAZy ~ genome.size*contamination_mean, data = MAG_gen_test)
-summary(cazy_model_C)
-
-domin(CAZy ~ genome.size*contamination_mean, 
-      lm, 
-      list(summary, "r.squared"), 
-      data = MAG_gen_test)
-
-# GC count
-cazy_model_D       = lm(CAZy ~ GC_count_mean, data = MAG_gen_test)
-summary(cazy_model_D)
-
-# Power Law
-CAZy_data          = as.data.frame(cbind(log(MAG_gen_test$genome.size), 
-                                         log(MAG_gen_test$CAZy)))
-
-CAZy_data           = subset(CAZy_data, CAZy_data$V2 != "-Inf") 
-colnames(CAZy_data) = c("genome.size","CAZy")
-
-cazy_model_E       = lm(CAZy ~ genome.size, data = CAZy_data)
-summary(cazy_model_E)
-
-AIC(cazy_model_A, cazy_model_B, cazy_model_C, cazy_model_D, cazy_model_E)
-
-# Protein enzyme ----
-
-# Linear Model 
-Protein_model_A       = lm(Protein ~ genome.size, data = MAG_gen_test)
-summary(Protein_model_A)
-
-# Genome Size and Completeness
-Protein_model_B       = lm(Protein ~ genome.size*completeness_mean, data = MAG_gen_test)
-summary(Protein_model_B)
-
-domin(Protein ~ genome.size*completeness_mean, 
-      lm, 
-      list(summary, "r.squared"), 
-      data = MAG_gen_test)
-
-# Genome size and Contamination
-Protein_model_C       = lm(Protein ~ genome.size*contamination_mean, data = MAG_gen_test)
-summary(Protein_model_C)
-
-domin(Protein ~ genome.size*contamination_mean, 
-      lm, 
-      list(summary, "r.squared"), 
-      data = MAG_gen_test)
-
-# GC count
-Protein_model_D       = lm(Protein ~ GC_count_mean, data = MAG_gen_test)
-summary(Protein_model_D)
-
-# Power Law
-Protein_data          = as.data.frame(cbind(log(MAG_gen_test$genome.size), 
-                                            log(MAG_gen_test$Protein)))
-
-Protein_data           = subset(Protein_data, Protein_data$V2 != "-Inf") 
-colnames(Protein_data) = c("genome.size","Protein")
-
-Protein_model_E       = lm(Protein ~ genome.size, data = Protein_data)
-summary(Protein_model_E)
-
-AIC(Protein_model_A, Protein_model_B, Protein_model_C, Protein_model_D, Protein_model_E)
-
-# tranport.total enzyme ----
-
-# Linear Model 
-tranport.total_model_A       = lm(tranport.total ~ genome.size, data = MAG_gen_test)
-summary(tranport.total_model_A)
-
-# Genome Size and Completeness
-tranport.total_model_B       = lm(tranport.total ~ genome.size*completeness_mean, data = MAG_gen_test)
-summary(tranport.total_model_B)
-
-domin(tranport.total ~ genome.size*completeness_mean, 
-      lm, 
-      list(summary, "r.squared"), 
-      data = MAG_gen_test)
-
-# Genome size and Contamination
-tranport.total_model_C       = lm(tranport.total ~ genome.size*contamination_mean, data = MAG_gen_test)
-summary(tranport.total_model_C)
-
-domin(tranport.total ~ genome.size*contamination_mean, 
-      lm, 
-      list(summary, "r.squared"), 
-      data = MAG_gen_test)
-
-# GC count
-tranport.total_model_D       = lm(tranport.total ~ GC_count_mean, data = MAG_gen_test)
-summary(tranport.total_model_D)
-
-# Power Law
-tranport.total_data          = as.data.frame(cbind(log(MAG_gen_test$genome.size), 
-                                                   log(MAG_gen_test$tranport.total)))
-
-tranport.total_data           = subset(tranport.total_data, tranport.total_data$V2 != "-Inf") 
-colnames(tranport.total_data) = c("genome.size","tranport.total")
-
-tranport.total_model_E       = lm(tranport.total ~ genome.size, data = tranport.total_data)
-summary(tranport.total_model_E)
-
-AIC(tranport.total_model_A, tranport.total_model_B, tranport.total_model_C, tranport.total_model_D, tranport.total_model_E)
-
-# GH.trasnport enzyme ----
-
-# Linear Model 
-GH.trasnport_model_A       = lm(GH.trasnport ~ genome.size, data = MAG_gen_test)
-summary(GH.trasnport_model_A)
-
-# Genome Size and Completeness
-GH.trasnport_model_B       = lm(GH.trasnport ~ genome.size*completeness_mean, data = MAG_gen_test)
-summary(GH.trasnport_model_B)
-
-domin(GH.trasnport ~ genome.size*completeness_mean, 
-      lm, 
-      list(summary, "r.squared"), 
-      data = MAG_gen_test)
-
-# Genome size and Contamination
-GH.trasnport_model_C       = lm(GH.trasnport ~ genome.size*contamination_mean, data = MAG_gen_test)
-summary(GH.trasnport_model_C)
-
-domin(GH.trasnport ~ genome.size*contamination_mean, 
-      lm, 
-      list(summary, "r.squared"), 
-      data = MAG_gen_test)
-
-# GC count
-GH.trasnport_model_D       = lm(GH.trasnport ~ GC_count_mean, data = MAG_gen_test)
-summary(GH.trasnport_model_D)
-
-# Power Law
-GH.trasnport_data          = as.data.frame(cbind(log(MAG_gen_test$genome.size), 
-                                                 log(MAG_gen_test$GH.trasnport)))
-
-GH.trasnport_data           = subset(GH.trasnport_data, GH.trasnport_data$V2 != "-Inf") 
-colnames(GH.trasnport_data) = c("genome.size","GH.trasnport")
-
-GH.trasnport_model_E       = lm(GH.trasnport ~ genome.size, data = GH.trasnport_data)
-summary(GH.trasnport_model_E)
-
-AIC(GH.trasnport_model_A, GH.trasnport_model_B, GH.trasnport_model_C, GH.trasnport_model_D, GH.trasnport_model_E)
-
-# amino.transport enzyme ----
-
-# Linear Model 
-amino.transport_model_A       = lm(amino.transport ~ genome.size, data = MAG_gen_test)
-summary(amino.transport_model_A)
-
-# Genome Size and Completeness
-amino.transport_model_B       = lm(amino.transport ~ genome.size*completeness_mean, data = MAG_gen_test)
-summary(amino.transport_model_B)
-
-domin(amino.transport ~ genome.size*completeness_mean, 
-      lm, 
-      list(summary, "r.squared"), 
-      data = MAG_gen_test)
-
-# Genome size and Contamination
-amino.transport_model_C       = lm(amino.transport ~ genome.size*contamination_mean, data = MAG_gen_test)
-summary(amino.transport_model_C)
-
-domin(amino.transport ~ genome.size*contamination_mean, 
-      lm, 
-      list(summary, "r.squared"), 
-      data = MAG_gen_test)
-
-# GC count
-amino.transport_model_D       = lm(amino.transport ~ GC_count_mean, data = MAG_gen_test)
-summary(amino.transport_model_D)
-
-# Power Law
-amino.transport_data          = as.data.frame(cbind(log(MAG_gen_test$genome.size), 
-                                                    log(MAG_gen_test$amino.transport)))
-
-amino.transport_data           = subset(amino.transport_data, amino.transport_data$V2 != "-Inf") 
-colnames(amino.transport_data) = c("genome.size","amino.transport")
-
-amino.transport_model_E       = lm(amino.transport ~ genome.size, data = amino.transport_data)
-summary(amino.transport_model_E)
-
-AIC(amino.transport_model_A, amino.transport_model_B, amino.transport_model_C, amino.transport_model_D, amino.transport_model_E)
-
-# osmolyte enzyme ----
-
-# Linear Model 
-osmolyte_model_A       = lm(osmolyte ~ genome.size, data = MAG_gen_test)
-summary(osmolyte_model_A)
-
-# Genome Size and Completeness
-osmolyte_model_B       = lm(osmolyte ~ genome.size*completeness_mean, data = MAG_gen_test)
-summary(osmolyte_model_B)
-
-domin(osmolyte ~ genome.size*completeness_mean, 
-      lm, 
-      list(summary, "r.squared"), 
-      data = MAG_gen_test)
-
-# Genome size and Contamination
-osmolyte_model_C       = lm(osmolyte ~ genome.size*contamination_mean, data = MAG_gen_test)
-summary(osmolyte_model_C)
-
-domin(osmolyte ~ genome.size*contamination_mean, 
-      lm, 
-      list(summary, "r.squared"), 
-      data = MAG_gen_test)
-
-# GC count
-osmolyte_model_D       = lm(osmolyte ~ GC_count_mean, data = MAG_gen_test)
-summary(osmolyte_model_D)
-
-# Power Law
-osmolyte_data          = as.data.frame(cbind(log(MAG_gen_test$genome.size), 
-                                             log(MAG_gen_test$osmolyte)))
-
-osmolyte_data           = subset(osmolyte_data, osmolyte_data$V2 != "-Inf") 
-colnames(osmolyte_data) = c("genome.size","osmolyte")
-
-osmolyte_model_E       = lm(osmolyte ~ genome.size, data = osmolyte_data)
-summary(osmolyte_model_E)
-
-AIC(osmolyte_model_A, osmolyte_model_B, osmolyte_model_C, osmolyte_model_D, osmolyte_model_E)
-
-# biofilm enzyme ----
-
-# Linear Model 
-biofilm_model_A       = lm(biofilm ~ genome.size, data = MAG_gen_test)
-summary(biofilm_model_A)
-
-# Genome Size and Completeness
-biofilm_model_B       = lm(biofilm ~ genome.size*completeness_mean, data = MAG_gen_test)
-summary(biofilm_model_B)
-
-domin(biofilm ~ genome.size*completeness_mean, 
-      lm, 
-      list(summary, "r.squared"), 
-      data = MAG_gen_test)
-
-# Genome size and Contamination
-biofilm_model_C       = lm(biofilm ~ genome.size*contamination_mean, data = MAG_gen_test)
-summary(biofilm_model_C)
-
-domin(biofilm ~ genome.size*contamination_mean, 
-      lm, 
-      list(summary, "r.squared"), 
-      data = MAG_gen_test)
-
-# GC count
-biofilm_model_D       = lm(biofilm ~ GC_count_mean, data = MAG_gen_test)
-summary(biofilm_model_D)
-
-# Power Law
-biofilm_data          = as.data.frame(cbind(log(MAG_gen_test$genome.size), 
-                                            log(MAG_gen_test$biofilm)))
-
-biofilm_data           = subset(biofilm_data, biofilm_data$V2 != "-Inf") 
-colnames(biofilm_data) = c("genome.size","biofilm")
-
-biofilm_model_E       = lm(biofilm ~ genome.size, data = biofilm_data)
-summary(biofilm_model_E)
-
-AIC(biofilm_model_A, biofilm_model_B, biofilm_model_C, biofilm_model_D, biofilm_model_E)
-
-# temp enzyme ----
-
-# Linear Model 
-temp_model_A       = lm(temp ~ genome.size, data = MAG_gen_test)
-summary(temp_model_A)
-
-# Genome Size and Completeness
-temp_model_B       = lm(temp ~ genome.size*completeness_mean, data = MAG_gen_test)
-summary(temp_model_B)
-
-domin(temp ~ genome.size*completeness_mean, 
-      lm, 
-      list(summary, "r.squared"), 
-      data = MAG_gen_test)
-
-# Genome size and Contamination
-temp_model_C       = lm(temp ~ genome.size*contamination_mean, data = MAG_gen_test)
-summary(temp_model_C)
-
-domin(temp ~ genome.size*contamination_mean, 
-      lm, 
-      list(summary, "r.squared"), 
-      data = MAG_gen_test)
-
-# GC count
-temp_model_D       = lm(temp ~ GC_count_mean, data = MAG_gen_test)
-summary(temp_model_D)
-
-# Power Law
-temp_data          = as.data.frame(cbind(log(MAG_gen_test$genome.size), 
-                                         log(MAG_gen_test$temp)))
-
-temp_data           = subset(temp_data, temp_data$V2 != "-Inf") 
-colnames(temp_data) = c("genome.size","temp")
-
-temp_model_E       = lm(temp ~ genome.size, data = temp_data)
-summary(temp_model_E)
-
-AIC(temp_model_A, temp_model_B, temp_model_C, temp_model_D, temp_model_E)
-
-# pH enzyme ----
-
-# Linear Model 
-pH_model_A       = lm(pH ~ genome.size, data = MAG_gen_test)
-summary(pH_model_A)
-
-# Genome Size and Completeness
-pH_model_B       = lm(pH ~ genome.size*completeness_mean, data = MAG_gen_test)
-summary(pH_model_B)
-
-domin(pH ~ genome.size*completeness_mean, 
-      lm, 
-      list(summary, "r.squared"), 
-      data = MAG_gen_test)
-
-# Genome size and Contamination
-pH_model_C       = lm(pH ~ genome.size*contamination_mean, data = MAG_gen_test)
-summary(pH_model_C)
-
-domin(pH ~ genome.size*contamination_mean, 
-      lm, 
-      list(summary, "r.squared"), 
-      data = MAG_gen_test)
-
-# GC count
-pH_model_D       = lm(pH ~ GC_count_mean, data = MAG_gen_test)
-summary(pH_model_D)
-
-# Power Law
-pH_data          = as.data.frame(cbind(log(MAG_gen_test$genome.size), 
-                                       log(MAG_gen_test$pH)))
-
-pH_data           = subset(pH_data, pH_data$V2 != "-Inf") 
-colnames(pH_data) = c("genome.size","pH")
-
-pH_model_E       = lm(pH ~ genome.size, data = pH_data)
-summary(pH_model_E)
-
-AIC(pH_model_A, pH_model_B, pH_model_C, pH_model_D, pH_model_E)
-
-# mgr ----
-
-MAG_gen_test     = MAG_gen_test %>% mutate(mgr = 1/mgr)
-
-# Linear Model 
-mgr_model_A       = lm(mgr ~ genome.size, data = MAG_gen_test)
-summary(mgr_model_A)
-
-# Genome Size and Completeness
-mgr_model_B       = lm(mgr ~ genome.size*completeness_mean, data = MAG_gen_test)
-summary(mgr_model_B)
-
-domin(mgr ~ genome.size*completeness_mean, 
-      lm, 
-      list(summary, "r.squared"), 
-      data = MAG_gen_test)
-
-# Genome size and Contamination
-mgr_model_C       = lm(mgr ~ genome.size*contamination_mean, data = MAG_gen_test)
-summary(mgr_model_C)
-
-domin(mgr ~ genome.size*contamination_mean, 
-      lm, 
-      list(summary, "r.squared"), 
-      data = MAG_gen_test)
-
-# GC count
-mgr_model_D       = lm(mgr ~ GC_count_mean, data = MAG_gen_test)
-summary(mgr_model_D)
-
-# Power Law
-mgr_data          = as.data.frame(cbind(log(MAG_gen_test$genome.size), 
-                                        log(MAG_gen_test$mgr)))
-
-mgr_data           = subset(mgr_data, mgr_data$V2 != "-Inf") 
-colnames(mgr_data) = c("genome.size","mgr")
-
-mgr_model_E       = lm(mgr ~ genome.size, data = mgr_data)
-summary(mgr_model_E)
-
-AIC(mgr_model_A, mgr_model_B, mgr_model_C, mgr_model_D, mgr_model_E)
-
-# ogt ----
-
-# Linear Model 
-ogt_model_A       = lm(ogt ~ genome.size, data = MAG_gen_test)
-summary(ogt_model_A)
-
-# Genome Size and Completeness
-ogt_model_B       = lm(ogt ~ genome.size*completeness_mean, data = MAG_gen_test)
-summary(ogt_model_B)
-
-domin(ogt ~ genome.size*completeness_mean, 
-      lm, 
-      list(summary, "r.squared"), 
-      data = MAG_gen_test)
-
-# Genome size and Contamination
-ogt_model_C       = lm(ogt ~ genome.size*contamination_mean, data = MAG_gen_test)
-summary(ogt_model_C)
-
-domin(ogt ~ genome.size*contamination_mean, 
-      lm, 
-      list(summary, "r.squared"), 
-      data = MAG_gen_test)
-
-# GC count
-ogt_model_D       = lm(ogt ~ GC_count_mean, data = MAG_gen_test)
-summary(ogt_model_D)
-
-# Power Law
-ogt_data          = as.data.frame(cbind(log(MAG_gen_test$genome.size), 
-                                        log(MAG_gen_test$ogt)))
-
-ogt_data           = subset(ogt_data, ogt_data$V2 != "-Inf") 
-colnames(ogt_data) = c("genome.size","ogt")
-
-ogt_model_E       = lm(ogt ~ genome.size, data = ogt_data)
-summary(ogt_model_E)
-
-AIC(ogt_model_A, ogt_model_B, ogt_model_C, ogt_model_D, ogt_model_E)
-
-# S vs A tradeoffs (Isolates) ----
-
-ISO_gen_TOTAL_ab = read.csv("Intermediate_Results/ISO_gen_trait.1.csv",dec=".")
-ISO_gen_test     = ISO_gen_TOTAL_ab %>% mutate(A_trait = rowSums(ISO_gen_TOTAL_ab[,9:11]),
-                                               S_trait = rowSums(ISO_gen_TOTAL_ab[,12:15]))
-ISO_gen_test     = ISO_gen_test %>% mutate(A_S = A_trait/S_trait)
-
-ISO_gen_test     = ISO_gen_test %>% mutate(MGR = 1/MGT)
-
-# CAZy enzyme ----
-
-# Linear Model 
-cazy_model_A       = lm(CAZy ~ Genome.Size, data = ISO_gen_test)
-summary(cazy_model_A)
-
-# Power Law
-CAZy_data          = as.data.frame(cbind(log(ISO_gen_test$Genome.Size), 
-                                         log(ISO_gen_test$CAZy)))
-
-CAZy_data           = subset(CAZy_data, CAZy_data$V2 != "-Inf") 
-colnames(CAZy_data) = c("genome.size","CAZy")
-
-cazy_model_E       = lm(CAZy ~ genome.size, data = CAZy_data)
-summary(cazy_model_E)
-
-AIC(cazy_model_A, cazy_model_E)
-
-# Protein.enzyme enzyme ----
-
-# Linear Model 
-Protein.enzyme_model_A       = lm(Protein.enzyme ~ Genome.Size, data = ISO_gen_test)
-summary(Protein.enzyme_model_A)
-
-# Power Law
-Protein.enzyme_data          = as.data.frame(cbind(log(ISO_gen_test$Genome.Size), 
-                                                   log(ISO_gen_test$Protein.enzyme)))
-
-Protein.enzyme_data           = subset(Protein.enzyme_data, Protein.enzyme_data$V2 != "-Inf") 
-colnames(Protein.enzyme_data) = c("genome.size","Protein.enzyme")
-
-Protein.enzyme_model_E       = lm(Protein.enzyme ~ genome.size, data = Protein.enzyme_data)
-summary(Protein.enzyme_model_E)
-
-AIC(Protein.enzyme_model_A, Protein.enzyme_model_E)
-
-# Total.transporter enzyme ----
-
-# Linear Model 
-Total.transporter_model_A       = lm(Total.transporter ~ Genome.Size, data = ISO_gen_test)
-summary(Total.transporter_model_A)
-
-# Power Law
-Total.transporter_data          = as.data.frame(cbind(log(ISO_gen_test$Genome.Size), 
-                                                      log(ISO_gen_test$Total.transporter)))
-
-Total.transporter_data           = subset(Total.transporter_data, Total.transporter_data$V2 != "-Inf") 
-colnames(Total.transporter_data) = c("genome.size","Total.transporter")
-
-Total.transporter_model_E       = lm(Total.transporter ~ genome.size, data = Total.transporter_data)
-summary(Total.transporter_model_E)
-
-AIC(Total.transporter_model_A, Total.transporter_model_E)
-
-# GH.transporter enzyme ----
-
-# Linear Model 
-GH.transporter_model_A       = lm(GH.transporter ~ Genome.Size, data = ISO_gen_test)
-summary(GH.transporter_model_A)
-
-# Power Law
-GH.transporter_data          = as.data.frame(cbind(log(ISO_gen_test$Genome.Size), 
-                                                   log(ISO_gen_test$GH.transporter)))
-
-GH.transporter_data           = subset(GH.transporter_data, GH.transporter_data$V2 != "-Inf") 
-colnames(GH.transporter_data) = c("genome.size","GH.transporter")
-
-GH.transporter_model_E       = lm(GH.transporter ~ genome.size, data = GH.transporter_data)
-summary(GH.transporter_model_E)
-
-AIC(GH.transporter_model_A, GH.transporter_model_E)
-
-# Amino.transporter enzyme ----
-
-# Linear Model 
-Amino.transporter_model_A       = lm(Amino.transporter ~ Genome.Size, data = ISO_gen_test)
-summary(Amino.transporter_model_A)
-
-# Power Law
-Amino.transporter_data          = as.data.frame(cbind(log(ISO_gen_test$Genome.Size), 
-                                                      log(ISO_gen_test$Amino.transporter)))
-
-Amino.transporter_data           = subset(Amino.transporter_data, Amino.transporter_data$V2 != "-Inf") 
-colnames(Amino.transporter_data) = c("genome.size","Amino.transporter")
-
-Amino.transporter_model_E       = lm(Amino.transporter ~ genome.size, data = Amino.transporter_data)
-summary(Amino.transporter_model_E)
-
-AIC(Amino.transporter_model_A, Amino.transporter_model_E)
-
-# Osmolyte enzyme ----
-
-# Linear Model 
-Osmolyte_model_A       = lm(Osmolyte ~ Genome.Size, data = ISO_gen_test)
-summary(Osmolyte_model_A)
-
-# Power Law
-Osmolyte_data          = as.data.frame(cbind(log(ISO_gen_test$Genome.Size), 
-                                             log(ISO_gen_test$Osmolyte)))
-
-Osmolyte_data           = subset(Osmolyte_data, Osmolyte_data$V2 != "-Inf") 
-colnames(Osmolyte_data) = c("genome.size","Osmolyte")
-
-Osmolyte_model_E       = lm(Osmolyte ~ genome.size, data = Osmolyte_data)
-summary(Osmolyte_model_E)
-
-AIC(Osmolyte_model_A, Osmolyte_model_E)
-
-# Biofilm enzyme ----
-
-# Linear Model 
-Biofilm_model_A       = lm(Biofilm ~ Genome.Size, data = ISO_gen_test)
-summary(Biofilm_model_A)
-
-# Power Law
-Biofilm_data          = as.data.frame(cbind(log(ISO_gen_test$Genome.Size), 
-                                            log(ISO_gen_test$Biofilm)))
-
-Biofilm_data           = subset(Biofilm_data, Biofilm_data$V2 != "-Inf") 
-colnames(Biofilm_data) = c("genome.size","Biofilm")
-
-Biofilm_model_E       = lm(Biofilm ~ genome.size, data = Biofilm_data)
-summary(Biofilm_model_E)
-
-AIC(Biofilm_model_A, Biofilm_model_E)
-
-# Temp.Tol enzyme ----
-
-# Linear Model 
-Temp.Tol_model_A       = lm(Temp.Tol ~ Genome.Size, data = ISO_gen_test)
-summary(Temp.Tol_model_A)
-
-# Power Law
-Temp.Tol_data          = as.data.frame(cbind(log(ISO_gen_test$Genome.Size), 
-                                             log(ISO_gen_test$Temp.Tol)))
-
-Temp.Tol_data           = subset(Temp.Tol_data, Temp.Tol_data$V2 != "-Inf") 
-colnames(Temp.Tol_data) = c("genome.size","Temp.Tol")
-
-Temp.Tol_model_E       = lm(Temp.Tol ~ genome.size, data = Temp.Tol_data)
-summary(Temp.Tol_model_E)
-
-AIC(Temp.Tol_model_A, Temp.Tol_model_E)
-
-# pH.Tol enzyme ----
-
-# Linear Model 
-pH.Tol_model_A       = lm(pH.Tol ~ Genome.Size, data = ISO_gen_test)
-summary(pH.Tol_model_A)
-
-# Power Law
-pH.Tol_data          = as.data.frame(cbind(log(ISO_gen_test$Genome.Size), 
-                                           log(ISO_gen_test$pH.Tol)))
-
-pH.Tol_data           = subset(pH.Tol_data, pH.Tol_data$V2 != "-Inf") 
-colnames(pH.Tol_data) = c("genome.size","pH.Tol")
-
-pH.Tol_model_E       = lm(pH.Tol ~ genome.size, data = pH.Tol_data)
-summary(pH.Tol_model_E)
-
-AIC(pH.Tol_model_A, pH.Tol_model_E)
-
-# Yield ----
-
-# Linear Model 
-Yield_model_A       = lm(Yield ~ Genome.Size, data = ISO_gen_test)
-summary(Yield_model_A)
-
-# Power Law
-Yield_data          = as.data.frame(cbind(log(ISO_gen_test$Genome.Size), 
-                                          log(ISO_gen_test$Yield)))
-
-Yield_data           = subset(Yield_data, Yield_data$V2 != "-Inf") 
-colnames(Yield_data) = c("genome.size","Yield")
-
-Yield_model_E       = lm(Yield ~ genome.size, data = Yield_data)
-summary(Yield_model_E)
-
-AIC(Yield_model_A, Yield_model_E)
-
-# MGR ----
-
-# Linear Model 
-MGR_model_A       = lm(MGR ~ Genome.Size, data = ISO_gen_test)
-summary(MGR_model_A)
-
-# Power Law
-MGR_data          = as.data.frame(cbind(log(ISO_gen_test$Genome.Size), 
-                                        log(ISO_gen_test$MGR)))
-
-MGR_data           = subset(MGR_data, MGR_data$V2 != "-Inf") 
-colnames(MGR_data) = c("genome.size","MGR")
-
-MGR_model_E       = lm(MGR ~ genome.size, data = MGR_data)
-summary(MGR_model_E)
-
-AIC(MGR_model_A, MGR_model_E)
-
-# OGT ----
-
-# Linear Model 
-OGT_model_A       = lm(OGT ~ Genome.Size, data = ISO_gen_test)
-summary(OGT_model_A)
-
-# Power Law
-OGT_data          = as.data.frame(cbind(log(ISO_gen_test$Genome.Size), 
-                                        log(ISO_gen_test$OGT)))
-
-OGT_data           = subset(OGT_data, OGT_data$V2 != "-Inf") 
-colnames(OGT_data) = c("genome.size","OGT")
-
-OGT_model_E       = lm(OGT ~ genome.size, data = OGT_data)
-summary(OGT_model_E)
-
-AIC(OGT_model_A, OGT_model_E)
-
-# Power Law models (Selected) - MAGs ----
-
-# MAGs gene counts ----
-
-MAG_gen_TOTAL_ab = read.csv("Intermediate_Results/MAG_gen_TOTAL_GC.csv",dec=".")
-MAG_gen_TOTAL_ab = MAG_gen_TOTAL_ab %>% mutate(speed = case_when(mgr <= 5 ~ "fast",
-                                                                 mgr  > 5 ~ "slow"))
-
-MAG_gen_TOTAL_ab_fast = MAG_gen_TOTAL_ab %>% filter(speed == "fast")
-MAG_gen_TOTAL_ab_slow = MAG_gen_TOTAL_ab %>% filter(speed == "slow")
-
-# CAZy----
-
-CAZy_data_fast = as.data.frame(cbind(log(MAG_gen_TOTAL_ab_fast$genome.size), 
-                                     log(MAG_gen_TOTAL_ab_fast$CAZy), 
-                                     rep("fast",nrow(MAG_gen_TOTAL_ab_fast))))
-colnames(CAZy_data_fast) = c("genome.size","CAZy","speed")
-CAZy_data_slow = as.data.frame(cbind(log(MAG_gen_TOTAL_ab_slow$genome.size), 
-                                     log(MAG_gen_TOTAL_ab_slow$CAZy), 
-                                     rep("slow",nrow(MAG_gen_TOTAL_ab_slow))))
-colnames(CAZy_data_slow) = c("genome.size","CAZy","speed")
-
-CAZy_data     = as.data.frame(rbind(CAZy_data_fast,CAZy_data_slow))
-
-Figure_CAZy   = ggplot(data = CAZy_data, aes(x = as.numeric(genome.size), 
-                                             y = as.numeric(CAZy))) +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5) + xlab("Log(Genome Size)") + 
-  ylab("Log(CAZy)") +
-  theme(legend.position="none") + xlim(13,16.5) + ylim(-0.8,3.5)
-Figure_CAZy
-
-# Protein enzyme ----
-
-Protein_data_fast = as.data.frame(cbind(log(MAG_gen_TOTAL_ab_fast$genome.size), 
-                                        log(MAG_gen_TOTAL_ab_fast$Protein), 
-                                        rep("fast",nrow(MAG_gen_TOTAL_ab_fast))))
-colnames(Protein_data_fast) = c("genome.size","Protein","speed")
-Protein_data_slow = as.data.frame(cbind(log(MAG_gen_TOTAL_ab_slow$genome.size), 
-                                        log(MAG_gen_TOTAL_ab_slow$Protein), 
-                                        rep("slow",nrow(MAG_gen_TOTAL_ab_slow))))
-colnames(Protein_data_slow) = c("genome.size","Protein","speed")
-
-Protein_data     = as.data.frame(rbind(Protein_data_fast,Protein_data_slow))
-
-Figure_Protein   = ggplot(data = Protein_data, aes(x = as.numeric(genome.size), 
-                                                   y = as.numeric(Protein))) +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5) + xlab("Log(Genome Size)") + 
-  ylab("Log(Protein)") +
-  theme(legend.position="none") + xlim(13,16.5) + ylim(0.8,4)
-Figure_Protein
-
-# Transport total Transporters ----
-
-tranport.total_data_fast = as.data.frame(cbind(log(MAG_gen_TOTAL_ab_fast$genome.size), 
-                                               log(MAG_gen_TOTAL_ab_fast$tranport.total), 
-                                               rep("fast",nrow(MAG_gen_TOTAL_ab_fast))))
-colnames(tranport.total_data_fast) = c("genome.size","tranport.total","speed")
-tranport.total_data_slow = as.data.frame(cbind(log(MAG_gen_TOTAL_ab_slow$genome.size), 
-                                               log(MAG_gen_TOTAL_ab_slow$tranport.total), 
-                                               rep("slow",nrow(MAG_gen_TOTAL_ab_slow))))
-colnames(tranport.total_data_slow) = c("genome.size","tranport.total","speed")
-
-tranport.total_data.1     = as.data.frame(rbind(tranport.total_data_fast,
-                                                tranport.total_data_slow))
-
-Figure_tranport.total   = ggplot(data = tranport.total_data.1, aes(x = as.numeric(genome.size), 
-                                                                   y = as.numeric(tranport.total))) +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5, label.y = "bottom", label.x = "right") + xlab("Log (Genome Size)") + 
-  ylab("Log (Transporters)") +
-  theme(legend.position="none") + xlim(13,16.5) + ylim(-0.5,5.5)
-Figure_tranport.total
-
-# GH total Transporters ----
-
-GH.trasnport_data_fast = as.data.frame(cbind(log(MAG_gen_TOTAL_ab_fast$genome.size), 
-                                             log(MAG_gen_TOTAL_ab_fast$GH.trasnport), 
-                                             rep("fast",nrow(MAG_gen_TOTAL_ab_fast))))
-colnames(GH.trasnport_data_fast) = c("genome.size","GH.trasnport","speed")
-GH.trasnport_data_slow = as.data.frame(cbind(log(MAG_gen_TOTAL_ab_slow$genome.size), 
-                                             log(MAG_gen_TOTAL_ab_slow$GH.trasnport), 
-                                             rep("slow",nrow(MAG_gen_TOTAL_ab_slow))))
-colnames(GH.trasnport_data_slow) = c("genome.size","GH.trasnport","speed")
-
-GH.trasnport_data     = as.data.frame(rbind(GH.trasnport_data_fast,
-                                            GH.trasnport_data_slow))
-
-Figure_GH.trasnport   = ggplot(data = GH.trasnport_data, aes(x = as.numeric(genome.size), 
-                                                             y = as.numeric(GH.trasnport))) +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5, label.y = "bottom", label.x = "right") + xlab("Log (Genome Size)") + 
-  ylab("Log (GH transporters)") +
-  theme(legend.position="none") + xlim(13,16.5) + ylim(-3.5,4.0)
-Figure_GH.trasnport
-
-# Amino total Transporters ----
-
-amino.transport_data_fast = as.data.frame(cbind(log(MAG_gen_TOTAL_ab_fast$genome.size), 
-                                                log(MAG_gen_TOTAL_ab_fast$amino.transport), 
-                                                rep("fast",nrow(MAG_gen_TOTAL_ab_fast))))
-colnames(amino.transport_data_fast) = c("genome.size","amino.transport","speed")
-amino.transport_data_slow = as.data.frame(cbind(log(MAG_gen_TOTAL_ab_slow$genome.size), 
-                                                log(MAG_gen_TOTAL_ab_slow$amino.transport), 
-                                                rep("slow",nrow(MAG_gen_TOTAL_ab_slow))))
-colnames(amino.transport_data_slow) = c("genome.size","amino.transport","speed")
-
-amino.transport_data     = as.data.frame(rbind(amino.transport_data_fast,
-                                               amino.transport_data_slow))
-
-Figure_amino.transport   = ggplot(data = amino.transport_data, aes(x = as.numeric(genome.size), 
-                                                                   y = as.numeric(amino.transport))) +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5) + xlab("Log (Genome Size)") + 
-  ylab("Log (Animo transporters)") +
-  theme(legend.position="none") + xlim(13,16.5) + ylim(0,3.5)
-Figure_amino.transport
-
-# Osmolytes ----
-
-osmolyte_data_fast = as.data.frame(cbind(log(MAG_gen_TOTAL_ab_fast$genome.size), 
-                                         log(MAG_gen_TOTAL_ab_fast$osmolyte), 
-                                         rep("fast",nrow(MAG_gen_TOTAL_ab_fast))))
-colnames(osmolyte_data_fast) = c("genome.size","osmolyte","speed")
-osmolyte_data_slow = as.data.frame(cbind(log(MAG_gen_TOTAL_ab_slow$genome.size), 
-                                         log(MAG_gen_TOTAL_ab_slow$osmolyte), 
-                                         rep("slow",nrow(MAG_gen_TOTAL_ab_slow))))
-colnames(osmolyte_data_slow) = c("genome.size","osmolyte","speed")
-
-osmolyte_data     = as.data.frame(rbind(osmolyte_data_fast,
-                                        osmolyte_data_slow))
-
-Figure_osmolyte  = ggplot(data = osmolyte_data, aes(x = as.numeric(genome.size), 
-                                                    y = as.numeric(osmolyte))) +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4, label.y = "bottom", label.x = "right") + xlab("Log (Genome Size)") + 
-  ylab("Log (Osmolytes)") +
-  theme(legend.position="none") + xlim(13,16.5) + ylim(-2.7,3.5)
-Figure_osmolyte
-
-# Biofilm ----
-
-biofilm_data_fast = as.data.frame(cbind(log(MAG_gen_TOTAL_ab_fast$genome.size), 
-                                        log(MAG_gen_TOTAL_ab_fast$biofilm), 
-                                        rep("fast",nrow(MAG_gen_TOTAL_ab_fast))))
-colnames(biofilm_data_fast) = c("genome.size","biofilm","speed")
-biofilm_data_slow = as.data.frame(cbind(log(MAG_gen_TOTAL_ab_slow$genome.size), 
-                                        log(MAG_gen_TOTAL_ab_slow$biofilm), 
-                                        rep("slow",nrow(MAG_gen_TOTAL_ab_slow))))
-colnames(biofilm_data_slow) = c("genome.size","biofilm","speed")
-
-biofilm_data     = as.data.frame(rbind(biofilm_data_fast,
-                                       biofilm_data_slow))
-
-biofilm_data     = subset(biofilm_data, biofilm!="-Inf") 
-
-Figure_biofilm  = ggplot(data = biofilm_data, aes(x = as.numeric(genome.size), 
-                                                  y = as.numeric(biofilm))) +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4, label.y = "bottom", label.x = "right") + xlab("Log (Genome Size)") + 
-  ylab("Log (Biofilm)") +
-  theme(legend.position="none") + xlim(13,16.5) + ylim(-3.2,2.8)
-Figure_biofilm
-
-# Heat Tolerance ----
-
-temp_fast_data_fast = as.data.frame(cbind(log(MAG_gen_TOTAL_ab_fast$genome.size), 
-                                          log(MAG_gen_TOTAL_ab_fast$temp), 
-                                          rep("fast",nrow(MAG_gen_TOTAL_ab_fast))))
-colnames(temp_fast_data_fast) = c("genome.size","temp_fast","speed")
-temp_fast_data_slow = as.data.frame(cbind(log(MAG_gen_TOTAL_ab_slow$genome.size), 
-                                          log(MAG_gen_TOTAL_ab_slow$temp), 
-                                          rep("slow",nrow(MAG_gen_TOTAL_ab_slow))))
-colnames(temp_fast_data_slow) = c("genome.size","temp_fast","speed")
-
-temp_fast_data     = as.data.frame(rbind(temp_fast_data_fast,
-                                         temp_fast_data_slow))
-
-# temp_fast_data     = subset(biofilm_data, biofilm!="-Inf") 
-
-Figure_temp_fast  = ggplot(data = temp_fast_data, aes(x = as.numeric(genome.size), 
-                                                      y = as.numeric(temp_fast))) +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4, label.y = "bottom", label.x = "right") + xlab("Log (Genome Size)") + 
-  ylab("Log (Temperature Tolerance)") +
-  theme(legend.position="none") + xlim(13,16.5) + ylim(0.5,2.6)
-Figure_temp_fast
-
-# pH Tolerance Transporters ----
-
-pH_data_fast = as.data.frame(cbind(log(MAG_gen_TOTAL_ab_fast$genome.size), 
-                                   log(MAG_gen_TOTAL_ab_fast$pH), 
-                                   rep("fast",nrow(MAG_gen_TOTAL_ab_fast))))
-colnames(pH_data_fast) = c("genome.size","pH","speed")
-pH_data_slow = as.data.frame(cbind(log(MAG_gen_TOTAL_ab_slow$genome.size), 
-                                   log(MAG_gen_TOTAL_ab_slow$pH), 
-                                   rep("slow",nrow(MAG_gen_TOTAL_ab_slow))))
-colnames(pH_data_slow) = c("genome.size","pH","speed")
-
-pH_data     = as.data.frame(rbind(pH_data_fast,
-                                  pH_data_slow))
-
-pH_data     = subset(pH_data, pH!="-Inf") 
-
-Figure_pH_fast  = ggplot(data = pH_data, aes(x = as.numeric(genome.size), 
-                                             y = as.numeric(pH))) +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4, label.y = "bottom", label.x = "right") + xlab("Log (Genome Size)") + 
-  ylab("Log (pH Tolerance)") +
-  theme(legend.position="none") + xlim(13,16.5) + ylim(-2.7,2.85)
-Figure_pH_fast
-
-# Minimum Generation Time ----
-
-mgr_data_fast = as.data.frame(cbind(log(MAG_gen_TOTAL_ab_fast$genome.size), 
-                                    log(1/MAG_gen_TOTAL_ab_fast$mgr), 
-                                    rep("fast",nrow(MAG_gen_TOTAL_ab_fast))))
-colnames(mgr_data_fast) = c("genome.size","mgr","speed")
-mgr_data_slow = as.data.frame(cbind(log(MAG_gen_TOTAL_ab_slow$genome.size), 
-                                    log(1/MAG_gen_TOTAL_ab_slow$mgr), 
-                                    rep("slow",nrow(MAG_gen_TOTAL_ab_slow))))
-colnames(mgr_data_slow) = c("genome.size","mgr","speed")
-
-mgr_data     = as.data.frame(rbind(mgr_data_fast,
-                                   mgr_data_slow))
-
-Figure_mgr_fast  = ggplot(data = mgr_data, aes(x = as.numeric(genome.size), 
-                                               y = as.numeric(mgr))) +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4, label.y = "top", label.x = "left") + xlab("Log (Genome Size)") + 
-  ylab("Log (mgr)") +
-  theme(legend.position="none") + xlim(13,16.5) + ylim(-2.55,3.45)
-Figure_mgr_fast
-
-# Optimum Growth Temperature ----
-
-ogt_data_fast = as.data.frame(cbind(log(MAG_gen_TOTAL_ab_fast$genome.size), 
-                                    log(MAG_gen_TOTAL_ab_fast$ogt), 
-                                    rep("fast",nrow(MAG_gen_TOTAL_ab_fast))))
-colnames(ogt_data_fast) = c("genome.size","ogt","speed")
-ogt_data_slow = as.data.frame(cbind(log(MAG_gen_TOTAL_ab_slow$genome.size), 
-                                    log(MAG_gen_TOTAL_ab_slow$ogt), 
-                                    rep("slow",nrow(MAG_gen_TOTAL_ab_slow))))
-colnames(ogt_data_slow) = c("genome.size","ogt","speed")
-
-ogt_data     = as.data.frame(rbind(ogt_data_fast,
-                                   ogt_data_slow))
-
-Figure_ogt_fast  = ggplot(data = ogt_data, aes(x = as.numeric(genome.size), 
-                                               y = as.numeric(ogt))) +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4, label.y = "bottom", label.x = "right") + xlab("Log (Genome Size)") + 
-  ylab("Log (OGT)") +
-  theme(legend.position="none") + xlim(13,16.5) + ylim(2.9,4.3)
-Figure_ogt_fast
-
-# Power Law models - Isolates ----
-
-# Isolate gene counts ----
-
-ISO_gen_TOTAL_ab = read.csv("Intermediate_Results/ISO_gen_trait.1.csv",dec=".")
-ISO_gen_TOTAL_ab = ISO_gen_TOTAL_ab %>% mutate(speed = case_when(MGT <= 5 ~ "fast",
-                                                                 MGT  > 5 ~ "slow"))
-
-ISO_gen_TOTAL_ab_fast = ISO_gen_TOTAL_ab %>% filter(speed == "fast")
-ISO_gen_TOTAL_ab_slow = ISO_gen_TOTAL_ab %>% filter(speed == "slow")
-
-# CAZy----
-
-CAZy.total_data_fast = as.data.frame(cbind(log(ISO_gen_TOTAL_ab_fast$Genome.Size), 
-                                           log(ISO_gen_TOTAL_ab_fast$CAZy), 
-                                           rep("fast",nrow(ISO_gen_TOTAL_ab_fast))))
-colnames(CAZy.total_data_fast) = c("genome.size","CAZy","speed")
-CAZy.total_data_slow = as.data.frame(cbind(log(ISO_gen_TOTAL_ab_slow$Genome.Size), 
-                                           log(ISO_gen_TOTAL_ab_slow$CAZy), 
-                                           rep("slow",nrow(ISO_gen_TOTAL_ab_slow))))
-colnames(CAZy.total_data_slow) = c("genome.size","CAZy","speed")
-
-CAZy.total_data.ISO     = as.data.frame(rbind(CAZy.total_data_fast,
-                                              CAZy.total_data_slow))
-
-Figure_CAZy.total.ISO   = ggplot(data = CAZy.total_data.ISO, aes(x = as.numeric(genome.size), 
-                                                                 y = as.numeric(CAZy))) +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5) + xlab("Log (Genome Size)") + 
-  ylab("Log (CAZy)") +
-  theme(legend.position="none") + xlim(13,16.5) + ylim(-0.8,3.5)
-Figure_CAZy.total.ISO
-
-# Protein enzyme ----
-
-Protein.enzyme.total_data_fast = as.data.frame(cbind(log(ISO_gen_TOTAL_ab_fast$Genome.Size), 
-                                                     log(ISO_gen_TOTAL_ab_fast$Protein.enzyme), 
-                                                     rep("fast",nrow(ISO_gen_TOTAL_ab_fast))))
-colnames(Protein.enzyme.total_data_fast) = c("genome.size","Protein.enzyme","speed")
-Protein.enzyme.total_data_slow = as.data.frame(cbind(log(ISO_gen_TOTAL_ab_slow$Genome.Size), 
-                                                     log(ISO_gen_TOTAL_ab_slow$Protein.enzyme), 
-                                                     rep("slow",nrow(ISO_gen_TOTAL_ab_slow))))
-colnames(Protein.enzyme.total_data_slow) = c("genome.size","Protein.enzyme","speed")
-
-Protein.enzyme.total_data.ISO     = as.data.frame(rbind(Protein.enzyme.total_data_fast,
-                                                        Protein.enzyme.total_data_slow))
-
-Figure_Protein.enzyme.total.ISO   = ggplot(data = Protein.enzyme.total_data.ISO, aes(x = as.numeric(genome.size), 
-                                                                                     y = as.numeric(Protein.enzyme))) +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5) + xlab("Log (Genome Size)") + 
-  ylab("Log (Protein)") +
-  theme(legend.position="none") + xlim(13,16.5) + ylim(0.8,4)
-Figure_Protein.enzyme.total.ISO
-
-# Transport total Transporters ----
-
-tranport.total_data_fast = as.data.frame(cbind(log(ISO_gen_TOTAL_ab_fast$Genome.Size), 
-                                               log(ISO_gen_TOTAL_ab_fast$Total.transporter), 
-                                               rep("fast",nrow(ISO_gen_TOTAL_ab_fast))))
-colnames(tranport.total_data_fast) = c("genome.size","tranport.total","speed")
-tranport.total_data_slow = as.data.frame(cbind(log(ISO_gen_TOTAL_ab_slow$Genome.Size), 
-                                               log(ISO_gen_TOTAL_ab_slow$Total.transporter), 
-                                               rep("slow",nrow(ISO_gen_TOTAL_ab_slow))))
-colnames(tranport.total_data_slow) = c("genome.size","tranport.total","speed")
-
-tranport.total_data     = as.data.frame(rbind(tranport.total_data_fast,
-                                              tranport.total_data_slow))
-
-Figure_tranport.total_ISO   = ggplot(data = tranport.total_data, aes(x = as.numeric(genome.size), 
-                                                                     y = as.numeric(tranport.total))) +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5, label.y = "bottom", label.x = "right") + xlab("Log (Genome Size)") + 
-  ylab("Log (Transporters)") +
-  theme(legend.position="none") + xlim(13,16.5) + ylim(-0.5,5.5)
-Figure_tranport.total_ISO
-
-# GH transporter ----
-
-GH.transporter_data_fast = as.data.frame(cbind(log(ISO_gen_TOTAL_ab_fast$Genome.Size), 
-                                               log(ISO_gen_TOTAL_ab_fast$GH.transporter), 
-                                               rep("fast",nrow(ISO_gen_TOTAL_ab_fast))))
-colnames(GH.transporter_data_fast) = c("genome.size","GH.transporter","speed")
-GH.transporter_data_slow = as.data.frame(cbind(log(ISO_gen_TOTAL_ab_slow$Genome.Size), 
-                                               log(ISO_gen_TOTAL_ab_slow$GH.transporter), 
-                                               rep("slow",nrow(ISO_gen_TOTAL_ab_slow))))
-colnames(GH.transporter_data_slow) = c("genome.size","GH.transporter","speed")
-
-GH.transporter_data     = as.data.frame(rbind(GH.transporter_data_fast,
-                                              GH.transporter_data_slow))
-
-Figure_GH.transporter   = ggplot(data = GH.transporter_data, aes(x = as.numeric(genome.size), 
-                                                                 y = as.numeric(GH.transporter))) +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5, label.y = "bottom", label.x = "right") + xlab("Log (Genome Size)") + 
-  ylab("Log (GH transporters)") +
-  theme(legend.position="none") + xlim(13,16.5) + ylim(-3.5,4.0)
-Figure_GH.transporter
-
-# Amino transporter ----
-
-Amino.transporter_data_fast = as.data.frame(cbind(log(ISO_gen_TOTAL_ab_fast$Genome.Size), 
-                                                  log(ISO_gen_TOTAL_ab_fast$Amino.transporter), 
-                                                  rep("fast",nrow(ISO_gen_TOTAL_ab_fast))))
-colnames(Amino.transporter_data_fast) = c("genome.size","Amino.transporter","speed")
-Amino.transporter_data_slow = as.data.frame(cbind(log(ISO_gen_TOTAL_ab_slow$Genome.Size), 
-                                                  log(ISO_gen_TOTAL_ab_slow$Amino.transporter), 
-                                                  rep("slow",nrow(ISO_gen_TOTAL_ab_slow))))
-colnames(Amino.transporter_data_slow) = c("genome.size","Amino.transporter","speed")
-
-Amino.transporter_data     = as.data.frame(rbind(Amino.transporter_data_fast,
-                                                 Amino.transporter_data_slow))
-
-Figure_Amino.transporter   = ggplot(data = Amino.transporter_data, aes(x = as.numeric(genome.size), 
-                                                                       y = as.numeric(Amino.transporter))) +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5) + xlab("Log (Genome Size)") + 
-  ylab("Log (Amino transporters)") +
-  theme(legend.position="none") + xlim(13,16.5) + ylim(0,3.5)
-Figure_Amino.transporter
-
-# Osmolyte ----
-
-osmolyte_data_fast_ISO = as.data.frame(cbind(log(ISO_gen_TOTAL_ab_fast$Genome.Size), 
-                                             log(ISO_gen_TOTAL_ab_fast$Osmolyte), 
-                                             rep("fast",nrow(ISO_gen_TOTAL_ab_fast))))
-colnames(osmolyte_data_fast_ISO) = c("genome.size","osmolyte","speed")
-osmolyte_data_slow_ISO = as.data.frame(cbind(log(ISO_gen_TOTAL_ab_slow$Genome.Size), 
-                                             log(ISO_gen_TOTAL_ab_slow$Osmolyte), 
-                                             rep("slow",nrow(ISO_gen_TOTAL_ab_slow))))
-colnames(osmolyte_data_slow_ISO) = c("genome.size","osmolyte","speed")
-
-osmolyte_data_ISO     = as.data.frame(rbind(osmolyte_data_fast_ISO,
-                                            osmolyte_data_slow_ISO))
-
-Figure_osmolyte_ISO   = ggplot(data = osmolyte_data_ISO, aes(x = as.numeric(genome.size), 
-                                                             y = as.numeric(osmolyte))) +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 4), label.y = "bottom", label.x = "left") + xlab("Log (Genome Size)") + 
-  ylab("Log (Osmolytes)") +
-  theme(legend.position="none") + xlim(13,16.5) + ylim(-2.7,3.5)
-Figure_osmolyte_ISO
-
-# Biofilm ----
-
-Biofilm_data_fast_ISO = as.data.frame(cbind(log(ISO_gen_TOTAL_ab_fast$Genome.Size), 
-                                            log(ISO_gen_TOTAL_ab_fast$Biofilm), 
-                                            rep("fast",nrow(ISO_gen_TOTAL_ab_fast))))
-colnames(Biofilm_data_fast_ISO) = c("genome.size","Biofilm","speed")
-Biofilm_data_slow_ISO = as.data.frame(cbind(log(ISO_gen_TOTAL_ab_slow$Genome.Size), 
-                                            log(ISO_gen_TOTAL_ab_slow$Biofilm), 
-                                            rep("slow",nrow(ISO_gen_TOTAL_ab_slow))))
-colnames(Biofilm_data_slow_ISO) = c("genome.size","Biofilm","speed")
-
-Biofilm_data_ISO     = as.data.frame(rbind(Biofilm_data_fast_ISO,
-                                           Biofilm_data_slow_ISO))
-
-Figure_Biofilm_ISO   = ggplot(data = Biofilm_data_ISO, aes(x = as.numeric(genome.size), 
-                                                           y = as.numeric(Biofilm))) +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 4), label.y = "bottom", label.x = "left") + xlab("Log (Genome Size)") + 
-  ylab("Log (Biofilm)") +
-  theme(legend.position="none") + xlim(13,16.5) + ylim(-3.2,2.8)
-Figure_Biofilm_ISO
-
-# Heat Tolerance ----
-
-Temp.Tol_data_fast_ISO = as.data.frame(cbind(log(ISO_gen_TOTAL_ab_fast$Genome.Size), 
-                                             log(ISO_gen_TOTAL_ab_fast$Temp.Tol), 
-                                             rep("fast",nrow(ISO_gen_TOTAL_ab_fast))))
-colnames(Temp.Tol_data_fast_ISO) = c("genome.size","Temp.Tol","speed")
-Temp.Tol_data_slow_ISO = as.data.frame(cbind(log(ISO_gen_TOTAL_ab_slow$Genome.Size), 
-                                             log(ISO_gen_TOTAL_ab_slow$Temp.Tol), 
-                                             rep("slow",nrow(ISO_gen_TOTAL_ab_slow))))
-colnames(Temp.Tol_data_slow_ISO) = c("genome.size","Temp.Tol","speed")
-
-Temp.Tol_data_ISO     = as.data.frame(rbind(Temp.Tol_data_fast_ISO,
-                                            Temp.Tol_data_slow_ISO))
-
-Figure_Temp.Tol_ISO   = ggplot(data = Temp.Tol_data_ISO, aes(x = as.numeric(genome.size), 
-                                                             y = as.numeric(Temp.Tol))) +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 4), label.y = "bottom", label.x = "left") + xlab("Log (Genome Size)") + 
-  ylab("Log (Temperature Tolerance)") +
-  theme(legend.position="none") + xlim(13,16.5) + ylim(0.5,2.6)
-Figure_Temp.Tol_ISO
-
-# pH Tolerance ----
-
-pH.Tol_data_fast_ISO = as.data.frame(cbind(log(ISO_gen_TOTAL_ab_fast$Genome.Size), 
-                                           log(ISO_gen_TOTAL_ab_fast$pH.Tol), 
-                                           rep("fast",nrow(ISO_gen_TOTAL_ab_fast))))
-colnames(pH.Tol_data_fast_ISO) = c("genome.size","pH.Tol","speed")
-pH.Tol_data_slow_ISO = as.data.frame(cbind(log(ISO_gen_TOTAL_ab_slow$Genome.Size), 
-                                           log(ISO_gen_TOTAL_ab_slow$pH.Tol), 
-                                           rep("slow",nrow(ISO_gen_TOTAL_ab_slow))))
-colnames(pH.Tol_data_slow_ISO) = c("genome.size","pH.Tol","speed")
-
-pH.Tol_data_ISO     = as.data.frame(rbind(pH.Tol_data_fast_ISO,
-                                          pH.Tol_data_slow_ISO))
-
-Figure_pH.Tol_ISO   = ggplot(data = pH.Tol_data_ISO, aes(x = as.numeric(genome.size), 
-                                                         y = as.numeric(pH.Tol))) +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 4), label.y = "bottom", label.x = "left") + xlab("Log (Genome Size)") + 
-  ylab("Log (pH Tolerance)") +
-  theme(legend.position="none") + xlim(13,16.5) + ylim(-2.7,2.85)
-Figure_pH.Tol_ISO
-
-# Yield ----
-
-Yield_data_fast = as.data.frame(cbind(log(ISO_gen_TOTAL_ab_fast$Genome.Size), 
-                                      log(ISO_gen_TOTAL_ab_fast$Yield), 
-                                      rep("fast",nrow(ISO_gen_TOTAL_ab_fast))))
-colnames(Yield_data_fast) = c("genome.size","Yield","speed")
-Yield_data_slow = as.data.frame(cbind(log(ISO_gen_TOTAL_ab_slow$Genome.Size), 
-                                      log(ISO_gen_TOTAL_ab_slow$Yield), 
-                                      rep("slow",nrow(ISO_gen_TOTAL_ab_slow))))
-colnames(Yield_data_slow) = c("genome.size","Yield","speed")
-
-Yield_data     = as.data.frame(rbind(Yield_data_fast,
-                                     Yield_data_slow))
-
-Figure_Yield_ISO   = ggplot(data = Yield_data, aes(x = as.numeric(genome.size), 
-                                                   y = as.numeric(Yield))) +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 4), label.y = "bottom", label.x = "left") + xlab("Log (Genome Size)") + 
-  ylab("Log (Yield)") +
-  theme(legend.position="none") + xlim(13,16.5)
-Figure_Yield_ISO
-
-# Minimum Generation Time ----
-
-mgr_data_fast_ISO = as.data.frame(cbind(log(ISO_gen_TOTAL_ab_fast$Genome.Size), 
-                                        log(1/ISO_gen_TOTAL_ab_fast$MGT), 
-                                        rep("fast",nrow(ISO_gen_TOTAL_ab_fast))))
-colnames(mgr_data_fast_ISO) = c("genome.size","mgr","speed")
-mgr_data_slow_ISO = as.data.frame(cbind(log(ISO_gen_TOTAL_ab_slow$Genome.Size), 
-                                        log(1/ISO_gen_TOTAL_ab_slow$MGT), 
-                                        rep("slow",nrow(ISO_gen_TOTAL_ab_slow))))
-colnames(mgr_data_slow_ISO) = c("genome.size","mgr","speed")
-
-mgr_data_ISO     = as.data.frame(rbind(mgr_data_fast_ISO,
-                                       mgr_data_slow_ISO))
-
-Figure_mgr_ISO   = ggplot(data = mgr_data_ISO, aes(x = as.numeric(genome.size), 
-                                                   y = as.numeric(mgr))) +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 4), label.y = "top", label.x = "left") + xlab("Log (Genome Size)") + 
-  ylab("Log (mgr)") +
-  theme(legend.position="none") + xlim(13,16.5) + ylim(-2.55,3.45)
-Figure_mgr_ISO
-
-# Optimum Growth Temperature ----
-
-OGT_data_fast_ISO = as.data.frame(cbind(log(ISO_gen_TOTAL_ab_fast$Genome.Size), 
-                                        log(ISO_gen_TOTAL_ab_fast$OGT), 
-                                        rep("fast",nrow(ISO_gen_TOTAL_ab_fast))))
-colnames(OGT_data_fast_ISO) = c("genome.size","OGT","speed")
-OGT_data_slow_ISO = as.data.frame(cbind(log(ISO_gen_TOTAL_ab_slow$Genome.Size), 
-                                        log(ISO_gen_TOTAL_ab_slow$OGT), 
-                                        rep("slow",nrow(ISO_gen_TOTAL_ab_slow))))
-colnames(OGT_data_slow_ISO) = c("genome.size","OGT","speed")
-
-OGT_data_ISO     = as.data.frame(rbind(OGT_data_fast_ISO,
-                                       OGT_data_slow_ISO))
-
-Figure_OGT_ISO   = ggplot(data = OGT_data_ISO, aes(x = as.numeric(genome.size), 
-                                                   y = as.numeric(OGT))) +
-  geom_point(size = 3) + theme_classic() + theme(text = element_text(size=20)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 4), label.y = "bottom", label.x = "left") + xlab("Log (Genome Size)") + 
-  ylab("Log (OGT)") +
-  theme(legend.position="none") + xlim(13,16.5) + ylim(2.9,4.3)
-Figure_OGT_ISO
-
-# Figure 2 (Enzyme encoding genes) ----
-
-Figure_2 = ggarrange(Figure_CAZy, Figure_Protein,Figure_CAZy.total.ISO,
-                     Figure_Protein.enzyme.total.ISO,
-                     labels = c("A","B","C","D"),ncol = 2, nrow = 2) + 
-  theme(panel.background = element_blank())
-
-Figure_2
-pdf("Output_Data/Figures/Figure_2.pdf",
-    width=14,height=14*5/5)
-print(Figure_2)
-dev.off()
-
-# Figure 3 (Transporters encoding genes) ----
-
-Figure_3 = ggarrange(Figure_tranport.total, Figure_GH.trasnport,
-                     Figure_amino.transport,Figure_tranport.total_ISO,
-                     Figure_GH.transporter,Figure_Amino.transporter,
-                     labels = c("A","B","C","D","E","F"),ncol = 3, nrow = 2) + 
-  theme(panel.background = element_blank())
-
-Figure_3
-pdf("Output_Data/Figures/Figure_3.pdf",
-    width=15,height=15*4/5)
-print(Figure_3)
-dev.off()
-
-# Figure 4(Stress Tolerance encoding genes) ----
-
-Figure_4 = ggarrange(Figure_osmolyte,Figure_biofilm,Figure_temp_fast,
-                     Figure_pH_fast,Figure_osmolyte_ISO,Figure_Biofilm_ISO,
-                     Figure_Temp.Tol_ISO,Figure_pH.Tol_ISO,
-                     labels = c("A","B","C","D","E","F","G","H"),ncol = 4, 
-                     nrow = 2) + theme(panel.background = element_blank())
-Figure_4
-
-pdf("Output_Data/Figures/Figure_4.pdf",
-    width=16,height=16*3/5)
-print(Figure_4)
-dev.off()
-
-# Figure 5 (Life History encoding genes (Yield)) ----
-
-Figure_5 = ggarrange(Figure_mgr_fast, Figure_mgr_ISO, Figure_Yield_ISO,
-                     labels = c("A","B","C"),ncol = 3, nrow = 1) + 
-  theme(panel.background = element_blank())
-
-Figure_5
-
-pdf("Output_Data/Figures/Figure_5.pdf",
-    width=12,height=12*1/3)
-print(Figure_5)
-dev.off()
-
-# Figure 6 (Life History encoding genes (Temperature)) ----
-
-Figure_6 = ggarrange(Figure_ogt_fast, Figure_OGT_ISO,labels = c("A","B"),
-                     ncol = 2, nrow = 1) + theme(panel.background = element_blank())
-
-Figure_6
-
-pdf("Output_Data/Figures/Figure_6.pdf",
-    width=12,height=12*1/2)
-print(Figure_6)
-dev.off()
-
-# CUE for different taxonomic levels ----
-
-isolates     = read.csv("Input_Data/SOIL_ISOLATES/dement_isolates_CUE.csv",dec=".")
-isolatest    = read.csv("Input_Data/SOIL_ISOLATES/total.granularity.3_datasets.csv",dec=".")
-isolates.1   = subset(isolates, isolates$CUE !='NaN')
-meta_iso     = read.delim("Input_Data/SOIL_ISOLATES/metadata_2.tsv",sep="\t")
-meta_iso     = as.data.frame(cbind(meta_iso$IMG.Genome.ID,meta_iso$Phylum,
-                                 meta_iso$Class,meta_iso$Order,meta_iso$Family,
+meta_iso   = read.delim("Input_Data/SOIL_ISOLATES/metadata_2.tsv", sep="\t")
+meta_iso   = as.data.frame(cbind(meta_iso$IMG.Genome.ID, meta_iso$Phylum,
+                                 meta_iso$Class, meta_iso$Order, meta_iso$Family,
                                  meta_iso$Genus))
-meta_iso.1   = read.delim("Input_Data/SOIL_ISOLATES/metadata_1.tsv",sep="\t")
-meta_iso.1   = as.data.frame(cbind(meta_iso.1$IMG.Genome.ID,meta_iso.1$Phylum,
-                                 meta_iso.1$Class,meta_iso.1$Order,meta_iso.1$Family,
+meta_iso.1 = read.delim("Input_Data/SOIL_ISOLATES/metadata_1.tsv", sep="\t")
+meta_iso.1 = as.data.frame(cbind(meta_iso.1$IMG.Genome.ID, meta_iso.1$Phylum,
+                                 meta_iso.1$Class, meta_iso.1$Order, meta_iso.1$Family,
                                  meta_iso.1$Genus))
-
-# final meta
-final_meta   = as.data.frame(rbind(meta_iso,meta_iso.1))
+final_meta = as.data.frame(rbind(meta_iso, meta_iso.1))
 colnames(final_meta) = c("id","Phylum","Class","Order","Family","Genus")
 
-merged_df    = merge(isolates.1,final_meta,by = "id")
-merged_df    = merged_df %>% filter(CUE <= 0.9)
+# Isolate-level data: OUR OWN BGE + genome size, correct artifact filter
+iso_cue_clean = my_isolates_BGE_glucose %>%
+  filter(BGE <= 0.90) %>%              # correct, evidence-based threshold
+  select(isolate_id, genomesize, BGE)
 
-# Figure S5A - Phylum ----
+cat("Isolates before artifact filter:", nrow(my_isolates_BGE_glucose), "\n")
+cat("Isolates after filter (BGE<=0.90):", nrow(iso_cue_clean), "\n\n")
 
-phylum = merged_df %>% group_by(Phylum) %>% summarise(across(where(is.numeric), 
-                                                             list(mean=mean), na.rm=TRUE))
-phylum = phylum %>% mutate(speed = case_when(mingentime_mean <= 5 ~ "fast",
-                                             mingentime_mean  > 5 ~ "slow"))
+# Attach taxonomy
+final_meta = final_meta %>% mutate(id = as.numeric(id))
 
-Figure_test_1.phylum = ggplot(data = phylum, aes(x = log(genome_length_mean), 
-                                                 y = log(CUE_mean))) +
-  geom_point() + theme_classic() + theme(text = element_text(size=14)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 5), label.y = "bottom", label.x = "left") + 
-  xlab("Log(Genome size)") + 
-  ylab("Log(Yield)") +
-  labs(title = "Phylum")
+iso_cue_tax = iso_cue_clean %>%
+  left_join(final_meta, by = c("isolate_id" = "id"))
+
+cat("Isolates with taxonomy match:", sum(!is.na(iso_cue_tax$Phylum)), 
+    "out of", nrow(iso_cue_tax), "\n\n")
+
+# Attach guild (for Figure S9, which is guild-level, not taxonomy-level)
+guild_lookup_iso = total_genes.guild.940_ISO %>% select(id, guild)
+
+iso_cue_guild = iso_cue_clean %>%
+  left_join(guild_lookup_iso, by = c("isolate_id" = "id")) %>%
+  filter(!is.na(guild))
+
+cat("Isolates with guild match:", nrow(iso_cue_guild), "\n\n")
+
+# Figure
+
+build_tax_panel = function(data, rank_col, title) {
+  agg = data %>%
+    group_by(.data[[rank_col]]) %>%
+    summarise(genome_length_mean = mean(genomesize, na.rm = TRUE),
+              CUE_mean = mean(BGE, na.rm = TRUE),
+              n = n()) %>%
+    filter(!is.na(.data[[rank_col]]), .data[[rank_col]] != "") %>%
+    mutate(CUE_logit = log(CUE_mean / (1 - CUE_mean)))
+  
+  cat(title, "- non-finite logit values:", sum(!is.finite(agg$CUE_logit)), "\n")
+  
+  ggplot(data = agg, aes(x = log(genome_length_mean), y = CUE_logit, weight = n)) +
+    geom_point() + theme_classic() + theme(text = element_text(size = 12)) +
+    stat_poly_line() +
+    stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 3, 
+                 label.y = "bottom", label.x = "left") +
+    xlab("Log(Genome size)") +
+    ylab("Logit(Yield)") +
+    labs(title = title)
+}
+
+Figure_test_1.phylum = build_tax_panel(iso_cue_tax, "Phylum", "Phylum")
+Figure_test_1.Class  = build_tax_panel(iso_cue_tax, "Class", "Class")
+Figure_test_1.Order  = build_tax_panel(iso_cue_tax, "Order", "Order")
+Figure_test_1.Family = build_tax_panel(iso_cue_tax, "Family", "Family")
+Figure_test_1.Genus  = build_tax_panel(iso_cue_tax, "Genus", "Genus")
+
 Figure_test_1.phylum
-
-# Figure S5B - Class ----
-
-Class = merged_df %>% group_by(Class) %>% summarise(across(where(is.numeric), 
-                                                           list(mean=mean), na.rm=TRUE))
-Class = Class %>% mutate(speed = case_when(mingentime_mean <= 5 ~ "fast",
-                                           mingentime_mean  > 5 ~ "slow"))
-Figure_test_1.Class = ggplot(data = Class, aes(x = log(genome_length_mean), 
-                                               y = log(CUE_mean))) +
-  geom_point() + theme_classic() + theme(text = element_text(size=14)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 5), label.y = "bottom", label.x = "left") + 
-  xlab("Log(Genome size)") + 
-  ylab("Log(Yield)") + 
-  labs(title = "Class")
 Figure_test_1.Class
-
-# Figure S5C - Order ----
-
-Order = merged_df %>% group_by(Order) %>% summarise(across(where(is.numeric), 
-                                                           list(mean=mean), na.rm=TRUE))
-Order = Order %>% mutate(speed = case_when(mingentime_mean <= 5 ~ "fast",
-                                           mingentime_mean  > 5 ~ "slow"))
-
-Figure_test_1.Order = ggplot(data = Order, aes(x = log(genome_length_mean), 
-                                               y = log(CUE_mean))) + 
-  geom_point() + theme_classic() + theme(text = element_text(size=14)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 5), label.y = "bottom", label.x = "left") + 
-  xlab("Log(Genome size)") + 
-  ylab("Log(Yield)") +
-  labs(title = "Order")
 Figure_test_1.Order
-
-# Figure S5D - Family ----
-
-Family = merged_df %>% group_by(Family) %>% summarise(across(where(is.numeric), 
-                                                             list(mean=mean), na.rm=TRUE))
-Family = Family %>% mutate(speed = case_when(mingentime_mean <= 5 ~ "fast",
-                                             mingentime_mean  > 5 ~ "slow"))
-
-Figure_test_1.Family = ggplot(data = Family, aes(x = log(genome_length_mean), 
-                                                 y = log(CUE_mean))) +
-  geom_point() + theme_classic() + theme(text = element_text(size=14)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 5), label.y = "bottom", label.x = "left") + 
-  xlab("Log(Genome size)") + 
-  ylab("Log(Yield)") +
-  labs(title = "Family")
 Figure_test_1.Family
-
-# Figure S5E - Genus ----
-
-Genus = merged_df %>% group_by(Genus) %>% summarise(across(where(is.numeric), 
-                                                           list(mean=mean), na.rm=TRUE))
-Genus = Genus %>% mutate(speed = case_when(mingentime_mean <= 5 ~ "fast",
-                                           mingentime_mean  > 5 ~ "slow"))
-
-Figure_test_1.Genus = ggplot(data = Genus, aes(x = log(genome_length_mean), 
-                                               y = log(CUE_mean))) +
-  geom_point() + theme_classic() + theme(text = element_text(size=14)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p"), size = 5), label.y = "bottom", label.x = "left") + 
-  xlab("Log(Genome size)") + 
-  ylab("Log(Yield)") +
-  labs(title = "Genus")
 Figure_test_1.Genus
 
-# Figure S5 ----
-
-Figure_S5 = ggarrange(Figure_test_1.phylum,Figure_test_1.Class,
-                      Figure_test_1.Order,Figure_test_1.Family,Figure_test_1.Genus, 
+# Combined figure
+Figure_S5 = ggarrange(Figure_test_1.phylum, Figure_test_1.Class,
+                      Figure_test_1.Order, Figure_test_1.Family, Figure_test_1.Genus,
                       labels = c("A","B","C","D","E"),
                       ncol = 3, nrow = 2) + theme(panel.background = element_blank())
 Figure_S5
@@ -2689,7 +2203,132 @@ pdf("Output_Data/Figures/Figure_S5.pdf",
 print(Figure_S5)
 dev.off()
 
-# Summary statistics from the MAGs ----
+# Fig_S9 -----
+
+# MAGs
+
+# Load raw files
+MAG_gen_trait         = read.csv("Intermediate_Results/MAG_gen_trait.csv",dec=".")
+total_genes.guild.940_MAG = read.csv("Intermediate_Results/total_genes.guild.940_MAG.csv", dec=".")
+sim_10000 = read.csv("Output_Data/my_MAGs_BGE_glucose_10000.csv")
+
+# S/A traits (from MAG_gen_trait, already confirmed 1342 guilds)
+MAG_traits = MAG_gen_trait %>%
+  mutate(
+    S_traits = rowSums(across(c(pH, temp, biofilm, osmolyte)), na.rm = TRUE),
+    A_traits = rowSums(across(c(tranport.total, Protein, CAZy)), na.rm = TRUE)
+  ) %>%
+  select(guild, S_traits, A_traits)
+
+# n_mags (total MAG count per guild)
+guild_n_mag = total_genes.guild.940_MAG %>% count(guild, name = "n_mags")
+
+# Corrected Yield (BGE <= 0.848, real artifact threshold)
+guild_lookup_mag = total_genes.guild.940_MAG %>% select(id, guild)
+mag_cue_guild = sim_10000 %>%
+  left_join(guild_lookup_mag, by = c("MAG_id" = "id")) %>%
+  filter(!is.na(guild), BGE <= 0.848) %>%
+  group_by(guild) %>%
+  summarise(Yield = mean(BGE, na.rm = TRUE), n_cue_mags = n())
+
+# Merge everything
+MAG_S9_data = MAG_traits %>%
+  left_join(guild_n_mag, by = "guild") %>%
+  left_join(mag_cue_guild, by = "guild")
+
+# Isolates
+
+Isolates_gen_trait    = read.csv("Intermediate_Results/Isolates_gen_trait.csv",dec=".")
+total_genes.guild.940_ISO = read.csv("Intermediate_Results/total_genes.guild.940_ISO.csv", dec=".")
+my_isolates_BGE_glucose = read.csv("Output_Data/my_isolates_BGE_glucose.csv")  # CONFIRM PATH
+
+# S/A traits
+ISO_traits = Isolates_gen_trait %>%
+  mutate(
+    S_traits = rowSums(across(c(pH, temp, biofilm, osmolyte)), na.rm = TRUE),
+    A_traits = rowSums(across(c(tranport.total, Protein, CAZy)), na.rm = TRUE)
+  ) %>%
+  select(guild, S_traits, A_traits)
+
+# n_mags (total isolate count per guild)
+guild_n_iso = total_genes.guild.940_ISO %>% count(guild, name = "n_mags")
+
+# Corrected Yield (BGE <= 0.90, isolate-specific artifact threshold)
+guild_lookup_iso = total_genes.guild.940_ISO %>% select(id, guild)
+iso_cue_guild = my_isolates_BGE_glucose %>%
+  left_join(guild_lookup_iso, by = c("isolate_id" = "id")) %>%
+  filter(!is.na(guild), BGE <= 0.90) %>%
+  group_by(guild) %>%
+  summarise(Yield = mean(BGE, na.rm = TRUE), n_cue_mags = n())
+
+# Merge everything
+ISO_S9_data = ISO_traits %>%
+  left_join(guild_n_iso, by = "guild") %>%
+  left_join(iso_cue_guild, by = "guild")
+
+# MAGs
+MAG_S9_data = MAG_S9_data %>%
+  mutate(AS_total = A_traits + S_traits)
+
+MAG_S9_complete = MAG_S9_data %>% filter(!is.na(Yield))
+
+wcor_MAG = cov.wt(cbind(MAG_S9_complete$AS_total, MAG_S9_complete$Yield),
+                  wt = MAG_S9_complete$n_cue_mags, cor = TRUE)
+r_weighted_MAG = wcor_MAG$cor[1, 2]
+
+lm_weighted_MAG = lm(Yield ~ AS_total, data = MAG_S9_complete, weights = n_cue_mags)
+p_weighted_MAG = summary(lm_weighted_MAG)$coefficients[2, 4]
+
+Figure_S9_MAG = ggplot(data = MAG_S9_complete,
+                       aes(x = AS_total, y = Yield, weight = n_cue_mags)) +
+  geom_point(size = 2.5) + theme_classic() + theme(text = element_text(size=14)) +
+  stat_poly_line() +
+  annotate("text", x = min(MAG_S9_complete$AS_total, na.rm=TRUE), 
+           y = min(MAG_S9_complete$Yield, na.rm=TRUE), hjust = 0, vjust = 0,
+           label = paste0("r = ", round(r_weighted_MAG, 3), ", p ", 
+                          ifelse(p_weighted_MAG < 0.001, "< 0.001", 
+                                 paste0("= ", round(p_weighted_MAG, 3))))) +
+  xlab("Total S+A gene counts per functional group") +
+  ylab("Yield (CUE)") 
+Figure_S9_MAG
+
+# Isolates
+ISO_S9_data = ISO_S9_data %>%
+  mutate(AS_total = A_traits + S_traits)
+
+ISO_S9_complete = ISO_S9_data %>% filter(!is.na(Yield))
+
+wcor_ISO = cov.wt(cbind(ISO_S9_complete$AS_total, ISO_S9_complete$Yield),
+                  wt = ISO_S9_complete$n_cue_mags, cor = TRUE)
+r_weighted_ISO = wcor_ISO$cor[1, 2]
+
+lm_weighted_ISO = lm(Yield ~ AS_total, data = ISO_S9_complete, weights = n_cue_mags)
+p_weighted_ISO = summary(lm_weighted_ISO)$coefficients[2, 4]
+
+Figure_S9_ISO = ggplot(data = ISO_S9_complete,
+                       aes(x = AS_total, y = Yield, weight = n_cue_mags)) +
+  geom_point(size = 2.5) + theme_classic() + theme(text = element_text(size=14)) +
+  stat_poly_line() +
+  annotate("text", x = min(ISO_S9_complete$AS_total, na.rm=TRUE), 
+           y = min(ISO_S9_complete$Yield, na.rm=TRUE), hjust = 0, vjust = 0,
+           label = paste0("r = ", round(r_weighted_ISO, 3), ", p ", 
+                          ifelse(p_weighted_ISO < 0.001, "< 0.001", 
+                                 paste0("= ", round(p_weighted_ISO, 3))))) +
+  xlab("Total S+A gene counts per functional group") +
+  ylab("Yield (CUE)")
+Figure_S9_ISO
+
+# --- Combined ---
+Figure_S9 = ggarrange(Figure_S9_MAG, Figure_S9_ISO,
+                      labels = c("A","B"), ncol = 2, nrow = 1) +
+  theme(panel.background = element_blank())
+Figure_S9
+
+pdf("Output_Data/Figures/Figure_S9.pdf", width=10, height=5)
+print(Figure_S9)
+dev.off()
+
+# Fig_S6 ----
 
 total_genes.guild     = read.csv("Intermediate_Results/global_datasets_guild.csv",dec=".")
 total_genes.guild     = total_genes.guild %>% select(id,guild)
@@ -2739,7 +2378,7 @@ Figure_S6.B      = ggplot(data = total_data, aes(x=cat, y=contamination)) +
   labs(x = "", y = "Contamination (%)")
 Figure_S6.B  
 
-# Figure S6 ----
+# Final figure
 
 Figure_S6 = ggarrange(Figure_S6.A,Figure_S6.B,
                       labels = c("A","B"),
@@ -2751,20 +2390,778 @@ pdf("Output_Data/Figures/Figure_S6.pdf",
 print(Figure_S6)
 dev.off()
 
-# New Figures arised during revision ----
+# Fig_S11 -----
 
-# Scatterplot Yield vs A+S traits ----
+# Loma Analysis
 
-pdf("Output_Data/Figures/Figure_S9.pdf",
-    width=2.5*2.5,height=2.5*2.5)
-plot(ISO_gen_TOTAL_ab$A_traits+ISO_gen_TOTAL_ab$S_traits, ISO_gen_TOTAL_ab$Yield,
-     xlab = "Total S+A gene counts per functional group",
-     ylab = "Yield (CUE)",
-     main = "Yield vs S+A gene counts — isolate functional groups")
-abline(lm(ISO_gen_TOTAL_ab$Yield ~ ISO_gen_TOTAL_ab$A_traits+ISO_gen_TOTAL_ab$S_traits), col = "red", lwd = 2)
-legend("bottomleft", 
-       legend = "r = -0.136, p = 0.042",
-       bty = "n")
+# Call the MAG-Microtrait datasets
+# Calling data and preprocessing
+hmm_loma    = read.csv("Input_Data/LOMA_MAGs/hmm_Loma.csv",dec=".")
+mag_stat    = read.csv("Input_Data/LOMA_MAGs/mag_stats.csv",dec=".") 
+mag_abun    = read.csv("Input_Data/LOMA_MAGs/mag_adundance.csv",dec=".") 
+mag_stat    = mag_stat %>% full_join(mag_abun)
+
+# Call Genes and merge datasets - Loma
+Loma_predictors_files = list.files(path="Intermediate_Results/LOMA_predictors", pattern=NULL, all.files=FALSE, 
+                                   full.names=TRUE)
+Loma_predictors_list = lapply(Loma_predictors_files, read.csv)
+Loma_predictors_gene = do.call(rbind.data.frame, Loma_predictors_list)
+Loma_predictors_gene = unique(Loma_predictors_gene$x)
+
+# Select only the best predictors 
+hmm_loma.global      = hmm_loma %>% select(id,tidyselect::any_of(Loma_predictors_gene))
+
+# Clustering
+
+FG_test = function(i,k,seed) {
+  set.seed(seed)
+  rand_df                = hmm_loma.global[sample(nrow(hmm_loma.global), size=i), ]
+  distance.total         = parDist(x = as.matrix(rand_df[2:length(rand_df)]),
+                                   method = "fJaccard",
+                                   threads = 10) # Adapt the number of threads
+  cluster.total          = hclust(distance.total, method="ward.D2")
+  v                      = cutree(cluster.total,k=k)
+  genome2guild           = data.frame(guild = factor(v))
+  rownames(genome2guild) = names(v)
+  adonis_1               = pairwiseAdonis::pairwise.adonis(distance.total,genome2guild$guild,
+                                                           perm = 999,p.adjust.m='BH')
+  return(as.data.frame(adonis_1))
+}
+
+# Number of clusters
+
+adonis = FG_test(nrow(hmm_loma.global),41,1000) # 41 is the final number
+
+# Calling distance matrix
+
+set.seed(1)
+distance.total  = parDist(x = as.matrix(hmm_loma.global[,2:182]),
+                          method = "fJaccard",
+                          threads = 1) # Adapt the number of threads
+cluster.total   = hclust(distance.total, method="ward.D2")
+v                      = cutree(cluster.total,k=round(41))
+genome2guild           = data.frame(guild = factor(v))
+rownames(genome2guild) = names(v)
+hmm_loma.global        = as.data.frame(cbind(genome2guild,hmm_loma.global))
+
+# Merge with genome size etc
+
+mag_stat = mag_stat %>%
+  mutate(id_join = paste0(sample, "_", bin))
+
+hmm_loma.global = hmm_loma.global %>%
+  left_join(mag_stat, by = c("id" = "id_join"))
+
+# Delete guild 35 which is extremely big
+
+hmm_loma.global = hmm_loma.global %>% filter(guild != 35)
+
+loma_guild_n = hmm_loma.global %>% 
+  filter(guild != 35) %>% 
+  count(guild, name = "n_mags")
+
+# Total Traits
+
+# Call Trait Keys 
+GH_rule = read_excel("Input_Data/microTrait_Rules/microtrait_GH.xlsx")
+GH_rule = as.data.frame(rbind("id","guild","size",GH_rule))
+PR_rule = read_excel("Input_Data/microTrait_Rules/microtrait_proteins.xlsx")
+PR_rule = as.data.frame(rbind("id","guild","size",PR_rule))
+transp_rule = read_excel("Input_Data/microTrait_Rules/microtrait_transporters.xlsx")
+osmo_rule   = read_excel("Input_Data/microTrait_Rules/microtrait_osmolytes.xlsx")
+osmo_rule   = as.data.frame(rbind("id","guild","size",osmo_rule))
+biofilm_rule = read_excel("Input_Data/microTrait_Rules/microtrait_biofilm.xlsx")
+biofilm_rule = as.data.frame(rbind("id","guild","size",biofilm_rule))  
+high.T_rule  = read_excel("Input_Data/microTrait_Rules/microtrait_high_T.xlsx")
+high.T_rule  = as.data.frame(rbind("id","guild","size",high.T_rule))
+pH_rule      = read_excel("Input_Data/microTrait_Rules/microtrait_pH_stress.xlsx")
+pH_rule      = as.data.frame(rbind("id","guild","size",pH_rule)) 
+
+# GH - genes (MAG)
+GH_TOTAL.MAG = hmm_loma.global %>% select(any_of(GH_rule$`microtrait_hmm-name`))
+GH_TOTAL.MAG$size = as.numeric(as.character(GH_TOTAL.MAG$size))
+GH_TOTAL_m   = GH_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                     list(mean=mean), na.rm=TRUE))
+GH_TOTAL_m   = GH_TOTAL_m %>% mutate(GH_total = rowSums(GH_TOTAL_m[,3:ncol(GH_TOTAL_m)]))
+GH_MAG       = GH_TOTAL_m %>% select(guild,size_mean,GH_total)
+
+# Protein - genes (MAG)
+PR_TOTAL.MAG = hmm_loma.global %>% select(any_of(PR_rule$`microtrait_hmm-name`))
+PR_TOTAL.MAG$size = as.numeric(as.character(PR_TOTAL.MAG$size))
+PR_TOTAL_m   = PR_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                     list(mean=mean), na.rm=TRUE))
+PR_TOTAL_m   = PR_TOTAL_m %>% mutate(PR_total = rowSums(PR_TOTAL_m[,3:ncol(PR_TOTAL_m)]))
+Protein_MAG  = PR_TOTAL_m %>% select(guild,size_mean,PR_total)
+
+# Transport - genes (MAG)
+transp_rule  = transp_rule %>% filter(`function` == c("transporter"))
+transp_rule  = as.data.frame(rbind("id","guild","size",transp_rule))
+TRANSP_TOTAL = hmm_loma.global %>% select(any_of(transp_rule$`microtrait_hmm-name`))
+TRANSP_TOTAL$size = as.numeric(as.character(TRANSP_TOTAL$size))
+TRANSP_TOTAL_m   = TRANSP_TOTAL %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                         list(mean=mean), na.rm=TRUE))
+TRANSP_TOTAL_m   = TRANSP_TOTAL_m %>% mutate(transp_total = rowSums(TRANSP_TOTAL_m[,3:ncol(TRANSP_TOTAL_m)]))
+Transporter_MAG  = TRANSP_TOTAL_m %>% select(guild,size_mean,transp_total)
+
+# Transport - Aminoacids (MAG)
+transp_rule        = transp_rule %>% filter(`function`==c("transporter"))
+transp_rule_ami    = transp_rule %>% filter(class==c("aminoacid","peptide"))
+transp_rule_ami    = as.data.frame(rbind("id","guild","size",transp_rule_ami))
+AMI_TRANSP_TOTAL   = hmm_loma.global %>% select(any_of(transp_rule_ami$`microtrait_hmm-name`))
+AMI_TRANSP_TOTAL$size = as.numeric(as.character(AMI_TRANSP_TOTAL$size))
+AMI_TRANSP_TOTAL_m = AMI_TRANSP_TOTAL %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                               list(mean=mean), na.rm=TRUE))
+AMI_TRANSP_TOTAL_m = AMI_TRANSP_TOTAL_m %>% mutate(AMI_TRANSP_TOTAL = rowSums(AMI_TRANSP_TOTAL_m[,3:ncol(AMI_TRANSP_TOTAL_m)]))
+Aminoacids_T_MAG   = AMI_TRANSP_TOTAL_m %>% select(guild,size_mean,AMI_TRANSP_TOTAL)
+
+# Transport - Carbohydrate (MAG)
+transp_rule_car    = transp_rule %>% filter(class==c("carbohydrate"))
+transp_rule_car    = as.data.frame(rbind("id","guild","size",transp_rule_car))
+CAR_TRANSP_TOTAL   = hmm_loma.global %>% select(any_of(transp_rule_car$`microtrait_hmm-name`))
+CAR_TRANSP_TOTAL$size = as.numeric(as.character(CAR_TRANSP_TOTAL$size))
+CAR_TRANSP_TOTAL_m = CAR_TRANSP_TOTAL %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                               list(mean=mean), na.rm=TRUE))
+CAR_TRANSP_TOTAL_m = CAR_TRANSP_TOTAL_m %>% mutate(CAR_TRANSP_TOTAL = rowSums(CAR_TRANSP_TOTAL_m[,3:ncol(CAR_TRANSP_TOTAL_m)]))
+GH_T_MAG           = CAR_TRANSP_TOTAL_m %>% select(guild,size_mean,CAR_TRANSP_TOTAL)
+
+# Osmolytes - genes (MAG)
+OSMO_TOTAL.MAG = hmm_loma.global %>% select(any_of(osmo_rule$`microtrait_hmm-name`))
+OSMO_TOTAL.MAG$size = as.numeric(as.character(OSMO_TOTAL.MAG$size))
+OSMO_TOTAL.MAG_m   = OSMO_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                             list(mean=mean), na.rm=TRUE))
+OSMO_TOTAL.MAG_m   = OSMO_TOTAL.MAG_m %>% mutate(OSMO_total = rowSums(OSMO_TOTAL.MAG_m[,3:ncol(OSMO_TOTAL.MAG_m)]))
+Osmolyte_MAG       = OSMO_TOTAL.MAG_m %>% select(guild,size_mean,OSMO_total)
+
+# Biofilm - genes (MAG)
+BIO_TOTAL.MAG = hmm_loma.global %>% select(any_of(biofilm_rule$`microtrait_hmm-name`))
+BIO_TOTAL.MAG$size = as.numeric(as.character(BIO_TOTAL.MAG$size))
+BIO_TOTAL.MAG_m   = BIO_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                           list(mean=mean), na.rm=TRUE))
+BIO_TOTAL.MAG_m   = BIO_TOTAL.MAG_m %>% mutate(BIO_total = rowSums(BIO_TOTAL.MAG_m[,3:ncol(BIO_TOTAL.MAG_m)]))
+Biofilm_MAG       = BIO_TOTAL.MAG_m %>% select(guild,size_mean,BIO_total)
+
+# High Temp - genes (MAG)
+TEMP.MAG = hmm_loma.global %>% select(any_of(high.T_rule$`microtrait_hmm-name`))
+TEMP.MAG$size = as.numeric(as.character(TEMP.MAG$size))
+TEMP.MAG_m   = TEMP.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                 list(mean=mean), na.rm=TRUE))
+TEMP.MAG_m   = TEMP.MAG_m %>% mutate(TEMP_total = rowSums(TEMP.MAG_m[,3:ncol(TEMP.MAG_m)]))
+TEMP_MAG     = TEMP.MAG_m %>% select(guild,size_mean,TEMP_total)
+
+# pH - genes (MAG)
+PH.MAG = hmm_loma.global %>% select(any_of(pH_rule$`microtrait_hmm-name`))
+PH.MAG$size = as.numeric(as.character(PH.MAG$size))
+PH.MAG_m   = PH.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                             list(mean=mean), na.rm=TRUE))
+PH.MAG_m   = PH.MAG_m %>% mutate(PH_total = rowSums(PH.MAG_m[,3:ncol(PH.MAG_m)]))
+PH_MAG     = PH.MAG_m %>% select(guild,size_mean,PH_total)
+
+MAG_gen_trait    = as.data.frame(cbind(Aminoacids_T_MAG,PH_MAG$PH_total,
+                                       TEMP_MAG$TEMP_total,Biofilm_MAG$BIO_total,
+                                       Osmolyte_MAG$OSMO_total,GH_T_MAG$CAR_TRANSP_TOTAL,
+                                       Transporter_MAG$transp_total,Protein_MAG$PR_total,
+                                       GH_MAG$GH_total))
+colnames(MAG_gen_trait) = c("guild","genome.size","amino.transport","pH","temp",
+                            "biofilm","osmolyte","GH.trasnport","tranport.total",
+                            "Protein","CAZy")
+
+loma_guild_n = loma_guild_n %>% mutate(guild = as.numeric(as.character(guild)))
+
+MAG_gen_trait.agg_LOMA = MAG_gen_trait %>%
+  mutate(guild = as.numeric(as.character(guild))) %>%
+  left_join(loma_guild_n, by = "guild")
+
+cat("Guilds before:", nrow(MAG_gen_trait.agg_LOMA), "\n")
+cat("Guilds with n_mags matched:", sum(!is.na(MAG_gen_trait.agg_LOMA$n_mags)), "\n")
+
+# Aggregated traits
+
+MAG_gen_trait.agg_LOMA   =  MAG_gen_trait.agg_LOMA %>% mutate(S_traits  = rowSums(MAG_gen_trait[,4:7]),
+                                                              A_traits  = rowSums(MAG_gen_trait[,9:11]),
+                                                              A_enzymes = rowSums(MAG_gen_trait[,10:11]))
+MAG_gen_trait.agg_LOMA   = MAG_gen_trait.agg_LOMA %>% mutate(A_S = A_traits/S_traits)
+
+write.csv(MAG_gen_trait.agg_LOMA, file = "Intermediate_Results/MAG_gen_trait.agg_LOMA.csv")
+
+# Plotting
+
+weighted_cor = function(x, y, w) {
+  ok = complete.cases(x, y, w)
+  if (sum(ok) < 3) return(list(r = NA, p = NA))
+  x = x[ok]; y = y[ok]; w = w[ok]
+  r = cov.wt(cbind(x, y), wt = w, cor = TRUE)$cor[1, 2]
+  p = tryCatch({ summary(lm(y ~ x, weights = w))$coefficients[2, 4] }, error = function(e) NA)
+  list(r = r, p = p)
+}
+
+res_loma = weighted_cor(MAG_gen_trait.agg_LOMA$A_traits, MAG_gen_trait.agg_LOMA$S_traits,
+                        MAG_gen_trait.agg_LOMA$n_mags)
+cat("LOMA - weighted r:", round(res_loma$r, 3), "| p:", res_loma$p, "\n")
+
+Figure_Total_S_SA_LOMA = ggplot(data = MAG_gen_trait.agg_LOMA, 
+                                aes(x = as.numeric(A_traits), y = as.numeric(S_traits),
+                                    color = A_S, weight = n_mags)) +
+  geom_point(size = 2.5) + theme_classic() + theme(text = element_text(size=14)) +
+  stat_poly_line() +
+  annotate("text", x = 3, y = 20, hjust = 0,
+           label = paste0("r = ", round(res_loma$r, 2), ", p ", 
+                          ifelse(res_loma$p < 0.001, "< 0.001", paste0("= ", round(res_loma$p, 3))))) +
+  xlab("A Traits") + ylab("S Traits") +
+  scale_color_gradient(low="red", high="blue", limits = c(0.5,8.5)) +
+  ylim(0,25) + xlim(0,40)
+Figure_Total_S_SA_LOMA
+
+# Fire Project Analysis
+
+# Call the MAG-Microtrait datasets
+# Calling data and preprocessing
+hmm_fire    = read.csv("Input_Data/FIRE_MAGs/hmm_Fire.csv",dec=".")
+mag_abun    = read.csv("Input_Data/FIRE_MAGs/mag_adundance_fire.csv",dec=".") 
+mag_abun    = mag_abun[-c(440,546), ]
+fire_meta   = read_excel("Input_Data/FIRE_MAGs/MAG_Dataset_BurnSeverity_ARNelson.xlsx")
+fire_size   = read_csv("Input_Data/FIRE_MAGs/fire_metadata.csv")
+
+# Call Genes and merge datasets - Fire
+Fire_predictors_files = list.files(path="Intermediate_Results/FIRE_predictors", pattern=NULL, all.files=FALSE, 
+                                   full.names=TRUE)
+Fire_predictors_list = lapply(Fire_predictors_files, read.csv)
+Fire_predictors_gene = do.call(rbind.data.frame, Fire_predictors_list)
+Fire_predictors_gene = unique(Fire_predictors_gene$x)
+
+# Select only the best predictors 
+hmm_fire.global      = hmm_fire %>% select(id,tidyselect::any_of(Fire_predictors_gene))
+
+# Clustering
+
+FG_test = function(i,k,seed) {
+  set.seed(seed)
+  rand_df                = hmm_fire.global[sample(nrow(hmm_fire.global), size=i), ]
+  distance.total         = parDist(x = as.matrix(rand_df[2:length(rand_df)]),
+                                   method = "fJaccard",
+                                   threads = 10) # Adapt the number of threads
+  cluster.total          = hclust(distance.total, method="ward.D2")
+  v                      = cutree(cluster.total,k=k)
+  genome2guild           = data.frame(guild = factor(v))
+  rownames(genome2guild) = names(v)
+  adonis_1               = pairwiseAdonis::pairwise.adonis(distance.total,genome2guild$guild,
+                                                           perm = 999,p.adjust.m='BH')
+  return(as.data.frame(adonis_1))
+}
+
+# Number of clusters
+
+adonis = FG_test(nrow(hmm_fire.global),18,1) # 18 is the final number
+
+# Calling distance matrix
+
+set.seed(1)
+distance.total  = parDist(x = as.matrix(hmm_fire.global[,2:214]),
+                          method = "fJaccard",
+                          threads = 1) # Adapt the number of threads
+cluster.total   = hclust(distance.total, method="ward.D2")
+v                      = cutree(cluster.total,k=round(18))
+genome2guild           = data.frame(guild = factor(v))
+rownames(genome2guild) = names(v)
+hmm_fire.global        = as.data.frame(cbind(genome2guild,hmm_fire.global))
+
+# Merge with genome size etc
+
+hmm_fire.global = hmm_fire.global %>%
+  left_join(fire_size, by = c("id"))
+
+fire_guild_n = hmm_fire.global %>% 
+  filter(guild != 35) %>% 
+  count(guild, name = "n_mags")
+
+# Total Traits
+
+# Call Trait Keys 
+GH_rule = read_excel("Input_Data/microTrait_Rules/microtrait_GH.xlsx")
+GH_rule = as.data.frame(rbind("id","guild","Genome_size",GH_rule))
+PR_rule = read_excel("Input_Data/microTrait_Rules/microtrait_proteins.xlsx")
+PR_rule = as.data.frame(rbind("id","guild","Genome_size",PR_rule))
+transp_rule = read_excel("Input_Data/microTrait_Rules/microtrait_transporters.xlsx")
+osmo_rule   = read_excel("Input_Data/microTrait_Rules/microtrait_osmolytes.xlsx")
+osmo_rule   = as.data.frame(rbind("id","guild","Genome_size",osmo_rule))
+biofilm_rule = read_excel("Input_Data/microTrait_Rules/microtrait_biofilm.xlsx")
+biofilm_rule = as.data.frame(rbind("id","guild","Genome_size",biofilm_rule))  
+high.T_rule  = read_excel("Input_Data/microTrait_Rules/microtrait_high_T.xlsx")
+high.T_rule  = as.data.frame(rbind("id","guild","Genome_size",high.T_rule))
+pH_rule      = read_excel("Input_Data/microTrait_Rules/microtrait_pH_stress.xlsx")
+pH_rule      = as.data.frame(rbind("id","guild","Genome_size",pH_rule)) 
+
+# GH - genes (MAG)
+GH_TOTAL.MAG = hmm_fire.global %>% select(any_of(GH_rule$`microtrait_hmm-name`))
+GH_TOTAL.MAG$Genome_size = as.numeric(as.character(GH_TOTAL.MAG$Genome_size))
+GH_TOTAL_m   = GH_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                     list(mean=mean), na.rm=TRUE))
+GH_TOTAL_m   = GH_TOTAL_m %>% mutate(GH_total = rowSums(GH_TOTAL_m[,3:ncol(GH_TOTAL_m)]))
+GH_MAG       = GH_TOTAL_m %>% select(guild,Genome_size_mean,GH_total)
+
+# Protein - genes (MAG)
+PR_TOTAL.MAG = hmm_fire.global %>% select(any_of(PR_rule$`microtrait_hmm-name`))
+PR_TOTAL.MAG$Genome_size = as.numeric(as.character(PR_TOTAL.MAG$Genome_size))
+PR_TOTAL_m   = PR_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                     list(mean=mean), na.rm=TRUE))
+PR_TOTAL_m   = PR_TOTAL_m %>% mutate(PR_total = rowSums(PR_TOTAL_m[,3:ncol(PR_TOTAL_m)]))
+Protein_MAG  = PR_TOTAL_m %>% select(guild,Genome_size_mean,PR_total)
+
+# Transport - genes (MAG)
+transp_rule  = transp_rule %>% filter(`function` == c("transporter"))
+transp_rule  = as.data.frame(rbind("id","guild","Genome_size",transp_rule))
+TRANSP_TOTAL = hmm_fire.global %>% select(any_of(transp_rule$`microtrait_hmm-name`))
+TRANSP_TOTAL$Genome_size = as.numeric(as.character(TRANSP_TOTAL$Genome_size))
+TRANSP_TOTAL_m   = TRANSP_TOTAL %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                         list(mean=mean), na.rm=TRUE))
+TRANSP_TOTAL_m   = TRANSP_TOTAL_m %>% mutate(transp_total = rowSums(TRANSP_TOTAL_m[,3:ncol(TRANSP_TOTAL_m)]))
+Transporter_MAG  = TRANSP_TOTAL_m %>% select(guild,Genome_size_mean,transp_total)
+
+# Transport - Aminoacids (MAG)
+transp_rule        = transp_rule %>% filter(`function`==c("transporter"))
+transp_rule_ami    = transp_rule %>% filter(class==c("aminoacid","peptide"))
+transp_rule_ami    = as.data.frame(rbind("id","guild","Genome_size",transp_rule_ami))
+AMI_TRANSP_TOTAL   = hmm_fire.global %>% select(any_of(transp_rule_ami$`microtrait_hmm-name`))
+AMI_TRANSP_TOTAL$Genome_size = as.numeric(as.character(AMI_TRANSP_TOTAL$Genome_size))
+AMI_TRANSP_TOTAL_m = AMI_TRANSP_TOTAL %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                               list(mean=mean), na.rm=TRUE))
+AMI_TRANSP_TOTAL_m = AMI_TRANSP_TOTAL_m %>% mutate(AMI_TRANSP_TOTAL = rowSums(AMI_TRANSP_TOTAL_m[,3:ncol(AMI_TRANSP_TOTAL_m)]))
+Aminoacids_T_MAG   = AMI_TRANSP_TOTAL_m %>% select(guild,Genome_size_mean,AMI_TRANSP_TOTAL)
+
+# Transport - Carbohydrate (MAG)
+transp_rule_car    = transp_rule %>% filter(class==c("carbohydrate"))
+transp_rule_car    = as.data.frame(rbind("id","guild","Genome_size",transp_rule_car))
+CAR_TRANSP_TOTAL   = hmm_fire.global %>% select(any_of(transp_rule_car$`microtrait_hmm-name`))
+CAR_TRANSP_TOTAL$Genome_size = as.numeric(as.character(CAR_TRANSP_TOTAL$Genome_size))
+CAR_TRANSP_TOTAL_m = CAR_TRANSP_TOTAL %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                               list(mean=mean), na.rm=TRUE))
+CAR_TRANSP_TOTAL_m = CAR_TRANSP_TOTAL_m %>% mutate(CAR_TRANSP_TOTAL = rowSums(CAR_TRANSP_TOTAL_m[,3:ncol(CAR_TRANSP_TOTAL_m)]))
+GH_T_MAG           = CAR_TRANSP_TOTAL_m %>% select(guild,Genome_size_mean,CAR_TRANSP_TOTAL)
+
+# Osmolytes - genes (MAG)
+OSMO_TOTAL.MAG = hmm_fire.global %>% select(any_of(osmo_rule$`microtrait_hmm-name`))
+OSMO_TOTAL.MAG$Genome_size = as.numeric(as.character(OSMO_TOTAL.MAG$Genome_size))
+OSMO_TOTAL.MAG_m   = OSMO_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                             list(mean=mean), na.rm=TRUE))
+OSMO_TOTAL.MAG_m   = OSMO_TOTAL.MAG_m %>% mutate(OSMO_total = rowSums(OSMO_TOTAL.MAG_m[,3:ncol(OSMO_TOTAL.MAG_m)]))
+Osmolyte_MAG       = OSMO_TOTAL.MAG_m %>% select(guild,Genome_size_mean,OSMO_total)
+
+# Biofilm - genes (MAG)
+BIO_TOTAL.MAG = hmm_fire.global %>% select(any_of(biofilm_rule$`microtrait_hmm-name`))
+BIO_TOTAL.MAG$Genome_size = as.numeric(as.character(BIO_TOTAL.MAG$Genome_size))
+BIO_TOTAL.MAG_m   = BIO_TOTAL.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                           list(mean=mean), na.rm=TRUE))
+BIO_TOTAL.MAG_m   = BIO_TOTAL.MAG_m %>% mutate(BIO_total = rowSums(BIO_TOTAL.MAG_m[,3:ncol(BIO_TOTAL.MAG_m)]))
+Biofilm_MAG       = BIO_TOTAL.MAG_m %>% select(guild,Genome_size_mean,BIO_total)
+
+# High Temp - genes (MAG)
+TEMP.MAG = hmm_fire.global %>% select(any_of(high.T_rule$`microtrait_hmm-name`))
+TEMP.MAG$Genome_size = as.numeric(as.character(TEMP.MAG$Genome_size))
+TEMP.MAG_m   = TEMP.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                                 list(mean=mean), na.rm=TRUE))
+TEMP.MAG_m   = TEMP.MAG_m %>% mutate(TEMP_total = rowSums(TEMP.MAG_m[,3:ncol(TEMP.MAG_m)]))
+TEMP_MAG     = TEMP.MAG_m %>% select(guild,Genome_size_mean,TEMP_total)
+
+# pH - genes (MAG)
+PH.MAG = hmm_fire.global %>% select(any_of(pH_rule$`microtrait_hmm-name`))
+PH.MAG$Genome_size = as.numeric(as.character(PH.MAG$Genome_size))
+PH.MAG_m   = PH.MAG %>% group_by(guild) %>% summarise(across(where(is.numeric), 
+                                                             list(mean=mean), na.rm=TRUE))
+PH.MAG_m   = PH.MAG_m %>% mutate(PH_total = rowSums(PH.MAG_m[,3:ncol(PH.MAG_m)]))
+PH_MAG     = PH.MAG_m %>% select(guild,Genome_size_mean,PH_total)
+
+MAG_gen_trait    = as.data.frame(cbind(Aminoacids_T_MAG,PH_MAG$PH_total,
+                                       TEMP_MAG$TEMP_total,Biofilm_MAG$BIO_total,
+                                       Osmolyte_MAG$OSMO_total,GH_T_MAG$CAR_TRANSP_TOTAL,
+                                       Transporter_MAG$transp_total,Protein_MAG$PR_total,
+                                       GH_MAG$GH_total))
+colnames(MAG_gen_trait) = c("guild","genome.size","amino.transport","pH","temp",
+                            "biofilm","osmolyte","GH.trasnport","tranport.total",
+                            "Protein","CAZy")
+
+fire_guild_n = fire_guild_n %>% mutate(guild = as.numeric(as.character(guild)))
+
+MAG_gen_trait.agg_FIRE = MAG_gen_trait %>%
+  mutate(guild = as.numeric(as.character(guild))) %>%
+  left_join(fire_guild_n, by = "guild")
+
+cat("Guilds before:", nrow(MAG_gen_trait.agg_FIRE), "\n")
+cat("Guilds with n_mags matched:", sum(!is.na(MAG_gen_trait.agg_FIRE$n_mags)), "\n")
+
+write.csv(MAG_gen_trait.agg_FIRE, file = "Intermediate_Results/MAG_gen_trait.agg_FIRE.csv")
+
+# Aggregated traits
+
+MAG_gen_trait.agg_FIRE   =  MAG_gen_trait.agg_FIRE %>% mutate(S_traits  = rowSums(MAG_gen_trait[,4:7]),
+                                                              A_traits  = rowSums(MAG_gen_trait[,9:11]),
+                                                              A_enzymes = rowSums(MAG_gen_trait[,10:11]))
+MAG_gen_trait.agg_FIRE   = MAG_gen_trait.agg_FIRE %>% mutate(A_S = A_traits/S_traits)
+
+# Plotting
+
+weighted_cor = function(x, y, w) {
+  ok = complete.cases(x, y, w)
+  if (sum(ok) < 3) return(list(r = NA, p = NA))
+  x = x[ok]; y = y[ok]; w = w[ok]
+  r = cov.wt(cbind(x, y), wt = w, cor = TRUE)$cor[1, 2]
+  p = tryCatch({ summary(lm(y ~ x, weights = w))$coefficients[2, 4] }, error = function(e) NA)
+  list(r = r, p = p)
+}
+
+res_fire = weighted_cor(MAG_gen_trait.agg_FIRE$A_traits, MAG_gen_trait.agg_FIRE$S_traits,
+                        MAG_gen_trait.agg_FIRE$n_mags)
+cat("FIRE - weighted r:", round(res_fire$r, 3), "| p:", res_fire$p, "\n")
+
+Figure_Total_S_SA_FIRE = ggplot(data = MAG_gen_trait.agg_FIRE, 
+                                aes(x = as.numeric(A_traits), y = as.numeric(S_traits),
+                                    color = A_S, weight = n_mags)) +
+  geom_point(size = 2.5) + theme_classic() + theme(text = element_text(size=14)) +
+  stat_poly_line() +
+  annotate("text", x = 3, y = 20, hjust = 0,
+           label = paste0("r = ", round(res_fire$r, 2), ", p ", 
+                          ifelse(res_fire$p < 0.001, "< 0.001", paste0("= ", round(res_fire$p, 3))))) +
+  xlab("A Traits") + ylab("S Traits") +
+  scale_color_gradient(low="red", high="blue", limits = c(0.5,8.5)) +
+  ylim(0,25) + xlim(0,40)
+Figure_Total_S_SA_FIRE
+
+# General Plot
+
+Figure_S11 = ggarrange(Figure_Total_S_SA_LOMA, Figure_Total_S_SA_FIRE, 
+                       labels = c("A","B"), ncol = 2, nrow = 1) + 
+  theme(panel.background = element_blank())
+Figure_S11
+
+pdf("Output_Data/Figures/Figure_S11.pdf", width=12, height=12*2/5)
+print(Figure_S11)
 dev.off()
 
+# Table S1 ----
 
+# Call data
+
+MAG_gen_trait_total = read.csv("Intermediate_Results/MAG_gen_trait.csv",dec=".")
+MAG_gen_test = MAG_gen_trait_total
+TOTAL_MAGs_fixed = read.csv("Intermediate_Results/TOTAL_MAGs_fixed.csv",dec=".")
+
+# Loop Function
+
+weighted_r2 = function(actual, predicted, weights) {
+  # Defensive: drop any row where actual/predicted/weights is NA or non-finite,
+  # rather than letting a single missing guild (e.g. mgr's 1 NA, ogt's 9 NA)
+  # silently propagate NA through sum() and poison the whole R2.
+  ok = stats::complete.cases(actual, predicted, weights) &
+    is.finite(actual) & is.finite(predicted) & is.finite(weights)
+  n_dropped <- sum(!ok)
+  if (n_dropped > 0) {
+    message(sprintf("weighted_r2: dropping %d row(s) with NA/non-finite actual, predicted, or weight", n_dropped))
+  }
+  actual    = actual[ok]
+  predicted = predicted[ok]
+  weights   = weights[ok]
+  
+  wmean    = weighted.mean(actual, weights)
+  ss_res   = sum(weights * (actual - predicted)^2)
+  ss_tot   = sum(weights * (actual - wmean)^2)
+  1 - ss_res / ss_tot
+}
+
+# 1. Build n_GC — the per-guild count of MAGs
+
+guild_n_GC = TOTAL_MAGs_fixed %>%
+  filter(!is.na(GC_count)) %>%
+  count(guild, name = "n_GC")
+
+MAG_gen_test_complete = MAG_gen_test %>%
+  filter(!is.na(GC_count_mean)) %>%
+  left_join(guild_n_GC, by = "guild")
+
+# 2. Four-model fitter for one trait (MAGs)
+
+run_four_models = function(trait, data, weight_mags = "n_mags", weight_gc = "n_GC",
+                           transform = c("log1p", "log", "logit")) {
+  transform = match.arg(transform)
+  df = data
+  df$.trait_raw  = df[[trait]]
+  
+  if (transform == "log1p") {
+    df$.log_trait = log(df[[trait]] + 1)   # gene-count traits: handles zero counts
+  } else if (transform == "log") {
+    n_nonpos = sum(df[[trait]] <= 0, na.rm = TRUE)
+    if (n_nonpos > 0) {
+      warning(sprintf(
+        "%s: %d rows have trait <= 0 -> log() will produce -Inf/NaN. Filter these before fitting.",
+        trait, n_nonpos))
+    }
+    df$.log_trait = log(df[[trait]])       # continuous positive variable (mgr, ogt): no pseudocount
+  } else if (transform == "logit") {
+    n_bad = sum(df[[trait]] <= 0 | df[[trait]] >= 1, na.rm = TRUE)
+    if (n_bad > 0) {
+      warning(sprintf(
+        "%s: %d rows have trait <= 0 or >= 1 -> qlogis() will produce -Inf/Inf. Filter these before fitting.",
+        trait, n_bad))
+    }
+    df$.log_trait = qlogis(df[[trait]])    # logit transform for bounded proportions (CUE)
+  }
+  
+  df$.log_genome = log(df$genome.size)
+  df$.w_mags     = df[[weight_mags]]
+  df$.w_gc       = df[[weight_gc]]
+  
+  # Model 1: linear, raw scale
+  m1 = lm(.trait_raw ~ genome.size, weights = .w_mags, data = df)
+  
+  # Model 2: power law / logit-linear, R2 back-transformed to raw scale for
+  # direct comparison with Model 1
+  m2 = lm(.log_trait ~ .log_genome, weights = .w_mags, data = df)
+  # newdata=df forces evaluation on every row of df, aligned positionally,
+  # regardless of the session's na.action setting (na.omit would otherwise
+  # silently return a SHORTER vector, misaligning row-by-row with df$.trait_raw)
+  pred_link_m2 = predict(m2, newdata = df)
+  pred_raw_m2  = switch(transform,
+                        log1p = exp(pred_link_m2) - 1,
+                        log   = exp(pred_link_m2),
+                        logit = plogis(pred_link_m2))
+  m2_r2_bt    = weighted_r2(df$.trait_raw, pred_raw_m2, df$.w_mags)
+  
+  # Model 3: confound check (completeness/contamination), same scale as M2/M4
+  m3 = lm(.log_trait ~ .log_genome + completeness_mean + contamination_mean,
+          weights = .w_mags, data = df)
+  
+  # Model 4: GC alternative — uses its OWN weight (n_GC), not n_mags
+  m4 = lm(.log_trait ~ GC_count_mean, weights = .w_gc, data = df)
+  
+  list(trait = trait, n = nrow(df),
+       model1 = m1, model2 = m2, model2_R2_backtransformed = m2_r2_bt,
+       model3 = m3, model4 = m4)
+}
+
+# Extract 
+
+extract_summary = function(model, r2_override = NULL) {
+  s  = summary(model)
+  co = coef(model)
+  n  = length(residuals(model))
+  p  = length(co) - 1L  # number of predictors, excluding intercept
+  
+  if (!is.null(r2_override)) {
+    R2     = r2_override
+    R2_adj = 1 - (1 - r2_override) * (n - 1) / (n - p - 1)
+  } else {
+    R2     = s$r.squared
+    R2_adj = s$adj.r.squared
+  }
+  
+  data.frame(
+    formula   = deparse(formula(model)),
+    n         = n,
+    R2        = R2,
+    R2_adj    = R2_adj,
+    intercept = unname(co[1]),
+    slope     = unname(co[2]),
+    p_slope   = coef(s)[2, 4],
+    AIC       = AIC(model)
+  )
+}
+
+# 4. Generalize into a loop across all remaining MAG traits
+
+mag_traits = c("pH", "temp", "biofilm", "osmolyte",
+               "CAZy", "Protein", "tranport.total",
+               "GH.trasnport", "amino.transport")
+
+mag_results_list = lapply(mag_traits, function(tr) {
+  fit = run_four_models(tr, MAG_gen_test_complete)
+  bind_rows(
+    extract_summary(fit$model1) |> mutate(trait = tr, model = "1_linear"),
+    extract_summary(fit$model2, fit$model2_R2_backtransformed) |>
+      mutate(trait = tr, model = "2_powerlaw_backtransformed"),
+    extract_summary(fit$model3) |> mutate(trait = tr, model = "3_confound_check"),
+    extract_summary(fit$model4) |> mutate(trait = tr, model = "4_GC_alternative")
+  )
+})
+MAG_TableS1 = bind_rows(mag_results_list) |>
+  select(trait, model, n, formula, intercept, slope, p_slope, R2, R2_adj, AIC)
+
+# 5. mgr, ogt, CUE
+
+mgr_fit = run_four_models("mgr", MAG_gen_test_complete, transform = "log")
+ogt_fit = run_four_models("ogt", MAG_gen_test_complete, transform = "log")
+
+mgr_ogt_table = bind_rows(
+  bind_rows(
+    extract_summary(mgr_fit$model1) |> mutate(model = "1_linear"),
+    extract_summary(mgr_fit$model2, mgr_fit$model2_R2_backtransformed) |>
+      mutate(model = "2_powerlaw_backtransformed"),
+    extract_summary(mgr_fit$model3) |> mutate(model = "3_confound_check"),
+    extract_summary(mgr_fit$model4) |> mutate(model = "4_GC_alternative")
+  ) |> mutate(trait = "mgr"),
+  bind_rows(
+    extract_summary(ogt_fit$model1) |> mutate(model = "1_linear"),
+    extract_summary(ogt_fit$model2, ogt_fit$model2_R2_backtransformed) |>
+      mutate(model = "2_powerlaw_backtransformed"),
+    extract_summary(ogt_fit$model3) |> mutate(model = "3_confound_check"),
+    extract_summary(ogt_fit$model4) |> mutate(model = "4_GC_alternative")
+  ) |> mutate(trait = "ogt")
+)
+
+# CUE — proportion, log-transformed 
+
+MAG_gen_trait_total = read.csv("Intermediate_Results/MAG_gen_trait.csv", dec = ".")
+MAG_gen_test = MAG_gen_trait_total
+TOTAL_MAGs_fixed = read.csv("Intermediate_Results/TOTAL_MAGs_fixed.csv", dec = ".")
+total_genes.guild.940_MAG = read.csv("Intermediate_Results/total_genes.guild.940_MAG.csv", dec = ".")
+sim_10000 = read.csv("Output_Data/my_MAGs_BGE_glucose_10000.csv")
+
+guild_n_GC = TOTAL_MAGs_fixed %>%
+  filter(!is.na(GC_count)) %>%
+  count(guild, name = "n_GC")
+
+# Used by all traits EXCEPT CUE (pH, temp, CAZy, Protein, transporters, mgr, ogt, etc.)
+MAG_gen_test_complete = MAG_gen_test %>%
+  filter(!is.na(GC_count_mean)) %>%
+  left_join(guild_n_GC, by = "guild")
+
+# CUE only
+
+guild_lookup = total_genes.guild.940_MAG %>% select(id, guild)
+
+cue_with_guild = sim_10000 %>%
+  left_join(guild_lookup, by = c("MAG_id" = "id")) %>%
+  filter(!is.na(guild))
+
+guild_cue_without = cue_with_guild %>%
+  filter(BGE <= 0.848) %>%
+  group_by(guild) %>%
+  summarise(CUE_mean = mean(BGE, na.rm = TRUE),
+            genome.size = mean(genomesize, na.rm = TRUE),
+            n_cue_mags = n())
+
+MAG_gen_test_CUE_complete <- guild_cue_without %>%
+  left_join(
+    MAG_gen_test %>% select(guild, completeness_mean, contamination_mean, GC_count_mean),
+    by = "guild"
+  ) %>%
+  left_join(guild_n_GC, by = "guild")
+
+cue_fit = run_four_models("CUE_mean", MAG_gen_test_CUE_complete,
+                          weight_mags = "n_cue_mags",
+                          weight_gc   = "n_GC",
+                          transform   = "logit")
+
+cue_table = bind_rows(
+  extract_summary(cue_fit$model1) |> mutate(model = "1_linear"),
+  extract_summary(cue_fit$model2, cue_fit$model2_R2_backtransformed) |>
+    mutate(model = "2_powerlaw_backtransformed"),
+  extract_summary(cue_fit$model3) |> mutate(model = "3_confound_check"),
+  extract_summary(cue_fit$model4) |> mutate(model = "4_GC_alternative")
+) |> mutate(trait = "CUE_mean")
+
+# Merge tables 
+
+Total_Models = as.data.frame(rbind(MAG_TableS1,mgr_ogt_table,cue_table))
+
+write.csv(Total_Models, file = "Output_Data/MAG_model_comparison.csv")
+
+# Table S2 ----
+
+ISO_gen_TOTAL_ab    = read.csv("Intermediate_Results/Isolates_gen_trait.csv",dec=".")
+
+# Traits
+
+run_two_models_isolates = function(trait, data, weight_col = NULL,
+                                   transform = c("log1p", "log", "logit")) {
+  transform = match.arg(transform)
+  df = data
+  df$.trait_raw  = df[[trait]]
+  
+  if (transform == "log1p") {
+    df$.log_trait = log(df[[trait]] + 1)
+  } else if (transform == "log") {
+    n_nonpos <- sum(df[[trait]] <= 0, na.rm = TRUE)
+    if (n_nonpos > 0) {
+      warning(sprintf("%s: %d rows have trait <= 0 -> log() will produce -Inf/NaN.", trait, n_nonpos))
+    }
+    df$.log_trait = log(df[[trait]])
+  } else if (transform == "logit") {
+    n_bad <- sum(df[[trait]] <= 0 | df[[trait]] >= 1, na.rm = TRUE)
+    if (n_bad > 0) {
+      warning(sprintf("%s: %d rows have trait <= 0 or >= 1 -> qlogis() will produce -Inf/Inf.", trait, n_bad))
+    }
+    df$.log_trait = qlogis(df[[trait]])
+  }
+  
+  df$.log_genome = log(df$genome.size)
+  
+  if (!is.null(weight_col) && weight_col %in% names(df)) {
+    df$.w = df[[weight_col]]
+    m1 = lm(.trait_raw ~ genome.size, weights = .w, data = df)
+    m2 = lm(.log_trait ~ .log_genome, weights = .w, data = df)
+  } else {
+    df$.w = 1
+    m1 = lm(.trait_raw ~ genome.size, data = df)
+    m2 = lm(.log_trait ~ .log_genome, data = df)
+  }
+  
+  pred_link_m2 = predict(m2, newdata = df)
+  pred_raw_m2  = switch(transform,
+                        log1p = exp(pred_link_m2) - 1,
+                        log   = exp(pred_link_m2),
+                        logit = plogis(pred_link_m2))
+  m2_r2_bt = weighted_r2(df$.trait_raw, pred_raw_m2, df$.w)
+  
+  list(trait = trait, n = nrow(df), model1 = m1, model2 = m2,
+       model2_R2_backtransformed = m2_r2_bt)
+}
+
+iso_traits = c("pH", "temp", "biofilm", "osmolyte",
+               "CAZy", "Protein", "tranport.total",
+               "GH.trasnport", "amino.transport")  
+
+iso_results_list = lapply(iso_traits, function(tr) {
+  fit = run_two_models_isolates(tr, ISO_gen_TOTAL_ab, "n_mags")
+  bind_rows(
+    extract_summary(fit$model1) |> mutate(trait = tr, model = "1_linear"),
+    extract_summary(fit$model2, fit$model2_R2_backtransformed) |>
+      mutate(trait = tr, model = "2_powerlaw_backtransformed")
+  )
+})
+
+ISO_TableS2 = bind_rows(iso_results_list) |>
+  select(trait, model, n, formula, intercept, slope, p_slope, R2, R2_adj, AIC)
+
+# MGR, OGT and CUE
+
+mgr_iso_fit = run_two_models_isolates("mgr", ISO_gen_TOTAL_ab, "n_mags", transform = "log")
+ogt_iso_fit = run_two_models_isolates("ogt", ISO_gen_TOTAL_ab, "n_mags", transform = "log")
+
+mgr_ogt_iso_table = bind_rows(
+  bind_rows(
+    extract_summary(mgr_iso_fit$model1) |> mutate(model = "1_linear"),
+    extract_summary(mgr_iso_fit$model2, mgr_iso_fit$model2_R2_backtransformed) |>
+      mutate(model = "2_powerlaw_backtransformed")
+  ) |> mutate(trait = "mgr"),
+  bind_rows(
+    extract_summary(ogt_iso_fit$model1) |> mutate(model = "1_linear"),
+    extract_summary(ogt_iso_fit$model2, ogt_iso_fit$model2_R2_backtransformed) |>
+      mutate(model = "2_powerlaw_backtransformed")
+  ) |> mutate(trait = "ogt")
+)
+
+# CUE
+
+range(ISO_gen_TOTAL_ab$CUE_mean, na.rm = TRUE)
+sum(ISO_gen_TOTAL_ab$CUE_mean > 0.848, na.rm = TRUE)
+
+cue_iso_fit = run_two_models_isolates("CUE_mean", ISO_gen_TOTAL_ab, "CUE_n_isolates", transform = "logit")
+
+cue_iso_table = bind_rows(
+  extract_summary(cue_iso_fit$model1) |> mutate(model = "1_linear"),
+  extract_summary(cue_iso_fit$model2, cue_iso_fit$model2_R2_backtransformed) |>
+    mutate(model = "2_powerlaw_backtransformed")
+) |> mutate(trait = "CUE_mean")
+
+# Merge tables 
+
+Total_Models_ISO = as.data.frame(rbind(ISO_TableS2,mgr_ogt_iso_table,cue_iso_table))
+
+write.csv(Total_Models_ISO, file = "Output_Data/ISOLATES_model_comparison.csv")

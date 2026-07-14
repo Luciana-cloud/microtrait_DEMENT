@@ -62,6 +62,10 @@ hmm_loma.global = hmm_loma.global %>%
 
 hmm_loma.global = hmm_loma.global %>% filter(guild != 35)
 
+loma_guild_n = hmm_loma.global %>% 
+  filter(guild != 35) %>% 
+  count(guild, name = "n_mags")
+
 # Total Traits
 
 # Call Trait Keys 
@@ -167,26 +171,50 @@ colnames(MAG_gen_trait) = c("guild","genome.size","amino.transport","pH","temp",
                             "biofilm","osmolyte","GH.trasnport","tranport.total",
                             "Protein","CAZy")
 
-write.csv(MAG_gen_trait, file = "Intermediate_Results/LOMA_microtrait.csv")
+loma_guild_n = loma_guild_n %>% mutate(guild = as.numeric(as.character(guild)))
+
+MAG_gen_trait.agg_LOMA = MAG_gen_trait %>%
+  mutate(guild = as.numeric(as.character(guild))) %>%
+  left_join(loma_guild_n, by = "guild")
+
+cat("Guilds before:", nrow(MAG_gen_trait.agg_LOMA), "\n")
+cat("Guilds with n_mags matched:", sum(!is.na(MAG_gen_trait.agg_LOMA$n_mags)), "\n")
 
 # Aggregated traits
 
-MAG_gen_trait.agg   =  MAG_gen_trait %>% mutate(S_traits  = rowSums(MAG_gen_trait[,4:7]),
+MAG_gen_trait.agg_LOMA   =  MAG_gen_trait.agg_LOMA %>% mutate(S_traits  = rowSums(MAG_gen_trait[,4:7]),
                                                 A_traits  = rowSums(MAG_gen_trait[,9:11]),
                                                 A_enzymes = rowSums(MAG_gen_trait[,10:11]))
-MAG_gen_trait.agg   = MAG_gen_trait.agg %>% mutate(A_S = A_traits/S_traits)
+MAG_gen_trait.agg_LOMA   = MAG_gen_trait.agg_LOMA %>% mutate(A_S = A_traits/S_traits)
+
+write.csv(MAG_gen_trait.agg_LOMA, file = "Intermediate_Results/MAG_gen_trait.agg_LOMA.csv")
 
 # Plotting
 
-Figure_Total_S_SA_LOMA   = ggplot(data = MAG_gen_trait.agg, aes(x = as.numeric((A_traits)), 
-                                                                  y = as.numeric((S_traits)),color = A_S)) +
+weighted_cor = function(x, y, w) {
+  ok = complete.cases(x, y, w)
+  if (sum(ok) < 3) return(list(r = NA, p = NA))
+  x = x[ok]; y = y[ok]; w = w[ok]
+  r = cov.wt(cbind(x, y), wt = w, cor = TRUE)$cor[1, 2]
+  p = tryCatch({ summary(lm(y ~ x, weights = w))$coefficients[2, 4] }, error = function(e) NA)
+  list(r = r, p = p)
+}
+
+res_loma = weighted_cor(MAG_gen_trait.agg_LOMA$A_traits, MAG_gen_trait.agg_LOMA$S_traits,
+                        MAG_gen_trait.agg_LOMA$n_mags)
+cat("LOMA - weighted r:", round(res_loma$r, 3), "| p:", res_loma$p, "\n")
+
+Figure_Total_S_SA_LOMA = ggplot(data = MAG_gen_trait.agg_LOMA, 
+                                aes(x = as.numeric(A_traits), y = as.numeric(S_traits),
+                                    color = A_S, weight = n_mags)) +
   geom_point(size = 2.5) + theme_classic() + theme(text = element_text(size=14)) +
   stat_poly_line() +
-  stat_cor(method = "pearson", label.x = 3, label.y = 20) + 
-  xlab("A Traits") + 
-  ylab("S Traits") +
-  theme() + scale_color_gradient(low="red", high="blue", limits = c(0.5,8.5))  + 
-  ylim(0,25)  + xlim(0,50) 
+  annotate("text", x = 3, y = 20, hjust = 0,
+           label = paste0("r = ", round(res_loma$r, 2), ", p ", 
+                          ifelse(res_loma$p < 0.001, "< 0.001", paste0("= ", round(res_loma$p, 3))))) +
+  xlab("A Traits") + ylab("S Traits") +
+  scale_color_gradient(low="red", high="blue", limits = c(0.5,8.5)) +
+  ylim(0,25) + xlim(0,40)
 Figure_Total_S_SA_LOMA
 
 # Fire Project Analysis ----
@@ -246,6 +274,10 @@ hmm_fire.global        = as.data.frame(cbind(genome2guild,hmm_fire.global))
 
 hmm_fire.global = hmm_fire.global %>%
   left_join(fire_size, by = c("id"))
+
+fire_guild_n = hmm_fire.global %>% 
+  filter(guild != 35) %>% 
+  count(guild, name = "n_mags")
 
 # Total Traits
 
@@ -352,37 +384,60 @@ colnames(MAG_gen_trait) = c("guild","genome.size","amino.transport","pH","temp",
                             "biofilm","osmolyte","GH.trasnport","tranport.total",
                             "Protein","CAZy")
 
-write.csv(MAG_gen_trait, file = "Intermediate_Results/FIRE_microtrait.csv")
+fire_guild_n = fire_guild_n %>% mutate(guild = as.numeric(as.character(guild)))
+
+MAG_gen_trait.agg_FIRE = MAG_gen_trait %>%
+  mutate(guild = as.numeric(as.character(guild))) %>%
+  left_join(fire_guild_n, by = "guild")
+
+cat("Guilds before:", nrow(MAG_gen_trait.agg_FIRE), "\n")
+cat("Guilds with n_mags matched:", sum(!is.na(MAG_gen_trait.agg_FIRE$n_mags)), "\n")
+
+write.csv(MAG_gen_trait.agg_FIRE, file = "Intermediate_Results/MAG_gen_trait.agg_FIRE.csv")
 
 # Aggregated traits
 
-MAG_gen_trait.agg   =  MAG_gen_trait %>% mutate(S_traits  = rowSums(MAG_gen_trait[,4:7]),
+MAG_gen_trait.agg_FIRE   =  MAG_gen_trait.agg_FIRE %>% mutate(S_traits  = rowSums(MAG_gen_trait[,4:7]),
                                                 A_traits  = rowSums(MAG_gen_trait[,9:11]),
                                                 A_enzymes = rowSums(MAG_gen_trait[,10:11]))
-MAG_gen_trait.agg   = MAG_gen_trait.agg %>% mutate(A_S = A_traits/S_traits)
+MAG_gen_trait.agg_FIRE   = MAG_gen_trait.agg_FIRE %>% mutate(A_S = A_traits/S_traits)
 
-# Plotting 
+# Plotting
 
-Figure_Total_S_SA_FIRE   = ggplot(data = MAG_gen_trait.agg, aes(x = as.numeric((A_traits)), 
-                                                                y = as.numeric((S_traits)),color = A_S)) +
+weighted_cor = function(x, y, w) {
+  ok = complete.cases(x, y, w)
+  if (sum(ok) < 3) return(list(r = NA, p = NA))
+  x = x[ok]; y = y[ok]; w = w[ok]
+  r = cov.wt(cbind(x, y), wt = w, cor = TRUE)$cor[1, 2]
+  p = tryCatch({ summary(lm(y ~ x, weights = w))$coefficients[2, 4] }, error = function(e) NA)
+  list(r = r, p = p)
+}
+
+res_fire = weighted_cor(MAG_gen_trait.agg_FIRE$A_traits, MAG_gen_trait.agg_FIRE$S_traits,
+                        MAG_gen_trait.agg_FIRE$n_mags)
+cat("FIRE - weighted r:", round(res_fire$r, 3), "| p:", res_fire$p, "\n")
+
+Figure_Total_S_SA_FIRE = ggplot(data = MAG_gen_trait.agg_FIRE, 
+                                aes(x = as.numeric(A_traits), y = as.numeric(S_traits),
+                                    color = A_S, weight = n_mags)) +
   geom_point(size = 2.5) + theme_classic() + theme(text = element_text(size=14)) +
   stat_poly_line() +
-  stat_cor(method = "pearson", label.x = 3, label.y = 15) + 
-  xlab("A Traits") + 
-  ylab("S Traits") +
-  theme() + scale_color_gradient(low="red", high="blue", limits = c(0.5,8.5))  + 
-  ylim(0,20)  + xlim(0,40) 
+  annotate("text", x = 3, y = 20, hjust = 0,
+           label = paste0("r = ", round(res_fire$r, 2), ", p ", 
+                          ifelse(res_fire$p < 0.001, "< 0.001", paste0("= ", round(res_fire$p, 3))))) +
+  xlab("A Traits") + ylab("S Traits") +
+  scale_color_gradient(low="red", high="blue", limits = c(0.5,8.5)) +
+  ylim(0,25) + xlim(0,40)
 Figure_Total_S_SA_FIRE
 
 # General Plot ----
 
 Figure_S11 = ggarrange(Figure_Total_S_SA_LOMA, Figure_Total_S_SA_FIRE, 
-                     labels = c("A","B"),
-                     ncol = 2, nrow = 1) + theme(panel.background = element_blank())
-
+                       labels = c("A","B"), ncol = 2, nrow = 1) + 
+  theme(panel.background = element_blank())
 Figure_S11
-pdf("Output_Data/Figures/Figure_S11.pdf",
-    width=12,height=12*2/5)
+
+pdf("Output_Data/Figures/Figure_S11.pdf", width=12, height=12*2/5)
 print(Figure_S11)
 dev.off()
 
