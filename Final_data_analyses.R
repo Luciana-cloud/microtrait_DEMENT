@@ -30,6 +30,10 @@ library(GGally)
 library(reshape2)
 library(factoextra)
 library(domir)
+library(patchwork)
+library(ggrastr)
+library(gtable)
+library(grid)
 
 # Set directory----
 
@@ -1801,15 +1805,71 @@ trait_cols = c("Yield","OGT","MGR","Amino-transporter","GH-transporter",
                "Total-transporter","Protein-enzyme","CAZy","pH-Tol","Temp-Tol", 
                "Biofilm", "Osmolyte", "Completeness","Contamination","GC-count")
 
-Figure_S3_weighted = ggpairs(MAG_corr_data, 
+# Rastering the Figure
+
+my_fn_lower_rastered = function(data, mapping, ...) {
+  ggplot(data = data, mapping = mapping) +
+    rasterise(geom_point(size = 0.5, alpha = 0.4), dpi = 300) +
+    geom_smooth(method = "lm", se = TRUE, color = "black", linewidth = 0.5)
+}
+
+Figure_S3_weighted = ggpairs(MAG_corr_data,
                              columns = trait_cols,
                              upper = list(continuous = my_fn_weighted),
-                             lower = list(continuous = "smooth"))
-Figure_S3_weighted
+                             lower = list(continuous = my_fn_lower_rastered))
 
-pdf("Output_Data/Figures/Figure_S3.pdf",
-    width=4*4,height=4*4)
-print(Figure_S3_weighted)
+# Adding axes
+
+n = length(trait_cols)
+
+units_vec = c("-","°C", "1/hrs", "genes", "genes", "genes", "genes", "genes",
+              "genes", "genes", "genes", "genes", "%", "%", "%")
+
+# Adding headings
+
+gt = ggmatrix_gtable(Figure_S3_weighted)
+gt = gtable_add_rows(gt, heights = unit(1.2, "cm"), pos = 0)
+
+group_ranges = list(Y = c(1, 3), A = c(4, 8), S = c(9, 12), Genomic = c(13, 15))
+group_colors = c(Y = "#1a7a1a", A = "#1a75ff", S = "#cc0000", Genomic = "#cc7a1a")
+
+panel_to_gridcol = function(j) 5 + 2 * j
+
+for (grp in names(group_ranges)) {
+  jr = group_ranges[[grp]]
+  l_col = panel_to_gridcol(jr[1])
+  r_col = panel_to_gridcol(jr[2])
+  gt = gtable_add_grob(gt, rectGrob(gp = gpar(fill = group_colors[[grp]], col = NA)),
+                       t = 1, l = l_col, r = r_col, name = paste0("hdr-rect-", grp))
+  gt = gtable_add_grob(gt, textGrob(grp, gp = gpar(col = "white", fontsize = 20, fontface = "bold")),
+                       t = 1, l = l_col, r = r_col, name = paste0("hdr-text-", grp))
+}
+
+gt = gtable_add_rows(gt, heights = unit(1, "cm"), pos = nrow(gt))
+bottom_row = nrow(gt)
+gt = gtable_add_cols(gt, widths = unit(1.2, "cm"), pos = 0)
+left_col = 1
+
+get_panel_pos = function(col_idx, row_idx) {
+  nm = paste0("panel-", col_idx, "-", row_idx)
+  gt$layout[gt$layout$name == nm, c("t", "l")]
+}
+
+for (j in 1:n) {
+  pos = get_panel_pos(j, n)
+  gt = gtable_add_grob(gt, textGrob(units_vec[j], gp = gpar(fontsize = 9)),
+                       t = bottom_row, l = pos$l, name = paste0("xlab-", j))
+}
+for (i in 1:n) {
+  pos = get_panel_pos(1, i)
+  gt = gtable_add_grob(gt, textGrob(units_vec[i], rot = 90, gp = gpar(fontsize = 9)),
+                       t = pos$t, l = left_col, name = paste0("ylab-", i))
+}
+
+# Save
+
+pdf("Output_Data/Figures/Figure_S3.pdf", width = 4*4, height = 4*4)
+grid.draw(gt)
 dev.off()
 
 # Fig_S7 ----
