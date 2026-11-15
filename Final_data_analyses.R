@@ -37,7 +37,7 @@ library(grid)
 
 # Set directory----
 
-setwd("C:/Users/lucia/OneDrive - Wageningen University & Research/UCI_projects/project_1_Microtrait_DEMENT/Manuscript/Dataset")
+setwd("C:/luciana_datos/project_1_Microtrait_DEMENT/Manuscript/Dataset")
 
 # Calling data IMG-JGI----
 
@@ -1761,15 +1761,16 @@ weighted_cor = function(x, y, w) {
   list(r = r, p = p)
 }
 
-sig_stars = function(p) {
+# Bonferroni-adjusted stars; m = number of comparisons in the matrix (105 for 15 traits)
+sig_stars_bonf = function(p, m = choose(length(trait_cols), 2)) {
   if (is.na(p)) return("")
-  if (p < 0.001) return("***")
-  if (p < 0.01) return("**")
-  if (p < 0.05) return("*")
+  p_adj = min(1, p * m)
+  if (p_adj < 0.001) return("***")
+  if (p_adj < 0.01)  return("**")
+  if (p_adj < 0.05)  return("*")
+  if (p < 0.05)      return("\u2020")      # dagger: nominal p < 0.05 only, not significant after correction
   return("")
 }
-
-# Step 3: custom ggpairs panel function - weighted correlation,
 
 my_fn_weighted = function(data, mapping, ...) {
   x_col = rlang::as_label(mapping$x)
@@ -1777,13 +1778,11 @@ my_fn_weighted = function(data, mapping, ...) {
   x = eval_data_col(data, mapping$x)
   y = eval_data_col(data, mapping$y)
   
-  # Use n_cue_mags if Yield is involved in this pair, otherwise n_mags
-  # (checking against "Yield" - the renamed display column, not "CUE_mean")
   w = if (x_col == "Yield" | y_col == "Yield") data$n_cue_mags else data$n_mags
   
   result = weighted_cor(x, y, w)
   corr = result$r
-  stars = sig_stars(result$p)
+  stars = sig_stars_bonf(result$p)                                  # CHANGED
   
   colFn = colorRampPalette(c("red", "white", "blue"), interpolate = 'spline')
   fill = if (is.na(corr)) "grey90" else colFn(100)[findInterval(corr, seq(-1, 1, length = 100))]
@@ -1794,7 +1793,7 @@ my_fn_weighted = function(data, mapping, ...) {
     annotate("text", x = 0.5, y = 0.5, label = label_text, size = 3.5) +
     theme_void() +
     theme(panel.background = element_rect(fill = fill)) +
-    xlim(0,1) + ylim(0,1)
+    xlim(0, 1) + ylim(0, 1)
 }
 # Step 4: build the plot
 # IMPORTANT: n_mags AND n_cue_mags must both be present in MAG_corr_data
@@ -1868,7 +1867,7 @@ for (i in 1:n) {
 
 # Save
 
-pdf("Output_Data/Figures/Figure_S3.pdf", width = 4*4, height = 4*4)
+pdf("Output_Data/Figures/Figure_S3_new.pdf", width = 4*4, height = 4*4)
 grid.draw(gt)
 dev.off()
 
@@ -1920,15 +1919,16 @@ weighted_cor = function(x, y, w) {
   list(r = r, p = p)
 }
 
-sig_stars = function(p) {
+# Bonferroni-adjusted stars; m = number of comparisons in the matrix (105 for 15 traits)
+sig_stars_bonf = function(p, m = choose(length(trait_cols), 2)) {
   if (is.na(p)) return("")
-  if (p < 0.001) return("***")
-  if (p < 0.01) return("**")
-  if (p < 0.05) return("*")
+  p_adj = min(1, p * m)
+  if (p_adj < 0.001) return("***")
+  if (p_adj < 0.01)  return("**")
+  if (p_adj < 0.05)  return("*")
+  if (p < 0.05)      return("\u2020")      # dagger: nominal p < 0.05 only, not significant after correction
   return("")
 }
-
-# Step 3: custom ggpairs panel function - weighted correlation,
 
 my_fn_weighted = function(data, mapping, ...) {
   x_col = rlang::as_label(mapping$x)
@@ -1936,13 +1936,11 @@ my_fn_weighted = function(data, mapping, ...) {
   x = eval_data_col(data, mapping$x)
   y = eval_data_col(data, mapping$y)
   
-  # Use n_cue_mags if Yield is involved in this pair, otherwise n_mags
-  # (checking against "Yield" - the renamed display column, not "CUE_mean")
   w = if (x_col == "Yield" | y_col == "Yield") data$n_cue_mags else data$n_mags
   
   result = weighted_cor(x, y, w)
   corr = result$r
-  stars = sig_stars(result$p)
+  stars = sig_stars_bonf(result$p)                                  # CHANGED
   
   colFn = colorRampPalette(c("red", "white", "blue"), interpolate = 'spline')
   fill = if (is.na(corr)) "grey90" else colFn(100)[findInterval(corr, seq(-1, 1, length = 100))]
@@ -1953,7 +1951,7 @@ my_fn_weighted = function(data, mapping, ...) {
     annotate("text", x = 0.5, y = 0.5, label = label_text, size = 3.5) +
     theme_void() +
     theme(panel.background = element_rect(fill = fill)) +
-    xlim(0,1) + ylim(0,1)
+    xlim(0, 1) + ylim(0, 1)
 }
 # Step 4: build the plot
 
@@ -2055,44 +2053,48 @@ weighted_cor = function(x, y, w) {
   if (sum(ok) < 3) return(list(r = NA, p = NA))
   x = x[ok]; y = y[ok]; w = w[ok]
   r = cov.wt(cbind(x, y), wt = w, cor = TRUE)$cor[1, 2]
+  # p-value via weighted lm - mathematically equivalent to testing correlation significance
   p = tryCatch({
     summary(lm(y ~ x, weights = w))$coefficients[2, 4]
   }, error = function(e) NA)
   list(r = r, p = p)
 }
 
-sig_stars = function(p) {
+# Bonferroni-adjusted stars; m = number of comparisons in the matrix (n_tests, set before ggpairs)
+sig_stars_bonf = function(p, m = n_tests) {                          # CHANGED
   if (is.na(p)) return("")
-  if (p < 0.001) return("***")
-  if (p < 0.01) return("**")
-  if (p < 0.05) return("*")
+  p_adj = min(1, p * m)
+  if (p_adj < 0.001) return("***")
+  if (p_adj < 0.01)  return("**")
+  if (p_adj < 0.05)  return("*")
+  if (p < 0.05)      return("\u2020")      # dagger: nominal p < 0.05 only, not significant after correction
   return("")
 }
 
-my_fn_weighted_iso = function(data, mapping, ...) {
+
+my_fn_weighted = function(data, mapping, ...) {
   x_col = rlang::as_label(mapping$x)
   y_col = rlang::as_label(mapping$y)
   x = eval_data_col(data, mapping$x)
   y = eval_data_col(data, mapping$y)
   
-  # Use n_cue_mags if Yield is involved, otherwise n_mags
   w = if (x_col == "Yield" | y_col == "Yield") data$n_cue_mags else data$n_mags
   
   result = weighted_cor(x, y, w)
   corr = result$r
-  stars = sig_stars(result$p)
+  stars = sig_stars_bonf(result$p)
   
   colFn = colorRampPalette(c("red", "white", "blue"), interpolate = 'spline')
   fill = if (is.na(corr)) "grey90" else colFn(100)[findInterval(corr, seq(-1, 1, length = 100))]
+  
   label_text = if (is.na(corr)) "NA" else sprintf("Corr: %.3f%s", corr, stars)
   
   ggplot() +
     annotate("text", x = 0.5, y = 0.5, label = label_text, size = 3.5) +
     theme_void() +
     theme(panel.background = element_rect(fill = fill)) +
-    xlim(0,1) + ylim(0,1)
+    xlim(0, 1) + ylim(0, 1)
 }
-
 # Step 4: readable column names
 # NOTE: n_mags and n_cue_mags NOT renamed - accessed programmatically.
 # NOTE: no Completeness/Contamination/GC-count - see header note above.
@@ -2119,6 +2121,10 @@ col_order = c("Yield","OGT","MGR","Amino-transporter","GH-transporter",
               "Total-transporter","Protein-enzyme","CAZy","pH-Tol","Temp-Tol", 
               "Biofilm", "Osmolyte")
 
+# Number of comparisons for the Bonferroni correction
+n_tests = choose(length(col_order), 2)                               # CHANGED (new)
+n_tests                                                              # CHANGED (new): should print 66
+
 # Step 5: build the plot
 
 # Rastering the Figure
@@ -2131,7 +2137,7 @@ my_fn_lower_rastered = function(data, mapping, ...) {
 
 Figure_S3_weighted = ggpairs(ISO_corr_data,
                              columns = col_order,
-                             upper = list(continuous = my_fn_weighted_iso),
+                             upper = list(continuous = my_fn_weighted),
                              lower = list(continuous = my_fn_lower_rastered))
 
 # Adding axes
@@ -2184,7 +2190,7 @@ for (i in 1:n) {
 
 # Save
 
-pdf("Output_Data/Figures/Figure_S4.pdf", width = 4*4, height = 4*4)
+pdf("Output_Data/Figures/Figure_S4_new.pdf", width = 4*4, height = 4*4)
 grid.draw(gt)
 dev.off()
 
@@ -2211,42 +2217,47 @@ weighted_cor = function(x, y, w) {
   if (sum(ok) < 3) return(list(r = NA, p = NA))
   x = x[ok]; y = y[ok]; w = w[ok]
   r = cov.wt(cbind(x, y), wt = w, cor = TRUE)$cor[1, 2]
+  # p-value via weighted lm - mathematically equivalent to testing correlation significance
   p = tryCatch({
     summary(lm(y ~ x, weights = w))$coefficients[2, 4]
   }, error = function(e) NA)
   list(r = r, p = p)
 }
 
-sig_stars = function(p) {
+# Bonferroni-adjusted stars; m = number of comparisons in the matrix (n_tests, set before ggpairs)
+sig_stars_bonf = function(p, m = n_tests) {
   if (is.na(p)) return("")
-  if (p < 0.001) return("***")
-  if (p < 0.01) return("**")
-  if (p < 0.05) return("*")
+  p_adj = min(1, p * m)
+  if (p_adj < 0.001) return("***")
+  if (p_adj < 0.01)  return("**")
+  if (p_adj < 0.05)  return("*")
+  if (p < 0.05)      return("\u2020")      # dagger: nominal p < 0.05 only, not significant after correction
   return("")
 }
 
-my_fn_weighted_iso = function(data, mapping, ...) {
+
+my_fn_weighted = function(data, mapping, ...) {
   x_col = rlang::as_label(mapping$x)
   y_col = rlang::as_label(mapping$y)
   x = eval_data_col(data, mapping$x)
   y = eval_data_col(data, mapping$y)
   
-  # Use n_cue_mags if Yield is involved, otherwise n_mags
   w = if (x_col == "Yield" | y_col == "Yield") data$n_cue_mags else data$n_mags
   
   result = weighted_cor(x, y, w)
   corr = result$r
-  stars = sig_stars(result$p)
+  stars = sig_stars_bonf(result$p)
   
   colFn = colorRampPalette(c("red", "white", "blue"), interpolate = 'spline')
   fill = if (is.na(corr)) "grey90" else colFn(100)[findInterval(corr, seq(-1, 1, length = 100))]
+  
   label_text = if (is.na(corr)) "NA" else sprintf("Corr: %.3f%s", corr, stars)
   
   ggplot() +
     annotate("text", x = 0.5, y = 0.5, label = label_text, size = 3.5) +
     theme_void() +
     theme(panel.background = element_rect(fill = fill)) +
-    xlim(0,1) + ylim(0,1)
+    xlim(0, 1) + ylim(0, 1)
 }
 
 # Step 4: readable column names
@@ -2275,6 +2286,10 @@ col_order = c("Yield","OGT","MGR","Amino-transporter-n","GH-transporter-n",
               "Total-transporter-n","Protein-enzyme-n","CAZy-n","pH-Tol-n","Temp-Tol-n", 
               "Biofilm-n", "Osmolyte-n")
 
+# Number of comparisons for the Bonferroni correction
+n_tests = choose(length(col_order), 2)                               # CHANGED (new)
+n_tests                                                              # CHANGED (new): should print 66
+
 # Step 5: build the plot
 
 # Rastering the Figure
@@ -2291,7 +2306,7 @@ my_fn_lower_rastered = function(data, mapping, ...) {
 
 Figure_S3_weighted = ggpairs(ISO_corr_data,
                              columns = col_order,
-                             upper = list(continuous = my_fn_weighted_iso),
+                             upper = list(continuous = my_fn_weighted),
                              lower = list(continuous = my_fn_lower_rastered))
 
 # Adding axes
@@ -2344,7 +2359,7 @@ for (i in 1:n) {
 
 # Save
 
-pdf("Output_Data/Figures/Figure_S4A.pdf", width = 4*4, height = 4*4)
+pdf("Output_Data/Figures/Figure_S4A_new.pdf", width = 4*4, height = 4*4)
 grid.draw(gt)
 dev.off()
 
