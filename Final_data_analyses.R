@@ -998,6 +998,7 @@ write.csv(MAG_gen_trait_v6, file = "Intermediate_Results/MAG_gen_trait_normalize
 
 isolates_microtrait = read_csv("Input_Data/SOIL_ISOLATES/dement_isolates_CUE.csv")
 my_isolates_BGE_glucose = read_csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/DEBmicroTrait.jl-main/DEBmicroTrait.jl-main/files/my_isolates_BGE_glucose.csv")
+total_genes.guild.940_ISO = read.csv("Intermediate_Results/total_genes.guild.940_ISO.csv",dec=".")
 
 guild_lookup_iso = total_genes.guild.940_ISO %>% select(id, guild, genome.size)
 
@@ -1723,7 +1724,7 @@ MAG_corr_data = MAG_corr_data %>%
   rename(
     "Guild" = guild,
     "Genome Size" = genome.size,
-    "Amino-transporter" = amino.transport,
+    "AA-transporter" = amino.transport,
     "pH-Tol" = pH,
     "Temp-Tol" = temp,
     "Biofilm" = biofilm,
@@ -1736,8 +1737,8 @@ MAG_corr_data = MAG_corr_data %>%
     "MGR" = mgr,
     "Completeness" = completeness_mean,
     "Contamination" = contamination_mean,
-    "GC-count" = GC_count_mean,
-    "Yield" = CUE_mean
+    "GC (%)" = GC_count_mean,
+    "CUE" = CUE_mean
   )
 
 # Step 2: weighted correlation function
@@ -1778,7 +1779,7 @@ my_fn_weighted = function(data, mapping, ...) {
   x = eval_data_col(data, mapping$x)
   y = eval_data_col(data, mapping$y)
   
-  w = if (x_col == "Yield" | y_col == "Yield") data$n_cue_mags else data$n_mags
+  w = if (x_col == "CUE" | y_col == "CUE") data$n_cue_mags else data$n_mags
   
   result = weighted_cor(x, y, w)
   corr = result$r
@@ -1800,9 +1801,9 @@ my_fn_weighted = function(data, mapping, ...) {
 # (not listed in trait_cols) so my_fn_weighted can access them via
 # data$n_mags / data$n_cue_mags even though they aren't plotted themselves.
 
-trait_cols = c("Yield","OGT","MGR","Amino-transporter","GH-transporter",
+trait_cols = c("CUE","OGT","MGR","AA-transporter","GH-transporter",
                "Total-transporter","Protein-enzyme","CAZy","pH-Tol","Temp-Tol", 
-               "Biofilm", "Osmolyte", "Completeness","Contamination","GC-count")
+               "Biofilm", "Osmolyte", "Completeness","Contamination","GC (%)")
 
 # Rastering the Figure
 
@@ -1888,7 +1889,7 @@ MAG_corr_data = MAG_corr_data %>%
   rename(
     "Guild" = guild,
     "Genome Size" = genome.size,
-    "Amino-transporter-n" = amino.transport_nor,
+    "AA-transporter-n" = amino.transport_nor,
     "pH-Tol-n" = pH_nor,
     "Temp-Tol-n" = temp_nor,
     "Biofilm-n" = biofilm_nor,
@@ -1901,8 +1902,8 @@ MAG_corr_data = MAG_corr_data %>%
     "MGR" = mgr,
     "Completeness" = completeness_mean,
     "Contamination" = contamination_mean,
-    "GC-count" = GC_count_mean,
-    "Yield" = CUE_mean
+    "GC (%)" = GC_count_mean,
+    "CUE" = CUE_mean
   )
 
 # Step 2: weighted correlation function
@@ -1936,7 +1937,7 @@ my_fn_weighted = function(data, mapping, ...) {
   x = eval_data_col(data, mapping$x)
   y = eval_data_col(data, mapping$y)
   
-  w = if (x_col == "Yield" | y_col == "Yield") data$n_cue_mags else data$n_mags
+  w = if (x_col == "CUE" | y_col == "CUE") data$n_cue_mags else data$n_mags
   
   result = weighted_cor(x, y, w)
   corr = result$r
@@ -1955,9 +1956,9 @@ my_fn_weighted = function(data, mapping, ...) {
 }
 # Step 4: build the plot
 
-trait_cols = c("Yield","OGT","MGR","Amino-transporter-n","GH-transporter-n",
+trait_cols = c("CUE","OGT","MGR","AA-transporter-n","GH-transporter-n",
                "Total-transporter-n","Protein-enzyme-n","CAZy-n","pH-Tol-n","Temp-Tol-n", 
-               "Biofilm-n", "Osmolyte-n", "Completeness","Contamination","GC-count")
+               "Biofilm-n", "Osmolyte-n", "Completeness","Contamination","GC (%)")
 
 # Rastering the Figure
 
@@ -2026,11 +2027,46 @@ for (i in 1:n) {
 
 # Save
 
-pdf("Output_Data/Figures/Figure_S3A.pdf", width = 4*4, height = 4*4)
+pdf("Output_Data/Figures/Figure_S3A_new.pdf", width = 4*4, height = 4*4)
 grid.draw(gt)
 dev.off()
 
 # Fig_S4 ----
+
+isolates_microtrait = read_csv("Input_Data/SOIL_ISOLATES/dement_isolates_CUE.csv")
+my_isolates_BGE_glucose = read_csv("C:/luciana_datos/UCI/Project_2 (microtrait-dement)/DEBmicroTrait.jl-main/DEBmicroTrait.jl-main/files/my_isolates_BGE_glucose.csv")
+total_genes.guild.940_ISO = read.csv("Intermediate_Results/total_genes.guild.940_ISO.csv",dec=".")
+
+guild_lookup_iso = total_genes.guild.940_ISO %>% select(id, guild, genome.size)
+
+guild_n_iso = total_genes.guild.940_ISO %>% count(guild, name = "n_mags")
+
+guild_lookup_iso = total_genes.guild.940_ISO %>% select(id, guild)
+
+iso_cue_with_guild = my_isolates_BGE_glucose %>%
+  left_join(guild_lookup_iso, by = c("isolate_id" = "id")) %>%
+  filter(!is.na(guild))
+
+# Genome size skew check for the CORRECTED threshold
+iso_cue_with_guild %>%
+  mutate(near_ceiling = BGE > 0.90) %>%
+  filter(!is.na(near_ceiling)) %>%
+  group_by(near_ceiling) %>%
+  summarise(mean_genome_size = mean(genomesize, na.rm=TRUE), n = n())
+
+guild_cue_iso = iso_cue_with_guild %>%
+  filter(BGE <= 0.90) %>%
+  group_by(guild) %>%
+  summarise(CUE_mean = mean(BGE, na.rm = TRUE),
+            genome.size = mean(genomesize, na.rm = TRUE),
+            n_cue_mags = n())
+
+guild_cue_iso = guild_cue_iso %>%
+  mutate(CUE_logit = log(CUE_mean / (1 - CUE_mean)))
+
+cat("Any non-finite logit values:", sum(!is.finite(guild_cue_iso$CUE_logit)), "\n")
+cat("Any single-isolate guilds:", sum(guild_cue_iso$n_cue_mags == 1), "\n")
+cat("Guilds remaining:", nrow(guild_cue_iso), "\n\n")
 
 # Step 1: check for the same stale-CUE problem we found in MAGs
 cat("Does ISO_gen_TOTAL_ab have old CUE columns?\n")
@@ -2078,7 +2114,7 @@ my_fn_weighted = function(data, mapping, ...) {
   x = eval_data_col(data, mapping$x)
   y = eval_data_col(data, mapping$y)
   
-  w = if (x_col == "Yield" | y_col == "Yield") data$n_cue_mags else data$n_mags
+  w = if (x_col == "CUE" | y_col == "CUE") data$n_cue_mags else data$n_mags
   
   result = weighted_cor(x, y, w)
   corr = result$r
@@ -2103,7 +2139,7 @@ ISO_corr_data = ISO_corr_data %>%
   rename(
     "Guild" = guild,
     "Genome Size" = genome.size,
-    "Amino-transporter" = amino.transport,
+    "AA-transporter" = amino.transport,
     "pH-Tol" = pH,
     "Temp-Tol" = temp,
     "Biofilm" = biofilm,
@@ -2114,10 +2150,10 @@ ISO_corr_data = ISO_corr_data %>%
     "CAZy" = CAZy,
     "OGT" = ogt,
     "MGR" = mgr,
-    "Yield" = CUE_mean
+    "CUE" = CUE_mean
   )
 
-col_order = c("Yield","OGT","MGR","Amino-transporter","GH-transporter",
+col_order = c("CUE","OGT","MGR","AA-transporter","GH-transporter",
               "Total-transporter","Protein-enzyme","CAZy","pH-Tol","Temp-Tol", 
               "Biofilm", "Osmolyte")
 
@@ -2242,7 +2278,7 @@ my_fn_weighted = function(data, mapping, ...) {
   x = eval_data_col(data, mapping$x)
   y = eval_data_col(data, mapping$y)
   
-  w = if (x_col == "Yield" | y_col == "Yield") data$n_cue_mags else data$n_mags
+  w = if (x_col == "CUE" | y_col == "CUE") data$n_cue_mags else data$n_mags
   
   result = weighted_cor(x, y, w)
   corr = result$r
@@ -2268,7 +2304,7 @@ ISO_corr_data = ISO_corr_data %>%
   rename(
     "Guild" = guild,
     "Genome Size" = genome.size,
-    "Amino-transporter-n" = amino.transport_nor,
+    "AA-transporter-n" = amino.transport_nor,
     "pH-Tol-n" = pH_nor,
     "Temp-Tol-n" = temp_nor,
     "Biofilm-n" = biofilm_nor,
@@ -2279,10 +2315,10 @@ ISO_corr_data = ISO_corr_data %>%
     "CAZy-n" = CAZy_nor,
     "OGT" = ogt,
     "MGR" = mgr,
-    "Yield" = CUE_mean
+    "CUE" = CUE_mean
   )
 
-col_order = c("Yield","OGT","MGR","Amino-transporter-n","GH-transporter-n",
+col_order = c("CUE","OGT","MGR","AA-transporter-n","GH-transporter-n",
               "Total-transporter-n","Protein-enzyme-n","CAZy-n","pH-Tol-n","Temp-Tol-n", 
               "Biofilm-n", "Osmolyte-n")
 

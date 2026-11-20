@@ -19,12 +19,12 @@ library(ggplot2)
 
 # Setting up data ----
 
-tree_file <- "C:/Users/lucia/OneDrive - Wageningen University & Research/UCI_projects/project_1_Microtrait_DEMENT/phylogeny/isolate_gtdbtk.unrooted.tree"
-iso_file  <- "C:/Users/lucia/OneDrive - Wageningen University & Research/UCI_projects/project_1_Microtrait_DEMENT/Manuscript/Dataset/Intermediate_Results/total_genes.guild.940_ISO.csv"
-cue_file  <- "C:/Users/lucia/OneDrive - Wageningen University & Research/UCI_projects/project_1_Microtrait_DEMENT/Manuscript/Dataset/Input_Data/SOIL_ISOLATES/dement_isolates_CUE.csv"
-out_file  <- "C:/Users/lucia/OneDrive - Wageningen University & Research/UCI_projects/project_1_Microtrait_DEMENT/Manuscript/Dataset/Output_Data/Figures/isolate_phylogeny.pdf"
-meta_file_1  <- "C:/Users/lucia/OneDrive - Wageningen University & Research/UCI_projects/project_1_Microtrait_DEMENT/Manuscript/Dataset/Input_Data/SOIL_ISOLATES/metadata_2.tsv"
-meta_file_2  <- "C:/Users/lucia/OneDrive - Wageningen University & Research/UCI_projects/project_1_Microtrait_DEMENT/Manuscript/Dataset/Input_Data/SOIL_ISOLATES/metadata_1.tsv"
+tree_file <- "C:/luciana_datos/project_1_Microtrait_DEMENT/phylogeny/isolate_gtdbtk.unrooted.tree"
+iso_file  <- "C:/luciana_datos/project_1_Microtrait_DEMENT/Manuscript/Dataset/Intermediate_Results/total_genes.guild.940_ISO.csv"
+cue_file  <- "C:/luciana_datos/project_1_Microtrait_DEMENT/Manuscript/Dataset/Input_Data/SOIL_ISOLATES/dement_isolates_CUE.csv"
+out_file  <- "C:/luciana_datos/project_1_Microtrait_DEMENT/Manuscript/Dataset/Output_Data/Figures/isolate_phylogeny.pdf"
+meta_file_1  <- "C:/luciana_datos/project_1_Microtrait_DEMENT/Manuscript/Dataset/Input_Data/SOIL_ISOLATES/metadata_2.tsv"
+meta_file_2  <- "C:/luciana_datos/project_1_Microtrait_DEMENT/Manuscript/Dataset/Input_Data/SOIL_ISOLATES/metadata_1.tsv"
 
 # STEP 1: Load data
 
@@ -110,10 +110,10 @@ cat("Tree is rooted:", is.rooted(tree_pruned.2), "\n\n")
 cat("Building tree figure...\n")
 
 # Base tree
-p <- ggtree(tree_pruned, layout = "circular", size = 0.1)
+p = ggtree(tree_pruned, layout = "circular", size = 0.1)
 
 # Ring 1 — genome size
-p1 <- p +
+p1 = p +
   new_scale_fill() +
   geom_fruit(
     data    = meta_df,
@@ -122,14 +122,10 @@ p1 <- p +
     width   = 0.1,
     offset  = 0.05
   ) +
-  scale_fill_gradient(
-    low  = "lightblue",
-    high = "darkblue",
-    name = "Genome size (bp)"
-  )
+  scale_fill_viridis_c(option = "D", name = "Genome size (bp)", na.value = "grey70")
 
-# Ring 2 — CUE (Yield)
-p2 <- p1 +
+# Ring 2 — CUE
+p2 = p1 +
   new_scale_fill() +
   geom_fruit(
     data    = meta_df,
@@ -138,14 +134,10 @@ p2 <- p1 +
     width   = 0.1,
     offset  = 0.05
   ) +
-  scale_fill_gradient(
-    low  = "lightyellow",
-    high = "darkorange",
-    name = "CUE (Yield)"
-  )
+  scale_fill_viridis_c(option = "C", name = "CUE", na.value = "grey70")   
 
 # Ring 3 — functional guild
-p3 <- p2 +
+p3 = p2 +
   new_scale_fill() +
   geom_fruit(
     data    = meta_df,
@@ -170,7 +162,7 @@ p3 <- p2 +
 
 # Save figure
 cat("Saving figure to", out_file, "...\n")
-ggsave(out_file, p3, width = 14, height = 14)
+ggsave(out_file, p3, width = 14, height = 14)  
 cat("Figure saved.\n\n")
 
 # STEP 4.A: Build phylogenetic tree figure ----
