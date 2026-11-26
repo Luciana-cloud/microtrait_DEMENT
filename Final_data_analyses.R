@@ -1360,7 +1360,7 @@ Figure_mgr = ggplot(data = MAG_gen_trait_total,
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4) + 
   xlab("Log(Genome Size)") + 
-  ylab("Log(mgr)") +
+  ylab("Log(MGR)") +
   theme(legend.position="none") + xlim(13,16.5)
 Figure_mgr
 
@@ -1377,7 +1377,7 @@ Figure_ogt = ggplot(data = MAG_gen_trait_total %>%
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4, label.y = "bottom", label.x = "right") + 
   xlab("Log (Genome Size)") + 
-  ylab("Log (ogt)") +
+  ylab("Log (OGT)") +
   theme(legend.position="none") + xlim(13,16.5) + ylim(2.9,4.3)
 Figure_ogt
 
@@ -1408,7 +1408,7 @@ Figure_yield_logit = ggplot(data = guild_cue_without,
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4, label.y = "bottom", label.x = "right") +
   xlab("Log (Genome Size)") +
-  ylab("Logit (Yield)") +
+  ylab("Logit (CUE)") +
   theme(legend.position="none") +
   coord_cartesian(xlim = c(13, 16.5))
 Figure_yield_logit
@@ -1556,7 +1556,7 @@ Figure_mgr_ISO = ggplot(data = ISO_gen_TOTAL_ab,
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4) + 
   xlab("Log(Genome Size)") + 
-  ylab("Log(mgr)") +
+  ylab("Log(MGR)") +
   theme(legend.position="none") + coord_cartesian(xlim = c(13,16.5), ylim = c(-2.55,3.45))
 Figure_mgr_ISO
 
@@ -1570,7 +1570,7 @@ Figure_OGT_ISO = ggplot(data = ISO_gen_TOTAL_ab,
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4) + 
   xlab("Log(Genome Size)") + 
-  ylab("Log(ogt)") +
+  ylab("Log(OGT)") +
   theme(legend.position="none") + coord_cartesian(xlim = c(13,16.5), ylim = c(2.9,4.))
 Figure_OGT_ISO
 
@@ -1610,7 +1610,7 @@ Figure_yield_logit_ISO = ggplot(data = guild_cue_iso,
   stat_poly_line() +
   stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4, label.y = "bottom", label.x = "right") +
   xlab("Log (Genome Size)") +
-  ylab("Logit (Yield)") +
+  ylab("Logit (CUE)") +
   theme(legend.position="none") +
   coord_cartesian(xlim = c(13, 16.5))
 Figure_yield_logit_ISO
@@ -1658,29 +1658,30 @@ dev.off()
 
 # Fig_6 ----
 
-Fig_6 = ggarrange(Figure_mgr, Figure_mgr_ISO, Figure_yield_logit,
-                  Figure_yield_logit_ISO,
-                  labels = c("A","B","C","D"),ncol = 2, nrow = 2) + 
+Fig_6 = ggarrange(Figure_mgr,          Figure_yield_logit,     Figure_ogt,       # top row: MAGs (A, B, C)
+                  Figure_mgr_ISO,      Figure_yield_logit_ISO, Figure_OGT_ISO,   # bottom row: isolates (D, E, F)
+                  labels = c("A", "B", "C", "D", "E", "F"),
+                  ncol = 3, nrow = 2) +
   theme(panel.background = element_blank())
 
 Fig_6
 
-pdf("Output_Data/Figures/Fig_6.pdf",
-    width=12,height=12*5/5)
+pdf("Output_Data/Figures/Fig_6_new.pdf",
+    width=15,height=15*4/5)
 print(Fig_6)
 dev.off()
 
 # Fig_7 ----
 
-Fig_7 = ggarrange(Figure_ogt, Figure_OGT_ISO,labels = c("A","B"),
-                  ncol = 2, nrow = 1) + theme(panel.background = element_blank())
+#Fig_7 = ggarrange(Figure_ogt, Figure_OGT_ISO,labels = c("A","B"),
+#                  ncol = 2, nrow = 1) + theme(panel.background = element_blank())
 
-Fig_7
+#Fig_7
 
-pdf("Output_Data/Figures/Fig_7.pdf",
-    width=12,height=12*1/2)
-print(Fig_7)
-dev.off()
+#pdf("Output_Data/Figures/Fig_7.pdf",
+#    width=12,height=12*1/2)
+#print(Fig_7)
+#dev.off()
 
 # Fig_S3 ----
 
@@ -2462,7 +2463,7 @@ build_tax_panel = function(data, rank_col, title) {
     stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 3, 
                  label.y = "bottom", label.x = "left") +
     xlab("Log(Genome size)") +
-    ylab("Logit(Yield)") +
+    ylab("CUE") +
     labs(title = title)
 }
 
@@ -2576,7 +2577,7 @@ Figure_S9_MAG = ggplot(data = MAG_S9_complete,
                           ifelse(p_weighted_MAG < 0.001, "< 0.001", 
                                  paste0("= ", round(p_weighted_MAG, 3))))) +
   xlab("Total S+A gene counts per functional group") +
-  ylab("Yield (CUE)") 
+  ylab("CUE") 
 Figure_S9_MAG
 
 # Isolates
@@ -2602,7 +2603,7 @@ Figure_S9_ISO = ggplot(data = ISO_S9_complete,
                           ifelse(p_weighted_ISO < 0.001, "< 0.001", 
                                  paste0("= ", round(p_weighted_ISO, 3))))) +
   xlab("Total S+A gene counts per functional group") +
-  ylab("Yield (CUE)")
+  ylab("CUE")
 Figure_S9_ISO
 
 # --- Combined ---
@@ -2611,7 +2612,7 @@ Figure_S9 = ggarrange(Figure_S9_MAG, Figure_S9_ISO,
   theme(panel.background = element_blank())
 Figure_S9
 
-pdf("Output_Data/Figures/Figure_S9.pdf", width=10, height=5)
+pdf("Output_Data/Figures/Figure_S9_new.pdf", width=10, height=5)
 print(Figure_S9)
 dev.off()
 

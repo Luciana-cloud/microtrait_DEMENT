@@ -74,7 +74,7 @@ meta.2 <- iso %>%
     by = "id"
   ) %>%
   left_join(
-    meta_data %>% select(id, `Specific Ecosystem`, `Geographic Location`),   # choose the columns you want
+    meta_data %>% select(id, `Specific Ecosystem`, `Geographic Location`),   
     by = "id"
   ) %>%
   filter(id %in% tree$tip.label)
@@ -169,21 +169,56 @@ cat("Figure saved.\n\n")
 
 cat("Building tree figure...\n")
 
+# --- ecosystem classes (check the grouping before using it) ---
+x = trimws(as.character(meta_df_2$`Specific Ecosystem`))
+meta_df_2$eco_group = dplyr::case_when(
+  is.na(x) | tolower(x) %in% c("", "unclassified")          ~ "Unclassified",
+  x %in% c("Agricultural land", "Agricultural soil", "Farm") ~ "Agricultural",
+  x %in% c("Contaminated", "Oil-contaminated", "Mine drainage") ~ "Contaminated",
+  x == "Desert"                                              ~ "Desert",
+  x %in% c("Bulk soil", "Mineral soil")                      ~ "Bulk / mineral soil",
+  x == "Permafrost"                                          ~ "Permafrost",
+  x %in% c("Forest", "Forest soil", "Grasslands")            ~ "Forest / grassland",
+  TRUE                                                       ~ "Other"
+)
+
+# check: counts per class and what ended up in "Other"
+print(table(meta_df_2$eco_group))
+print(table(x[meta_df_2$eco_group == "Other"]))
+
+# legend with n
+eco_levels = c("Agricultural", "Contaminated", "Desert", "Bulk / mineral soil",
+               "Permafrost", "Forest / grassland", "Other", "Unclassified")
+meta_df_2$eco_group = factor(meta_df_2$eco_group, levels = eco_levels)
+eco_n   = table(meta_df_2$eco_group)
+eco_lab = paste0(eco_levels, " (n = ", eco_n[eco_levels], ")")
+
+eco_cols = c("Agricultural"        = "#E69F00",
+             "Contaminated"        = "#D55E00",
+             "Desert"              = "#F0E442",
+             "Bulk / mineral soil" = "#009E73",
+             "Permafrost"          = "#56B4E9",
+             "Forest / grassland"  = "#0072B2",
+             "Other"               = "#CC79A7",
+             "Unclassified"        = "grey85")
+
 # Base tree
 p.2 <- ggtree(tree_pruned.2, layout = "circular", size = 0.1)
 
-# Ring 1 — Specific Ecosystem
+# Ring 1: source ecosystem
 p1.2 <- p.2 +
   new_scale_fill() +
   geom_fruit(
     data    = meta_df_2,
     geom    = geom_tile,
-    mapping = aes(y = id, fill = `Specific Ecosystem`),
+    mapping = aes(y = id, fill = eco_group),
     width   = 0.1,
     offset  = 0.05
-  )
+  ) +
+  scale_fill_manual(values = eco_cols, breaks = eco_levels, labels = eco_lab,
+                    name = "Source ecosystem", drop = FALSE)
 
-# Ring 2 — functional guild
+# Ring 2: functional guild (unchanged)
 p3.2 <- p1.2 +
   new_scale_fill() +
   geom_fruit(
@@ -199,13 +234,15 @@ p3.2 <- p1.2 +
         "pink", "brown", "grey", "cyan", "magenta")
     )(length(unique(meta_df$guild))),
     name  = "Functional guild",
-    guide = "none"   # too many guilds for a readable legend
+    guide = "none"
   ) +
   theme(
     legend.position = "right",
     legend.text     = element_text(size = 8),
     legend.title    = element_text(size = 9)
   )
+
+ggsave(out_file, p3.2, width = 14, height = 14)
 # Save figure
 cat("Saving figure to", out_file, "...\n")
 ggsave(out_file, p3.2, width = 14, height = 14)
