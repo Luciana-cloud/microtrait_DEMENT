@@ -308,3 +308,98 @@ cat("=================================================\n")
 print(results)
 cat("\nSaved: phylogenetic_signal_results.csv\n")
 cat("Done.\n")
+
+# Phylogeny for MAGs ----
+
+library(dplyr)
+
+dir_phy = "C:/luciana_datos/project_1_Microtrait_DEMENT/phylogeny/gtdb/gtdb"
+
+cue_MAG = sim_10000 %>%
+  transmute(id = as.character(MAG_id),
+            CUE = ifelse(BGE <= 0.848, BGE, NA)) %>%
+  distinct(id, .keep_all = TRUE)
+
+MAG_trait = MAG_trait %>%
+  select(-any_of(c("CUE", "CUE.x", "CUE.y"))) %>%
+  left_join(cue_MAG, by = "id")
+
+sum(!is.na(MAG_trait$CUE))                              # expect 14,075
+length(unique(MAG_trait$guild[!is.na(MAG_trait$CUE)]))  # expect 1,139
+
+write.csv(MAG_trait[, c("id", "guild", "genome.size", "CUE")],
+          file.path(dir_phy, "MAG_trait_for_phylosig.csv"), row.names = FALSE)
+
+library(ape)
+library(phytools)
+
+dir_phy  = "C:/luciana_datos/project_1_Microtrait_DEMENT/phylogeny/gtdb/gtdb"
+tree_mag = read.tree(file.path(dir_phy, "img_gtdbtk.unrooted.tree"))
+
+MAG_trait = read.csv(file.path(dir_phy, "MAG_trait_for_phylosig.csv"))
+MAG_trait$id    = as.character(MAG_trait$id)
+MAG_trait$guild = as.character(MAG_trait$guild)
+
+mt = MAG_trait[MAG_trait$id %in% tree_mag$tip.label, ]
+cat("MAGs in tree:", nrow(mt), "| with CUE:", sum(!is.na(mt$CUE)),
+    "| guilds:", length(unique(mt$guild)), "\n")   # expect 21,077 | 11,200 | 1,256
+
+# FG means from ALL MAGs of the guild (as in the FG tables)
+fg_gs  = c(tapply(MAG_trait$genome.size, MAG_trait$guild, mean))
+fg_cue = c(tapply(MAG_trait$CUE, MAG_trait$guild, mean, na.rm = TRUE))   # NaN if no CUE
+
+tips_by_guild = split(mt$id, mt$guild)
+gs_mag  = setNames(mt$genome.size, mt$id)
+cue_mag = setNames(mt$CUE, mt$id)
+
+# Blomberg's K for one draw
+sig = function(ids, x) {
+  tr = midpoint.root(keep.tip(tree_mag, ids))
+  tr$edge.length[tr$edge.length == 0] = 1e-6
+  x  = x[tr$tip.label]
+  c(K = as.numeric(phylosig(tr, x, method = "K")))
+}
+
+# individual MAGs vs one MAG per guild carrying the guild mean
+run_trait = function(trait_mag, trait_fg, guilds, R = 20) {
+  pool = names(trait_mag)[!is.na(trait_mag)]
+  n    = length(guilds)
+  res  = lapply(1:R, function(i) {
+    ids_b = sample(pool, n)
+    ids_a = sapply(tips_by_guild[guilds], function(v) v[sample.int(length(v), 1)])
+    rbind(before = sig(ids_b, trait_mag[ids_b]),
+          after  = sig(ids_a, setNames(trait_fg[guilds], ids_a)))
+  })
+  list(n = n, res = res)
+}
+
+summarise_run = function(out) {
+  K = sapply(out$res, function(m) m[, "K"])
+  data.frame(level = c("MAGs", "FGs"), n = out$n,
+             K_median = apply(K, 1, median),
+             K_min = apply(K, 1, min), K_max = apply(K, 1, max))
+}
+
+g_size = names(tips_by_guild)
+g_cue  = names(tips_by_guild)[!is.nan(fg_cue[names(tips_by_guild)])]
+
+# test run
+set.seed(1)
+t0 = Sys.time()
+out_test = run_trait(gs_mag, fg_gs, g_size, R = 3)
+Sys.time() - t0
+summarise_run(out_test)
+
+# full run
+set.seed(1)
+out_gs  = run_trait(gs_mag,  fg_gs,  g_size, R = 20)
+out_cue = run_trait(cue_mag, fg_cue, g_cue,  R = 20)
+
+res_K = rbind(cbind(trait = "Genome size", summarise_run(out_gs)),
+              cbind(trait = "CUE",         summarise_run(out_cue)))
+tab = res_K
+tab[, c("K_median", "K_min", "K_max")] =
+  lapply(tab[, c("K_median", "K_min", "K_max")], formatC, format = "e", digits = 1)
+names(tab) = c("Trait", "Level", "n tips", "K (median)", "K (min)", "K (max)")
+write.csv(tab, "C:/luciana_datos/project_1_Microtrait_DEMENT/Manuscript/Dataset/Output_Data/Table_S_phylosig_K_MAGs.csv", row.names = FALSE)
+

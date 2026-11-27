@@ -217,3 +217,154 @@ data.frame(pair = c("A-S", "A-RU", "S-RU"),
                        wpartial(tab_iso$A_traits, tab_iso$RU_n, tab_iso$genome.size, w),
                        wpartial(tab_iso$S_traits, tab_iso$RU_n, tab_iso$genome.size, w)))
 
+# ===================== Genome Level Analysis (reviewer figure) =====================
+library(readxl); library(readr); library(dplyr); library(ggplot2)
+
+# ===================== Open relevant data =====================
+total_genes.guild.940_MAG = read.csv("Intermediate_Results/total_genes.guild.940_MAG.csv", dec = ".")
+GH_rule      = as.data.frame(rbind("id","guild","genome.size", read_excel("Input_Data/microTrait_Rules/microtrait_GH.xlsx")))
+PR_rule      = as.data.frame(rbind("id","guild","genome.size", read_excel("Input_Data/microTrait_Rules/microtrait_proteins.xlsx")))
+osmo_rule    = as.data.frame(rbind("id","guild","genome.size", read_excel("Input_Data/microTrait_Rules/microtrait_osmolytes.xlsx")))
+biofilm_rule = as.data.frame(rbind("id","guild","genome.size", read_excel("Input_Data/microTrait_Rules/microtrait_biofilm.xlsx")))
+high.T_rule  = as.data.frame(rbind("id","guild","genome.size", read_excel("Input_Data/microTrait_Rules/microtrait_high_T.xlsx")))
+pH_rule      = as.data.frame(rbind("id","guild","genome.size", read_excel("Input_Data/microTrait_Rules/microtrait_pH_stress.xlsx")))
+transp_rule  = read_excel("Input_Data/microTrait_Rules/microtrait_transporters.xlsx")
+
+MAG_gen_trait    = read.csv("C:/luciana_datos/project_1_Microtrait_DEMENT/Manuscript/Dataset/Intermediate_Results/MAG_gen_trait.csv")
+TOTAL_MAGs_fixed = read_csv("Intermediate_Results/TOTAL_MAGs_fixed.csv")
+sim_10000        = read.csv("Output_Data/my_MAGs_BGE_glucose_10000.csv")
+microtrait       = read_csv("Input_Data/IMG_JGI_MAGs/total.granularity.3_datasets.csv")
+
+# ===================== Create MAG_trait (one row per MAG) =====================
+dat = total_genes.guild.940_MAG
+dat$genome.size = as.numeric(as.character(dat$genome.size))
+
+genes_in = function(rule) {
+  x = intersect(rule$`microtrait_hmm-name`, names(dat))
+  setdiff(x, c("id", "guild", "genome.size"))
+}
+
+MAG_trait = data.frame(id = dat$id, guild = dat$guild, genome.size = dat$genome.size)
+
+rules = list(CAZy = GH_rule, protein = PR_rule, osmolyte = osmo_rule,
+             biofilm = biofilm_rule, temp = high.T_rule, pH = pH_rule)
+for (nm in names(rules)) {
+  MAG_trait[[nm]] = rowSums(dat[, genes_in(rules[[nm]]), drop = FALSE])
+}
+
+# transporters (same filters as in the FG analysis; AA = aminoacid + peptide, with %in%)
+tr0 = transp_rule %>% filter(`function` == "transporter")
+g_total = intersect(tr0$`microtrait_hmm-name`, names(dat))
+g_ami   = intersect((tr0 %>% filter(class %in% c("aminoacid", "peptide")))$`microtrait_hmm-name`, names(dat))
+g_car   = intersect((tr0 %>% filter(class == "carbohydrate"))$`microtrait_hmm-name`, names(dat))
+c(total = length(g_total), amino_peptide = length(g_ami), carbohydrate = length(g_car))   # genes per trait
+
+MAG_trait$total = rowSums(dat[, g_total, drop = FALSE])
+MAG_trait$AA    = rowSums(dat[, g_ami,   drop = FALSE])
+MAG_trait$GH    = rowSums(dat[, g_car,   drop = FALSE])    # "GH" transporters = carbohydrate transporters
+
+# same exclusion as in the FG analysis (guild 247, 2 MAGs)
+MAG_trait = MAG_trait[MAG_trait$guild != 247, ]
+nrow(MAG_trait)                                             # expect 27212
+
+# ===================== CUE =====================
+cue_MAG = sim_10000 %>% transmute(id = MAG_id, CUE = ifelse(BGE <= 0.848, BGE, NA_real_))
+MAG_trait = MAG_trait %>% select(-any_of(c("CUE", "CUE.x", "CUE.y"))) %>% left_join(cue_MAG, by = "id")
+sum(!is.na(MAG_trait$CUE))                                  # expect 14075
+
+cue_fg = sim_10000 %>%
+  inner_join(dat %>% select(id, guild), by = c("MAG_id" = "id")) %>%
+  filter(BGE <= 0.848) %>% group_by(guild) %>% summarise(CUE_fg = mean(BGE), n_cue_mags = n())
+chk2 = MAG_trait %>% filter(!is.na(CUE)) %>% group_by(guild) %>% summarise(CUE = mean(CUE), n = n())
+chk2 = merge(chk2, cue_fg, by = "guild")
+cor(chk2$CUE, chk2$CUE_fg); max(abs(chk2$CUE - chk2$CUE_fg)); sum(chk2$n != chk2$n_cue_mags)   # expect 1, 0, 0
+
+# ===================== ogt, mgt, mgr =====================
+growth = microtrait %>% filter(id %in% MAG_trait$id) %>% transmute(id, OGT = ogt, MGT = mgt, MGR = 1 / mgt)
+MAG_trait = MAG_trait %>%
+  select(-any_of(c("OGT", "MGT", "MGR", "OGT.x", "OGT.y", "MGT.x", "MGT.y", "MGR.x", "MGR.y"))) %>%
+  left_join(growth, by = "id")
+
+chk3 = MAG_trait %>% group_by(guild) %>% summarise(OGT = mean(OGT, na.rm = TRUE), MGT = mean(MGT, na.rm = TRUE))
+chk3 = merge(chk3, MAG_gen_trait[, c("guild", "ogt", "mgt")], by = "guild")
+ok = complete.cases(chk3)
+cor(chk3$OGT[ok], chk3$ogt[ok]); max(abs(chk3$OGT[ok] - chk3$ogt[ok]))   # expect 1, ~0
+cor(chk3$MGT[ok], chk3$mgt[ok]); max(abs(chk3$MGT[ok] - chk3$mgt[ok]))   # expect 1, ~0
+
+# ===================== completeness, contamination, GC =====================
+qual = TOTAL_MAGs_fixed %>% filter(id %in% MAG_trait$id) %>%
+  transmute(id, completeness, contamination, GC = GC_count)
+MAG_trait = MAG_trait %>%
+  select(-any_of(c("completeness", "contamination", "GC", "completeness.x", "completeness.y",
+                   "contamination.x", "contamination.y", "GC.x", "GC.y"))) %>%
+  left_join(qual, by = "id")
+
+# ===================== Check every trait against your FG table =====================
+fgmap = c(CAZy = "CAZy", protein = "Protein", osmolyte = "osmolyte", biofilm = "biofilm",
+          temp = "temp", pH = "pH", total = "tranport.total", GH = "GH.trasnport",
+          completeness = "completeness_mean", contamination = "contamination_mean", GC = "GC_count_mean")
+for (tr in names(fgmap)) {
+  col = unname(fgmap[tr])
+  m = aggregate(MAG_trait[[tr]], list(guild = MAG_trait$guild), mean, na.rm = TRUE)
+  m = merge(m, MAG_gen_trait[, c("guild", col)], by = "guild")
+  m = m[complete.cases(m), ]
+  cat(sprintf("%-14s r = %.4f | max abs diff = %.4f\n", tr, cor(m$x, m[[col]]), max(abs(m$x - m[[col]]))))
+}
+# expect r = 1.0000 and diff = 0.0000 for all lines (AA is not listed: it has the NEW definition)
+
+# ===================== Reviewer figure: FG-level vs MAG-level correlations =====================
+traits = c("OGT", "MGR", "CUE", "AA", "GH", "total", "protein", "CAZy", "pH", "temp",
+           "biofilm", "osmolyte", "completeness", "contamination", "GC")
+
+# FG level: mean per guild, number of MAGs, number of MAGs with CUE
+fg = MAG_trait %>% group_by(guild) %>%
+  summarise(n_mags = n(), n_cue_mags = sum(!is.na(CUE)),
+            across(c(OGT, MGT, CUE, AA, GH, total, protein, CAZy, pH, temp, biofilm,
+                     osmolyte, completeness, contamination, GC),
+                   ~ mean(.x, na.rm = TRUE)))
+fg$MGR = 1 / fg$MGT                       # as in the FG analysis: 1 / mean(mgt)
+
+# weighted Pearson correlation (as in S3: weights = number of MAGs per guild)
+wcor = function(a, b, w) {
+  ok = complete.cases(a, b, w) & w > 0
+  cov.wt(cbind(a[ok], b[ok]), wt = w[ok], cor = TRUE)$cor[1, 2]
+}
+
+res = as.data.frame(t(combn(traits, 2)), stringsAsFactors = FALSE)
+names(res) = c("x", "y")
+res$r_FG = unname(mapply(function(a, b) {
+  w = if ("CUE" %in% c(a, b)) fg$n_cue_mags else fg$n_mags
+  wcor(fg[[a]], fg[[b]], w)
+}, res$x, res$y))
+res$r_MAG = unname(mapply(function(a, b) cor(MAG_trait[[a]], MAG_trait[[b]], use = "pairwise.complete.obs"),
+                          res$x, res$y))
+res$n_MAG = unname(mapply(function(a, b) sum(complete.cases(MAG_trait[, c(a, b)])), res$x, res$y))
+
+# CHECK against S3 (CUE pairs; AA is expected to differ):
+cue_rows = subset(res, x == "CUE" | y == "CUE")[, c("x", "y", "r_FG")]
+cue_rows$r_FG = round(cue_rows$r_FG, 3)
+print(cue_rows)
+
+# summary for the answer
+c(n_pairs = nrow(res), r_between = cor(res$r_FG, res$r_MAG),
+  median_abs_diff = median(abs(res$r_FG - res$r_MAG)),
+  same_sign = sum(sign(res$r_FG) == sign(res$r_MAG)))
+
+write.csv(res, "C:/luciana_datos/project_1_Microtrait_DEMENT/Manuscript/Dataset/Output_Data/Table_S_FG_vs_MAG_correlations.csv", row.names = FALSE)
+
+res$type = ifelse(res$x %in% c("OGT", "MGR", "CUE") | res$y %in% c("OGT", "MGR", "CUE"),
+                  "Pair includes a Y-like trait", "Other pairs")
+
+p = ggplot(res, aes(r_FG, r_MAG, colour = type)) +
+  geom_abline(slope = 1, intercept = 0, colour = "grey50") +
+  geom_point(size = 2, alpha = 0.8) +
+  coord_equal(xlim = c(-1, 1), ylim = c(-1, 1)) +
+  labs(x = "Correlation at functional group level (weighted)",
+       y = "Correlation at MAG level (unweighted)", colour = NULL) +
+  theme_bw() + theme(legend.position = "bottom")
+p
+ggsave("C:/luciana_datos/project_1_Microtrait_DEMENT/Manuscript/Dataset/Output_Data/Figures/Figure_S_FG_vs_MAG.pdf", p, width = 6, height = 6.5)
+
+
+
+

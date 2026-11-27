@@ -677,7 +677,7 @@ Transporter_MAG  = TRANSP_TOTAL_m.1 %>% select(guild,genome.size_mean,transp_tot
 
 # Transport - Aminoacids (MAG)
 transp_rule        = transp_rule %>% filter(`function`==c("transporter"))
-transp_rule_ami    = transp_rule %>% filter(class==c("aminoacid","peptide"))
+transp_rule_ami    = transp_rule %>% filter(class %in% c("aminoacid","peptide"))
 transp_rule_ami    = as.data.frame(rbind("id","guild","genome.size",transp_rule_ami))
 AMI_TRANSP_TOTAL   = total_genes.guild.940_MAG %>% select(any_of(transp_rule_ami$`microtrait_hmm-name`))
 AMI_TRANSP_TOTAL$genome.size = as.numeric(as.character(AMI_TRANSP_TOTAL$genome.size))
@@ -776,7 +776,7 @@ TRANSP_TOTAL_m = TRANSP_TOTAL_m %>% mutate(transp_total = rowSums(TRANSP_TOTAL_m
 Transporter_Isolates  = TRANSP_TOTAL_m %>% select(guild,genome.size_mean,transp_total)
 
 # Transport - Aminoacids (Isolates)
-transp_rule_ami    = transp_rule %>% filter(class==c("aminoacid","peptide"))
+transp_rule_ami    = transp_rule %>% filter(class %in% c("aminoacid","peptide")) 
 transp_rule_ami    = as.data.frame(rbind("id","guild","genome.size",transp_rule_ami))
 AMI_TRANSP_TOTAL.i = total_genes.guild.940_ISO %>% select(any_of(transp_rule_ami$`microtrait_hmm-name`))
 AMI_TRANSP_TOTAL.i$genome.size = as.numeric(as.character(AMI_TRANSP_TOTAL.i$genome.size))
@@ -1256,7 +1256,8 @@ Figure_tranport.total   = ggplot(data = MAG_gen_trait_total,
                                      weight = n_mags)) +
   geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
   stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5) + 
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5,
+               label.x = "right", label.y = "bottom") + 
   xlab("Log(Genome Size)") + 
   ylab("Log(Transporters)") +
   theme(legend.position="none") + xlim(13,16.5) + ylim(-0.5,5.5)
@@ -1270,7 +1271,8 @@ Figure_GH.trasnport   = ggplot(data = MAG_gen_trait_total,
                                    weight = n_mags)) +
   geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
   stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5) + 
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5,
+               label.x = "right", label.y = "bottom") + 
   xlab("Log(Genome Size)") + 
   ylab("Log(GH transporters)") +
   theme(legend.position="none") + xlim(13,16.5) + ylim(-3.5,4.0)
@@ -1284,7 +1286,8 @@ Figure_amino.transport   = ggplot(data = MAG_gen_trait_total,
                                       weight = n_mags)) +
   geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
   stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5) + 
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 3.5,
+               label.x = "right", label.y = "bottom") + 
   xlab("Log(Genome Size)") + 
   ylab("Log(Amino transporters)") +
   theme(legend.position="none") + xlim(13,16.5) + ylim(0,3.5)
@@ -1451,7 +1454,8 @@ Figure_tranport.total_ISO = ggplot(data = ISO_gen_TOTAL_ab,
                                        weight = n_mags)) +
   geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
   stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5) + 
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5,
+               label.x = "right", label.y = "bottom") + 
   xlab("Log(Genome Size)") + 
   ylab("Log(Transporters)") +
   theme(legend.position="none") + coord_cartesian(xlim = c(13,16.5), ylim = c(-0.5,5.5))
@@ -1480,7 +1484,8 @@ Figure_Amino.transporter = ggplot(data = ISO_gen_TOTAL_ab,
                                       weight = n_mags)) +
   geom_point(size = 3) + theme_classic() + theme(text = element_text(size=24)) +
   stat_poly_line() +
-  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 5) + 
+  stat_poly_eq(use_label(c("eq", "adj.R2", "p")), size = 4,
+               label.x = "right", label.y = "bottom") + 
   xlab("Log(Genome Size)") + 
   ylab("Log(Amino transporters)") +
   theme(legend.position="none") + coord_cartesian(xlim = c(13,16.5), ylim = c(0,3.5))
