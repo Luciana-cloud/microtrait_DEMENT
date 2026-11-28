@@ -34,8 +34,9 @@ total_genes.full$dataset = ifelse(total_genes.full$id %in% mag_ids, "MAG",
 ## 0. A and S gene sets from the key files -----------------------------------
 key = function(df) setdiff(unique(trimws(as.character(df[[1]]))),
                            c("id", "guild", "genome.size"))                           # CHANGED: drop header strings
-A_all = unique(c(key(transp_rule), key(PR_rule), key(GH_rule)))
-S_all = unique(c(key(high.T_rule), key(low.T_rule), key(pH_rule),                     # CHANGED: low-T added
+A_all = unique(c(key(transp_rule[transp_rule$`function` == "transporter", ]),
+                 key(PR_rule), key(GH_rule)))
+S_all = unique(c(key(high.T_rule), key(pH_rule),                     # CHANGED: low-T added
                  key(osmo_rule), key(biofilm_rule)))
 shared = intersect(A_all, S_all)                       # genes in both A and S (expect 6)
 
@@ -217,6 +218,37 @@ data.frame(pair = c("A-S", "A-RU", "S-RU"),
                        wpartial(tab_iso$A_traits, tab_iso$RU_n, tab_iso$genome.size, w),
                        wpartial(tab_iso$S_traits, tab_iso$RU_n, tab_iso$genome.size, w)))
 
+fmt = function(q) sprintf("%.2f (%.2f-%.2f)", q[2], q[1], q[3])   # median (2.5%-97.5%)
+tab_S20 = data.frame(
+  Dataset = c("MAGs", "Isolates"),
+  `Real A-S (genome size removed)` = sprintf("%.2f", c(res_MAG_w$observed["partial"],
+                                                       res_ISO_w$observed["partial"])),
+  `Random genes outside A/S` = c(fmt(res_MAG_w$null_all_genes$quantiles[, "partial"]),
+                                 fmt(res_ISO_w$null_all_genes$quantiles[, "partial"])),
+  `Random splits of selected genes` = c(fmt(res_MAG_w$null_selected_genes$quantiles[, "partial"]),
+                                        fmt(res_ISO_w$null_selected_genes$quantiles[, "partial"])),
+  check.names = FALSE)
+tab_S20
+write.csv(tab_S20, "Output_Data/Table_S20.csv", row.names = FALSE)
+
+make_ru = function(tb, label) {
+  w = tb$n_mags
+  data.frame(
+    Dataset = label,
+    FGs     = nrow(tb),
+    Pair    = c("A-S", "A-RU", "S-RU"),
+    r       = c(wcor(tb$A_traits, tb$S_traits, w),
+                wcor(tb$A_traits, tb$RU_n, w),
+                wcor(tb$S_traits, tb$RU_n, w)),
+    partial = c(wpartial(tb$A_traits, tb$S_traits, tb$genome.size, w),
+                wpartial(tb$A_traits, tb$RU_n, tb$genome.size, w),
+                wpartial(tb$S_traits, tb$RU_n, tb$genome.size, w)))
+}
+tab_S21 = rbind(make_ru(tab, "MAGs"), make_ru(tab_iso, "Isolates"))
+tab_S21[, c("r", "partial")] = round(tab_S21[, c("r", "partial")], 2)
+tab_S21
+write.csv(tab_S21, "Output_Data/Table_S21.csv", row.names = FALSE)
+
 # ===================== Genome Level Analysis (reviewer figure) =====================
 library(readxl); library(readr); library(dplyr); library(ggplot2)
 
@@ -365,6 +397,151 @@ p = ggplot(res, aes(r_FG, r_MAG, colour = type)) +
 p
 ggsave("C:/luciana_datos/project_1_Microtrait_DEMENT/Manuscript/Dataset/Output_Data/Figures/Figure_S_FG_vs_MAG.pdf", p, width = 6, height = 6.5)
 
+# Additional plots for Loma and Fire project ----
 
+key = function(df) setdiff(unique(trimws(as.character(df[[1]]))),
+                           c("id", "guild", "genome.size", "size"))
+rd  = function(f) read_excel(file.path("Input_Data/microTrait_Rules", f))
+
+tr = rd("microtrait_transporters.xlsx")
+A_all = unique(c(key(tr[tr$`function` == "transporter", ]),
+                 key(rd("microtrait_proteins.xlsx")), key(rd("microtrait_GH.xlsx"))))
+S_all = unique(c(key(rd("microtrait_high_T.xlsx")), key(rd("microtrait_pH_stress.xlsx")),
+                 key(rd("microtrait_osmolytes.xlsx")), key(rd("microtrait_biofilm.xlsx"))))
+shared = intersect(A_all, S_all)
+
+wcor = function(x, y, w) cov.wt(cbind(x, y), wt = w, cor = TRUE)$cor[1, 2]
+
+# ---- Random baseline and genome-size-removed values (local datasets) ----
+
+run_control_local = function(d, gene_cols, selected_genes, n_iter = 1000) {
+  sums = rowsum(as.matrix(d[, gene_cols]), group = d$guild)
+  n    = tabulate(match(d$guild, rownames(sums)))
+  G    = sums / n
+  gs   = as.vector(tapply(d$genome.size, d$guild, mean, na.rm = TRUE)[rownames(G)])
+  A_g  = setdiff(intersect(A_all, selected_genes), shared)
+  S_g  = setdiff(intersect(S_all, selected_genes), shared)
+  nA = length(A_g); nS = length(S_g)
+  
+  stat = function(Ag, Sg) {
+    a = rowSums(G[, Ag, drop = FALSE]); s = rowSums(G[, Sg, drop = FALSE])
+    c(r = wcor(a, s, n),
+      partial = wcor(resid(lm(a ~ gs, weights = n)), resid(lm(s ~ gs, weights = n)), n))
+  }
+  observed = stat(A_g, S_g)
+  
+  null_for = function(pool) {
+    set.seed(1)
+    nl = t(replicate(n_iter, { g = sample(pool, nA + nS); stat(g[1:nA], g[(nA+1):(nA+nS)]) }))
+    p = sapply(c("r", "partial"), function(k) (sum(nl[, k] >= observed[k]) + 1) / (n_iter + 1))
+    list(quantiles = apply(nl, 2, quantile, c(.025, .5, .975)), p = p, draws = nl)
+  }
+  
+  a = rowSums(G[, A_g, drop = FALSE]); s = rowSums(G[, S_g, drop = FALSE])
+  list(observed = observed, sizes = c(A = nA, S = nS),
+       null_outside = null_for(setdiff(gene_cols, c(A_g, S_g, shared))),
+       null_split   = null_for(setdiff(selected_genes, shared)),
+       data = data.frame(guild = rownames(G), n = n, gs = gs, a = a, s = s,
+                         a_res = resid(lm(a ~ gs, weights = n)),
+                         s_res = resid(lm(s ~ gs, weights = n))))
+}
+
+# Inputs: one row per MAG, with guild, genome size and ALL gene columns
+d_loma = merge(hmm_loma.global[, c("id","guild","size")], hmm_loma, by = "id")
+names(d_loma)[names(d_loma) == "size"] = "genome.size"
+d_loma$genome.size = as.numeric(as.character(d_loma$genome.size))
+gene_cols_loma = setdiff(names(hmm_loma), c("X","id"))
+selected_loma  = intersect(Loma_predictors_gene, names(hmm_loma))
+
+d_fire = merge(hmm_fire.global[, c("id","guild","Genome_size")], hmm_fire, by = "id")
+names(d_fire)[names(d_fire) == "Genome_size"] = "genome.size"
+d_fire$genome.size = as.numeric(as.character(d_fire$genome.size))
+gene_cols_fire = setdiff(names(hmm_fire), c("X","id"))
+selected_fire  = intersect(Fire_predictors_gene, names(hmm_fire))
+
+ctrl_loma = run_control_local(d_loma, gene_cols_loma, selected_loma)
+ctrl_fire = run_control_local(d_fire, gene_cols_fire, selected_fire)
+
+# Panels C and D: A and S traits divided by genome size (as in Fig. S2)
+plot_AS_div = function(d) {
+  d$A_n = d$A_traits / d$genome.size
+  d$S_n = d$S_traits / d$genome.size
+  res   = weighted_cor(d$A_n, d$S_n, d$n_mags)
+  ggplot(d, aes(A_n, S_n, color = A_S, weight = n_mags)) +
+    geom_point(size = 2.5) + stat_poly_line() +
+    theme_classic() + theme(text = element_text(size = 14)) +
+    annotate("text", x = -Inf, y = Inf, hjust = -0.1, vjust = 1.5,
+             label = paste0("r = ", round(res$r, 2), ", p ",
+                            ifelse(res$p < 0.001, "< 0.001", paste0("= ", round(res$p, 3))))) +
+    scale_color_gradient(low = "red", high = "blue", limits = c(0.5, 8.5)) +
+    xlab("A traits / genome size") + ylab("S traits / genome size")
+}
+
+# Panels E and F: A and S traits with genome size removed (residuals, as in Table S20)
+plot_AS_res = function(res) {
+  d = res$data; d$A_S = d$a / d$s
+  n = nrow(d); r = res$observed["partial"]
+  p = 2 * pt(-abs(r * sqrt((n - 3) / (1 - r^2))), n - 3)
+  ggplot(d, aes(a_res, s_res, color = A_S, weight = n)) +
+    geom_point(size = 2.5) + stat_poly_line() +
+    theme_classic() + theme(text = element_text(size = 14)) +
+    annotate("text", x = -Inf, y = Inf, hjust = -0.1, vjust = 1.5,
+             label = paste0("r = ", round(r, 2), ", p ",
+                            ifelse(p < 0.001, "< 0.001", paste0("= ", round(p, 3))))) +
+    scale_color_gradient(low = "red", high = "blue", limits = c(0.5, 8.5)) +
+    xlab("A traits (residuals)") + ylab("S traits (residuals)")
+}
+
+Figure_S11_ext = ggarrange(Figure_Total_S_SA_LOMA, Figure_Total_S_SA_FIRE,
+                           plot_AS_div(MAG_gen_trait.agg_LOMA), plot_AS_div(MAG_gen_trait.agg_FIRE),
+                           plot_AS_res(ctrl_loma), plot_AS_res(ctrl_fire),
+                           labels = c("A", "B", "C", "D", "E", "F"), ncol = 2, nrow = 3)
+Figure_S11_ext
+pdf("Output_Data/Figures/Figure_S11_extended.pdf", width = 12, height = 14)
+print(Figure_S11_ext)
+dev.off()
+
+# Table S25: real A-S vs random gene sets
+fmt = function(q) sprintf("%.2f (%.2f-%.2f)", q[2], q[1], q[3])
+mk = function(ctrl, name) data.frame(
+  Dataset = name, FGs = nrow(ctrl$data), `A genes` = ctrl$sizes["A"], `S genes` = ctrl$sizes["S"],
+  `Real A-S` = sprintf("%.2f", ctrl$observed["r"]),
+  `Real A-S (genome size removed)` = sprintf("%.2f", ctrl$observed["partial"]),
+  `Random genes outside A/S` = fmt(ctrl$null_outside$quantiles[, "partial"]),
+  `p outside` = sprintf("%.3f", mean(ctrl$null_outside$draws[, "partial"] <= ctrl$observed["partial"])),
+  `Random splits of selected genes` = fmt(ctrl$null_split$quantiles[, "partial"]),
+  `p splits` = sprintf("%.3f", mean(ctrl$null_split$draws[, "partial"] <= ctrl$observed["partial"])),
+  check.names = FALSE, row.names = NULL)
+tab_S25 = rbind(mk(ctrl_loma, "Loma"), mk(ctrl_fire, "Fire"))
+tab_S25
+write.csv(tab_S25, "Output_Data/Table_S25_local_control.csv", row.names = FALSE)
+
+# Prevalence and Bias ----
+
+total_genes.guild.940_MAG = read.csv("Intermediate_Results/total_genes.guild.940_MAG.csv",dec=".")
+
+g = total_genes.guild.940_MAG
+is01  = sapply(g, function(v) is.numeric(v) && all(v %in% c(0, 1, NA)))
+genes = names(g)[is01]
+length(genes)                                   # expect 936
+
+prev = colSums(g[, genes], na.rm = TRUE)        # number of MAGs carrying each gene
+summary(prev)
+c(only_1_MAG = sum(prev == 1), under_10 = sum(prev < 10), under_100 = sum(prev < 100))
+
+n_mag = nrow(g)
+
+gene_tab = data.frame(Gene = genes,
+                      `MAGs with gene` = as.integer(prev),
+                      `% of MAGs` = round(100 * prev / n_mag, 2),
+                      check.names = FALSE)
+
+gene_tab$Category = ifelse(gene_tab$Gene %in% A_genes & gene_tab$Gene %in% S_genes, "A and S",
+                           ifelse(gene_tab$Gene %in% A_genes, "A",
+                                  ifelse(gene_tab$Gene %in% S_genes, "S", "Neither")))
+
+table(gene_tab$Category)
+gene_tab = gene_tab[order(-gene_tab$`MAGs with gene`), ]
+write.csv(gene_tab, "C:/luciana_datos/project_1_Microtrait_DEMENT/Manuscript/Dataset/Output_Data/Table_S_gene_prevalence.csv", row.names = FALSE)
 
 

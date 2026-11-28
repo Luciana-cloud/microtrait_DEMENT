@@ -2798,7 +2798,7 @@ Transporter_MAG  = TRANSP_TOTAL_m %>% select(guild,size_mean,transp_total)
 
 # Transport - Aminoacids (MAG)
 transp_rule        = transp_rule %>% filter(`function`==c("transporter"))
-transp_rule_ami    = transp_rule %>% filter(class==c("aminoacid","peptide"))
+transp_rule_ami = transp_rule %>% filter(class %in% c("aminoacid","peptide"))
 transp_rule_ami    = as.data.frame(rbind("id","guild","size",transp_rule_ami))
 AMI_TRANSP_TOTAL   = hmm_loma.global %>% select(any_of(transp_rule_ami$`microtrait_hmm-name`))
 AMI_TRANSP_TOTAL$size = as.numeric(as.character(AMI_TRANSP_TOTAL$size))
@@ -3011,7 +3011,7 @@ Transporter_MAG  = TRANSP_TOTAL_m %>% select(guild,Genome_size_mean,transp_total
 
 # Transport - Aminoacids (MAG)
 transp_rule        = transp_rule %>% filter(`function`==c("transporter"))
-transp_rule_ami    = transp_rule %>% filter(class==c("aminoacid","peptide"))
+transp_rule_ami = transp_rule %>% filter(class %in% c("aminoacid","peptide"))
 transp_rule_ami    = as.data.frame(rbind("id","guild","Genome_size",transp_rule_ami))
 AMI_TRANSP_TOTAL   = hmm_fire.global %>% select(any_of(transp_rule_ami$`microtrait_hmm-name`))
 AMI_TRANSP_TOTAL$Genome_size = as.numeric(as.character(AMI_TRANSP_TOTAL$Genome_size))
